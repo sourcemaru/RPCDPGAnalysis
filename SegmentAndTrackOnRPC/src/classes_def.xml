@@ -1,0 +1,7 @@
+<lcgdict>
+  <class name="RPCBarrelData" splitLevel="0" />
+  <class name="RPCEndcapData" splitLevel="0" />
+  <class name="std::vector<RPCBarrelData>" />
+  <class name="std::vector<RPCEndcapData>" />
+</lcgdict>
+
