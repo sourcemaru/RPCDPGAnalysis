@@ -11,6 +11,7 @@
 <use name="DataFormats/RPCDigi" />
 <use name="DQM/RPCMonitorDigi" />
 <use name="DQMServices/Core" />
+<use name="Geometry/RPCGeometry" />
 
 <library   name="RPCDPGAnalysisSegmentAndTrackOnRPC_plugins" file="*.cc">
   <flags   EDM_PLUGIN="1"/>
