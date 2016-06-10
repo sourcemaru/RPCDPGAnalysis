@@ -129,8 +129,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       snprintf(buffer, 12, "Wheel_%d", wh);
       auto dir_wheel = dir_barrel.mkdir(buffer);
       if ( !hXYExpBarrelByWheel_[wh] ) {
-        hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
       }
 
       snprintf(buffer, 12, "sector_%d", se);
@@ -150,8 +150,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       snprintf(buffer, 12, "Disk_%d", di);
       auto dir_disk = dir_endcapP.mkdir(buffer);
       if ( !hXYExpEndcapByDisk_[di] ) {
-        hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
       }
 
       snprintf(buffer, 12, "ring_%d", rn);
@@ -171,8 +171,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       snprintf(buffer, 12, "Disk_%d", di);
       auto dir_disk = dir_endcapM.mkdir(buffer);
       if ( !hXYExpEndcapByDisk_[di] ) {
-        hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
       }
 
       snprintf(buffer, 12, "ring_%d", rn);
@@ -332,7 +332,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
 
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
       hXYExpBarrel_->Fill(dat.expGx[i], dat.expGy[i]);
-      hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expLx[i], dat.expLy[i]);
+      hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
       hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
     }
     for ( int i=0, n=dat.rpcLx.size(); i<n; ++i ) {
@@ -345,7 +345,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       if ( matched == -1 ) continue;
 
       hXYRPCBarrel_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      hXYRPCBarrelByWheel_[id.ring()]->Fill(dat.expLx[i], dat.expLy[i]);
+      hXYRPCBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
       hRPCsItr->second->Fill(dat.expLx[matched], dat.expLy[matched]);
     }
   }
@@ -363,11 +363,11 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
       if      ( id.region() == +1 ) {
         hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
-        hXYExpEndcapByDisk_[id.station()]->Fill(dat.expLx[i], dat.expLy[i]);
+        hXYExpEndcapByDisk_[id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
       }
       else if ( id.region() == -1 ) {
         hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
-        hXYExpEndcapByDisk_[id.station()]->Fill(dat.expLx[i], dat.expLy[i]);
+        hXYExpEndcapByDisk_[id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
       }
     }
     for ( int i=0, n=dat.rpcLx.size(); i<n; ++i ) {
@@ -381,11 +381,11 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
 
       if      ( id.region() == +1 ) {
         hXYRPCEndcapP_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-        hXYRPCEndcapByDisk_[id.station()]->Fill(dat.expLx[i], dat.expLy[i]);
+        hXYRPCEndcapByDisk_[id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
       }
       else if ( id.region() == -1 ) {
         hXYRPCEndcapM_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-        hXYRPCEndcapByDisk_[id.station()]->Fill(dat.expLx[i], dat.expLy[i]);
+        hXYRPCEndcapByDisk_[id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
       }
       hRPCsItr->second->Fill(dat.expLx[matched], dat.expLy[matched]);
     }
