@@ -33,6 +33,8 @@ process.rpcPointProducer.dt4DSegments = "dt4DSegments"
 process.rpcPointProducer.cscSegments = "cscSegments"
 
 process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
+    doTree = cms.untracked.bool(False),
+    doHist = cms.untracked.bool(True),
     rpcRecHits = cms.InputTag("rpcRecHits"),
     dtPoints = cms.InputTag("rpcPointProducer:RPCDTExtrapolatedPoints"),
     cscPoints = cms.InputTag("rpcPointProducer:RPCCSCExtrapolatedPoints"),
