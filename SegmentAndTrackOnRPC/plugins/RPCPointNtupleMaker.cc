@@ -360,15 +360,10 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
     if ( hRPCsItr == chToRPCs_.end() ) continue;
 
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
+      if      ( id.region() == +1 ) hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
+      else if ( id.region() == -1 ) hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
+      hXYExpEndcapByDisk_[id.region()*id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
       hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
-      if      ( id.region() == +1 ) {
-        hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
-        hXYExpEndcapByDisk_[id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
-      }
-      else if ( id.region() == -1 ) {
-        hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
-        hXYExpEndcapByDisk_[id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
-      }
     }
     for ( int i=0, n=dat.rpcLx.size(); i<n; ++i ) {
       int matched = -1;
@@ -379,14 +374,9 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       }
       if ( matched == -1 ) continue;
 
-      if      ( id.region() == +1 ) {
-        hXYRPCEndcapP_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-        hXYRPCEndcapByDisk_[id.station()]->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      }
-      else if ( id.region() == -1 ) {
-        hXYRPCEndcapM_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-        hXYRPCEndcapByDisk_[id.station()]->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      }
+      if      ( id.region() == +1 ) hXYRPCEndcapP_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
+      else if ( id.region() == -1 ) hXYRPCEndcapM_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
+      hXYRPCEndcapByDisk_[id.region()*id.station()]->Fill(dat.rpcGx[i], dat.rpcGy[i]);
       hRPCsItr->second->Fill(dat.expLx[matched], dat.expLy[matched]);
     }
   }
