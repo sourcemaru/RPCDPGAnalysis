@@ -130,9 +130,9 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
 
       snprintf(buffer, 12, "Wheel_%d", wh);
       auto dir_wheel = dir_barrel.mkdir(buffer);
-      if ( !hXYExpBarrelByWheel_[wh] ) {
-        hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+      if ( !hXYExpBarrelByWheel_[wh+2] ) {
+        hXYExpBarrelByWheel_[wh+2] = dir_wheel.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYRPCBarrelByWheel_[wh+2] = dir_wheel.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+"X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
       }
 
       snprintf(buffer, 12, "sector_%d", se);
@@ -334,7 +334,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
 
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
       hXYExpBarrel_->Fill(dat.expGx[i], dat.expGy[i]);
-      hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expLx[i], dat.expLy[i]);
+      hXYExpBarrelByWheel_[id.ring()+2]->Fill(dat.expLx[i], dat.expLy[i]);
       hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
     }
     for ( int i=0, n=dat.rpcLx.size(); i<n; ++i ) {
@@ -347,7 +347,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       if ( matched == -1 ) continue;
 
       hXYRPCBarrel_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      hXYRPCBarrelByWheel_[id.ring()]->Fill(dat.expLx[i], dat.expLy[i]);
+      hXYRPCBarrelByWheel_[id.ring()+2]->Fill(dat.expLx[i], dat.expLy[i]);
       hRPCsItr->second->Fill(dat.expLx[matched], dat.expLy[matched]);
     }
   }
