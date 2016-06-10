@@ -102,14 +102,14 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
   auto dir = fs->mkdir(buffer);
 
   auto dir_barrel = dir.mkdir("Barrel");
-  hXYExpBarrel_  = dir_barrel.make<TH2D>("hXYExpBarrel" , "Expected points in Barrel;X (cm);Y (cm)" , 100, -1000, 1000, 100, -1000, 1000);
-  hXYRPCBarrel_  = dir_barrel.make<TH2D>("hXYRPCBarrel" , "RPC in Barrel;X (cm);Y (cm)" , 100, -1000, 1000, 100, -1000, 1000);
+  hXYExpBarrel_  = dir_barrel.make<TH2D>("hXYExpBarrel" , "Expected points in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
+  hXYRPCBarrel_  = dir_barrel.make<TH2D>("hXYRPCBarrel" , "RPC in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
   auto dir_endcapP = dir.mkdir("Endcap+");
-  hXYExpEndcapP_ = dir_endcapP.make<TH2D>("hXYExpEndcap+", "Expected points in Endcap+;X (cm);Y (cm)", 100, -1000, 1000, 100, -1000, 1000);
-  hXYRPCEndcapP_ = dir_endcapP.make<TH2D>("hXYRPCEndcap+", "RPC in Endcap+;X (cm);Y (cm)", 100, -1000, 1000, 100, -1000, 1000);
+  hXYExpEndcapP_ = dir_endcapP.make<TH2D>("hXYExpEndcap+", "Expected points in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
+  hXYRPCEndcapP_ = dir_endcapP.make<TH2D>("hXYRPCEndcap+", "RPC in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
   auto dir_endcapM = dir.mkdir("Endcap-");
-  hXYExpEndcapM_ = dir_endcapM.make<TH2D>("hXYExpEndcap-", "Expected points in Endcap-;X (cm);Y (cm)", 100, -1000, 1000, 100, -1000, 1000);
-  hXYRPCEndcapM_ = dir_endcapM.make<TH2D>("hXYRPCEndcap-", "RPC in Endcap-;X (cm);Y (cm)", 100, -1000, 1000, 100, -1000, 1000);
+  hXYExpEndcapM_ = dir_endcapM.make<TH2D>("hXYExpEndcap-", "Expected points in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
+  hXYRPCEndcapM_ = dir_endcapM.make<TH2D>("hXYRPCEndcap-", "RPC in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
 
   edm::ESHandle<RPCGeometry> rpcGeom;
   eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
