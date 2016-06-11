@@ -264,6 +264,7 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   event.getByToken(rpcHitToken_, rpcHitHandle);
   for ( auto rpcItr = rpcHitHandle->begin(); rpcItr != rpcHitHandle->end(); ++rpcItr ) {
     const auto rpcId = rpcItr->rpcId();
+    if ( !rpcGeom->roll(rpcId) or !rpcGeom->chamber(rpcId) ) continue;
     const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
     const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
     const auto rpcLx = rpcLp.x();
