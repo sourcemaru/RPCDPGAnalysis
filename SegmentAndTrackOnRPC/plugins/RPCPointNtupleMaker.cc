@@ -20,6 +20,7 @@
 #include "Geometry/RPCGeometry/interface/RPCGeometry.h"
 #include "RPCDPGAnalysis/SegmentAndTrackOnRPC/interface/RPCPointData.h"
 #include "Geometry/RPCGeometry/interface/RPCGeomServ.h"
+#include "DataFormats/GeometrySurface/interface/TrapezoidalPlaneBounds.h"
 
 #include "TTree.h"
 #include "TH1D.h"
@@ -119,8 +120,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
   for ( const RPCChamber* ch : rpcGeom->chambers() ) {
     const RPCDetId rpcId = ch->id();
     const std::string chName = RPCGeomServ(rpcId).chambername();
-    const double height = ch->specificSurface().bounds().length()+20;
-    const double width = ch->specificSurface().bounds().width()+20;
+    const double height = ch->surface().bounds().length();
+    const double width = ch->surface().bounds().width();
     if ( rpcId.region() == 0 ) {
       const int wh = rpcId.ring();
       const int st = rpcId.station();
@@ -139,37 +140,17 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       snprintf(buffer, 12, "station_%d", st);
       auto dir_station = dir_sector.mkdir(buffer);
 
-      chToPoints_[chName] = dir_station.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -width/2, width/2, 100, -height/2, height/2);
-      chToRPCs_[chName] = dir_station.make<TH2D>(("RPC_"+chName).c_str(), ("RPC "+chName).c_str(), 100, -width/2, width/2, 100, -height/2, height/2);
+      const double wh2 = std::max(height, width)/2+10;
+      chToPoints_[chName] = dir_station.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
+      chToRPCs_[chName] = dir_station.make<TH2D>(("RPC_"+chName).c_str(), ("RPC "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
     }
-    else if ( rpcId.region() == +1 ) {
-      const int di = rpcId.station();
-      const int rn = rpcId.ring();
-      const int se = rpcId.sector();
-
-      snprintf(buffer, 12, "Disk_%d", di);
-      auto dir_disk = dir_endcapP.mkdir(buffer);
-      if ( !hXYExpEndcapByDisk_[di] ) {
-        hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-      }
-
-      snprintf(buffer, 12, "ring_%d", rn);
-      auto dir_ring = dir_disk.mkdir(buffer);
-
-      snprintf(buffer, 12, "sector_%d", se);
-      auto dir_sector = dir_ring.mkdir(buffer);
-
-      chToPoints_[chName] = dir_sector.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -width/2, width/2, 100, -height/2, height/2);
-      chToRPCs_[chName] = dir_sector.make<TH2D>(("RPC_"+chName).c_str(), ("RPC "+chName).c_str(), 100, -width/2, width/2, 100, -height/2, height/2);
-    }
-    else if ( rpcId.region() == -1 ) {
+    else {
       const int di = rpcId.region()*rpcId.station();
       const int rn = rpcId.ring();
       const int se = rpcId.sector();
 
       snprintf(buffer, 12, "Disk_%d", di);
-      auto dir_disk = dir_endcapM.mkdir(buffer);
+      auto dir_disk = rpcId.region() == 1 ? dir_endcapP.mkdir(buffer) : dir_endcapM.mkdir(buffer);
       if ( !hXYExpEndcapByDisk_[di] ) {
         hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYExp")+buffer).c_str(), (string("Expected points ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
         hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>((string("hXYRPC")+buffer).c_str(), (string("RPC in ")+buffer+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
@@ -181,8 +162,10 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       snprintf(buffer, 12, "sector_%d", se);
       auto dir_sector = dir_ring.mkdir(buffer);
 
-      chToPoints_[chName] = dir_sector.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -width/2, width/2, 100, -height/2, height/2);
-      chToRPCs_[chName] = dir_sector.make<TH2D>(("RPC_"+chName).c_str(), ("RPC "+chName).c_str(), 100, -width/2, width/2, 100, -height/2, height/2);
+      const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
+      const double wh2 = std::max(1.*bounds.width(), height)/2+10;
+      chToPoints_[chName] = dir_sector.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
+      chToRPCs_[chName] = dir_sector.make<TH2D>(("RPC_"+chName).c_str(), ("RPC "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
     }
   }
 }
@@ -212,9 +195,10 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   event.getByToken(dtPointToken_, dtPointHandle);
   for ( auto rpcItr = dtPointHandle->begin(); rpcItr != dtPointHandle->end(); ++rpcItr ) {
     const auto rpcId = rpcItr->rpcId();
-    const auto rpcLx = rpcItr->localPosition().x();
-    const auto rpcLy = rpcItr->localPosition().y();
     const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
+    const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
+    const auto rpcLx = rpcLp.x();
+    const auto rpcLy = rpcLp.y();
     if ( rpcId.region() == 0 ) {
       auto datItr = barrelDataMap.find(rpcId);
       if ( datItr == barrelDataMap.end() ) {
@@ -244,9 +228,10 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   event.getByToken(cscPointToken_, cscPointHandle);
   for ( auto rpcItr = cscPointHandle->begin(); rpcItr != cscPointHandle->end(); ++rpcItr ) {
     const auto rpcId = rpcItr->rpcId();
-    const auto rpcLx = rpcItr->localPosition().x();
-    const auto rpcLy = rpcItr->localPosition().y();
     const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
+    const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
+    const auto rpcLx = rpcLp.x();
+    const auto rpcLy = rpcLp.y();
     if ( rpcId.region() == 0 ) {
       auto datItr = barrelDataMap.find(rpcId);
       if ( datItr == barrelDataMap.end() ) {
@@ -279,9 +264,10 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   event.getByToken(rpcHitToken_, rpcHitHandle);
   for ( auto rpcItr = rpcHitHandle->begin(); rpcItr != rpcHitHandle->end(); ++rpcItr ) {
     const auto rpcId = rpcItr->rpcId();
-    const auto rpcLx = rpcItr->localPosition().x();
-    const auto rpcLex = rpcItr->localPositionError().xx();
     const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
+    const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
+    const auto rpcLx = rpcLp.x();
+    const auto rpcLex = rpcItr->localPositionError().xx();
     if ( rpcId.region() == 0 ) {
       auto datItr = barrelDataMap.find(rpcId);
       if ( datItr == barrelDataMap.end() ) continue;
