@@ -5,9 +5,11 @@ process = cms.Process("RPCAnalysis")
 process.load('Configuration/StandardSequences/Services_cff')
 process.load('FWCore/MessageService/MessageLogger_cfi')
 process.load("Configuration.StandardSequences.GeometryDB_cff")
+#process.load("Configuration.Geometry.GeometryIdeal2015Reco_cff")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.autoCond_condDBv2 import autoCond
-process.GlobalTag.globaltag = autoCond['run2_mc']
+#process.GlobalTag.globaltag = autoCond['run2_mc']
+process.GlobalTag.globaltag = autoCond['run2_data']
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet(
