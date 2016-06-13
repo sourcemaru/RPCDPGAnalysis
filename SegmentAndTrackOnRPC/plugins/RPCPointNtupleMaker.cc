@@ -107,15 +107,6 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
   hXYExpBarrel_  = dir_barrel.make<TH2D>("hXYExpBarrel" , "Expected points in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
   hXYRPCBarrel_  = dir_barrel.make<TH2D>("hXYRPCBarrel" , "RPC in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
 
-  for ( int i=1; i<=4; ++i ) {
-    hZPhiExpBarrelByStation_[i] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel%d", i),
-                                                        Form("Expected points in Barrel station %d;Z (cm);#phi", i),
-                                                        500, -700, 700, 500, -3.15, 3.15);
-    hZPhiExpOnRPCBarrelByStation_[i] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel%d", i),
-                                                             Form("Expected Points matched to RPC in Barrel station %d;Z (cm);#phi", i),
-                                                             500, -700, 700, 500, -3.15, 3.15);
-  }
-
   auto dir_endcapP = dir.mkdir("Endcap+");
   hXYExpEndcapP_ = dir_endcapP.make<TH2D>("hXYExpEndcap+", "Expected points in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
   hXYRPCEndcapP_ = dir_endcapP.make<TH2D>("hXYRPCEndcap+", "RPC in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
@@ -135,6 +126,7 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       const int wh = rpcId.ring();
       const int st = rpcId.station();
       const int se = rpcId.sector();
+      const int la = rpcId.layer();
 
       const string whStr = Form("Wheel_%d", wh);
       auto dir_wheel = dir_barrel.mkdir(whStr);
@@ -143,6 +135,15 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2D>(("hXYRPC"+whStr).c_str(), ("RPC in "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
       }
 
+      const int stla = st*10+la;
+      if ( !hZPhiExpBarrelByStation_[stla] ) {
+        hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel%d_%d", st, la),
+                                                               Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st+1, la+1),
+                                                               500, -700, 700, 500, -3.15, 3.15);
+        hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel%d_%d", st, la),
+                                                                    Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
+                                                                    500, -700, 700, 500, -3.15, 3.15);
+      }
       auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
       auto dir_station = dir_sector.mkdir(Form("station_%d", st));
 
@@ -325,7 +326,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
 
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
       hXYExpBarrel_->Fill(dat.expGx[i], dat.expGy[i]);
-      hZPhiExpBarrelByStation_[id.station()]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
+      hZPhiExpBarrelByStation_[id.station()*10+id.layer()]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
       hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
       hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
     }
@@ -339,7 +340,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       if ( matched == -1 ) continue;
 
       hXYRPCBarrel_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      hZPhiExpOnRPCBarrelByStation_[id.station()]->Fill(dat.expGz[matched], atan2(dat.expGy[matched], dat.expGx[matched]));
+      hZPhiExpOnRPCBarrelByStation_[id.station()*10+id.layer()]->Fill(dat.expGz[matched], atan2(dat.expGy[matched], dat.expGx[matched]));
       hXYRPCBarrelByWheel_[id.ring()]->Fill(dat.rpcGx[i], dat.rpcGy[i]);
       hRPCsItr->second->Fill(dat.expLx[matched], dat.expLy[matched]);
     }
