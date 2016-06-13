@@ -14,10 +14,11 @@ struct RPCBarrelData
     sector = id.sector();
     station = id.station();
     layer = id.layer();
+    subsector = id.subsector();
     roll = id.roll();
   };
 
-  char wheel, sector, station, layer, roll;
+  char wheel, sector, station, layer, subsector, roll;
   std::vector<float> rpcLx, rpcLex, expLx, expLy;
   std::vector<float> rpcGx, rpcGy, rpcGz;
   std::vector<float> expGx, expGy, expGz; 
@@ -33,10 +34,11 @@ struct RPCEndcapData
     sector = id.sector();
     ring = id.ring();
     layer = id.layer();
+    subsector = id.subsector();
     roll = id.roll();
   };
 
-  char disk, sector, ring, layer, roll;
+  char disk, sector, ring, layer, subsector, roll;
   std::vector<float> rpcLx, rpcLex, expLx, expLy;
   std::vector<float> rpcGx, rpcGy, rpcGz;
   std::vector<float> expGx, expGy, expGz; 
