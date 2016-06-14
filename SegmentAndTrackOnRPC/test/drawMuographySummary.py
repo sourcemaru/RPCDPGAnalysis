@@ -10,24 +10,24 @@ gStyle.SetOptStat(0)
 f = TFile("hist.root")
 
 hBarrel = [
-  ("Barrel/hZPhiExpBarrel1_1", "Barrel/hZPhiExpOnRPCBarrel1_1"),
-  ("Barrel/hZPhiExpBarrel2_1", "Barrel/hZPhiExpOnRPCBarrel2_1"),
-  ("Barrel/hZPhiExpBarrel3_1", "Barrel/hZPhiExpOnRPCBarrel3_1"),
-  ("Barrel/hZPhiExpBarrel1_2", "Barrel/hZPhiExpOnRPCBarrel1_2"),
-  ("Barrel/hZPhiExpBarrel2_2", "Barrel/hZPhiExpOnRPCBarrel2_2"),
-  ("Barrel/hZPhiExpBarrel4_1", "Barrel/hZPhiExpOnRPCBarrel4_1"),
+  ("Barrel/hZPhiExpBarrel_Station1_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer1"),
+  ("Barrel/hZPhiExpBarrel_Station2_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station2_Layer1"),
+  ("Barrel/hZPhiExpBarrel_Station3_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station3_Layer1"),
+  ("Barrel/hZPhiExpBarrel_Station1_Layer2", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer2"),
+  ("Barrel/hZPhiExpBarrel_Station2_Layer2", "Barrel/hZPhiExpOnRPCBarrel_Station2_Layer2"),
+  ("Barrel/hZPhiExpBarrel_Station4_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station4_Layer1"),
 ]
 hEndcapP = [
-  ("Endcap+/Disk_1/hXYExpDisk_1", "Endcap+/Disk_1/hXYExpOnRPCDisk_1"),
-  ("Endcap+/Disk_2/hXYExpDisk_2", "Endcap+/Disk_2/hXYExpOnRPCDisk_2"),
-  ("Endcap+/Disk_3/hXYExpDisk_3", "Endcap+/Disk_3/hXYExpOnRPCDisk_3"),
-  ("Endcap+/Disk_4/hXYExpDisk_4", "Endcap+/Disk_4/hXYExpOnRPCDisk_4"),
+  ("Endcap+/Disk_1/hXYExp_Disk_1", "Endcap+/Disk_1/hXYExpOnRPC_Disk_1"),
+  ("Endcap+/Disk_2/hXYExp_Disk_2", "Endcap+/Disk_2/hXYExpOnRPC_Disk_2"),
+  ("Endcap+/Disk_3/hXYExp_Disk_3", "Endcap+/Disk_3/hXYExpOnRPC_Disk_3"),
+  ("Endcap+/Disk_4/hXYExp_Disk_4", "Endcap+/Disk_4/hXYExpOnRPC_Disk_4"),
 ]
 hEndcapN = [
-  ("Endcap-/Disk_-1/hXYExpDisk_-1", "Endcap-/Disk_-1/hXYExpOnRPCDisk_-1"),
-  ("Endcap-/Disk_-2/hXYExpDisk_-2", "Endcap-/Disk_-2/hXYExpOnRPCDisk_-2"),
-  ("Endcap-/Disk_-3/hXYExpDisk_-3", "Endcap-/Disk_-3/hXYExpOnRPCDisk_-3"),
-  ("Endcap-/Disk_-4/hXYExpDisk_-4", "Endcap-/Disk_-4/hXYExpOnRPCDisk_-4"),
+  ("Endcap-/Disk_-1/hXYExp_Disk_-1", "Endcap-/Disk_-1/hXYExpOnRPC_Disk_-1"),
+  ("Endcap-/Disk_-2/hXYExp_Disk_-2", "Endcap-/Disk_-2/hXYExpOnRPC_Disk_-2"),
+  ("Endcap-/Disk_-3/hXYExp_Disk_-3", "Endcap-/Disk_-3/hXYExpOnRPC_Disk_-3"),
+  ("Endcap-/Disk_-4/hXYExp_Disk_-4", "Endcap-/Disk_-4/hXYExpOnRPC_Disk_-4"),
 ]
 
 hDens, hEffs = [], []
@@ -39,6 +39,23 @@ gROOT.ProcessLine("""struct customDivide { customDivide(const TH2D* h1, const TH
     const double num = h2->GetBinContent(i);
     heff->SetBinContent(i, den == 0 ? -1 : num/den);
   }
+}};""")
+gROOT.ProcessLine("""struct effStat { effStat(const TH2D* h/*, const TH1D* heff*/) {
+  const int nBins = h->GetNbinsX()*h->GetNbinsY();
+  //const double width = h->GetXaxis()->GetBinLowEdge(h->GetNbinsX()+1) - h->GetXaxis()->GetBinLowEdge(1);
+  //const double height = h->GetYaxis()->GetBinLowEdge(h->GetNbinsY()+1) - h->GetYaxis()->GetBinLowEdge(1);
+  int nTotal = 0, nDead = 0;
+  for ( int i=1; i<=h->GetNbinsX(); ++i ) {
+    for ( int j=1; j<=h->GetNbinsY(); ++j ) {
+      const double y = h->GetBinContent(i, j);
+      //heff->Fill(y);
+      if ( y >= 0 ) ++nTotal;
+      if ( y == 0 ) ++nDead;
+    }
+  }
+  //const double totalArea = width*height*nTotal/nBins/100/100;
+  const double deadFrac = 1.0*nDead/nTotal;
+  cout << "RPC dead fraction = " << (100.0*deadFrac) << "% at " << h->GetTitle() << " \\n";
 }};""")
 
 cBDen = TCanvas("cBDen", "Barrel statistics", 3*padW, 2*padW)
@@ -151,3 +168,5 @@ for c in (cBEff, cEPEff, cENEff):
         p.Modified()
         p.Update()
     c.Print("%s.png" % c.GetName())
+
+for h in hEffs: effStat(h)
