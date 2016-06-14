@@ -137,10 +137,10 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
 
       const int stla = st*10+la;
       if ( !hZPhiExpBarrelByStation_[stla] ) {
-        hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel%d_%d", st, la),
+        hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
                                                                Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
                                                                500, -700, 700, 500, -3.15, 3.15);
-        hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel%d_%d", st, la),
+        hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel_Station%d_Layer%d", st, la),
                                                                     Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
                                                                     500, -700, 700, 500, -3.15, 3.15);
       }
@@ -155,15 +155,18 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       const int di = rpcId.region()*rpcId.station();
       const int rn = rpcId.ring();
       const int se = rpcId.sector();
+      const int la = rpcId.layer();
 
       const std::string diStr = Form("Disk_%d", di);
       auto dir_disk = rpcId.region() == 1 ? dir_endcapP.mkdir(diStr) : dir_endcapM.mkdir(diStr);
-      if ( !hXYExpEndcapByDisk_[di] ) {
-        hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExp"+diStr).c_str(), ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYRPC"+diStr).c_str(), ("RPC in "+diStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-        hXYExpOnRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExpOnRPC"+diStr).c_str(),
-                                                           ("Expected points matched to RPC in "+diStr+";X (cm);Y (cm)").c_str(),
-                                                           500, -1000, 1000, 500, -1000, 1000);
+      const int dila = rpcId.region()*(10*rpcId.station()+la);
+      if ( !hXYExpEndcapByDisk_[dila] ) {
+        const std::string dilaStr = Form("Disk_%d_layer%d", di, la);
+        hXYExpEndcapByDisk_[dila] = dir_disk.make<TH2D>(("hXYExp_"+dilaStr).c_str(), ("Expected points "+dilaStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYRPCEndcapByDisk_[dila] = dir_disk.make<TH2D>(("hXYRPC_"+dilaStr).c_str(), ("RPC in "+dilaStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+        hXYExpOnRPCEndcapByDisk_[dila] = dir_disk.make<TH2D>(("hXYExpOnRPC_"+dilaStr).c_str(),
+                                                             ("Expected points matched to RPC in "+dilaStr+";X (cm);Y (cm)").c_str(),
+                                                             500, -1000, 1000, 500, -1000, 1000);
       }
 
       auto dir_ring = dir_disk.mkdir(Form("ring_%d", rn));
@@ -358,7 +361,7 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
       if      ( id.region() == +1 ) hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
       else if ( id.region() == -1 ) hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
-      hXYExpEndcapByDisk_[id.region()*id.station()]->Fill(dat.expGx[i], dat.expGy[i]);
+      hXYExpEndcapByDisk_[id.region()*(10*id.station()+id.layer())]->Fill(dat.expGx[i], dat.expGy[i]);
       hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
     }
     for ( int i=0, n=dat.rpcLx.size(); i<n; ++i ) {
@@ -372,8 +375,8 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
 
       if      ( id.region() == +1 ) hXYRPCEndcapP_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
       else if ( id.region() == -1 ) hXYRPCEndcapM_->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      hXYRPCEndcapByDisk_[id.region()*id.station()]->Fill(dat.rpcGx[i], dat.rpcGy[i]);
-      hXYExpOnRPCEndcapByDisk_[id.region()*id.station()]->Fill(dat.expGx[matched], dat.expGy[matched]);
+      hXYRPCEndcapByDisk_[id.region()*(10*id.station()+id.layer())]->Fill(dat.rpcGx[i], dat.rpcGy[i]);
+      hXYExpOnRPCEndcapByDisk_[id.region()*(10*id.station()+id.layer())]->Fill(dat.expGx[matched], dat.expGy[matched]);
       hRPCsItr->second->Fill(dat.expLx[matched], dat.expLy[matched]);
     }
   }
