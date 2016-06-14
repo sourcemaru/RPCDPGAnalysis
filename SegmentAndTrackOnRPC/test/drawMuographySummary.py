@@ -51,6 +51,7 @@ for i, (hDenName, hNumName) in enumerate(hBarrel):
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
+    hEff.SetTitle(hEff.GetTitle().replace("Expected Points matched to RPC in", "Efficiency of"))
     hEffs.append(hEff)
 
     cBDen.cd(i+1)
@@ -75,6 +76,7 @@ for i, (hDenName, hNumName) in enumerate(hEndcapP):
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
+    hEff.SetTitle(hEff.GetTitle().replace("Expected points matched to RPC in", "Efficiency of"))
     hEffs.append(hEff)
 
     cEPDen.cd(i+1)
@@ -103,6 +105,7 @@ for i, (hDenName, hNumName) in enumerate(hEndcapN):
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
+    hEff.SetTitle(hEff.GetTitle().replace("Expected points matched to RPC in", "Efficiency of"))
     hEffs.append(hEff)
 
     cENDen.cd(i+1)
@@ -131,6 +134,7 @@ for c in (cBDen, cEPDen, cENDen):
         if p == None: break
         p.Modified()
         p.Update()
+    c.Print("%s.png" % c.GetName())
 
 rpcPalette = array('i', [kBlack,632,632,632,632,632,632,632,807,400,416,kBlue])
 levels = array('d', [0.1*i+1e-9 for i in range(-1, 12)])
@@ -146,4 +150,4 @@ for c in (cBEff, cEPEff, cENEff):
         if p == None: break
         p.Modified()
         p.Update()
-
+    c.Print("%s.png" % c.GetName())
