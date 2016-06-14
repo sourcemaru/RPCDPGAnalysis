@@ -7,7 +7,7 @@ from ROOT import *
 from array import array
 gStyle.SetOptStat(0)
 
-f = TFile("hist.root")
+f = TFile("%d.root" % run)
 
 hBarrel = [
   ("Barrel/hZPhiExpBarrel_Station1_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer1"),
