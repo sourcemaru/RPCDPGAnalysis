@@ -139,10 +139,10 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       if ( !hZPhiExpBarrelByStation_[stla] ) {
         hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
                                                                Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                               500, -700, 700, 500, -3.15, 3.15);
+                                                               500, -700, 700, 500, -3.14159265, 3.14159265);
         hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel_Station%d_Layer%d", st, la),
                                                                     Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                                    500, -700, 700, 500, -3.15, 3.15);
+                                                                    500, -700, 700, 500, -3.14159265, 3.14159265);
       }
       auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
       auto dir_station = dir_sector.mkdir(Form("station_%d", st));
