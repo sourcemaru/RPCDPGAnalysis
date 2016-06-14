@@ -155,7 +155,6 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
       const int di = rpcId.region()*rpcId.station();
       const int rn = rpcId.ring();
       const int se = rpcId.sector();
-      const int la = rpcId.layer();
 
       const std::string diStr = Form("Disk_%d", di);
       auto dir_disk = rpcId.region() == 1 ? dir_endcapP.mkdir(diStr) : dir_endcapM.mkdir(diStr);
@@ -276,7 +275,7 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
     const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
     const auto rpcLx = rpcLp.x();
-    const auto rpcLex = rpcItr->localPositionError().xx();
+    const auto rpcLex = sqrt(rpcItr->localPositionError().xx());
     if ( rpcId.region() == 0 ) {
       auto datItr = barrelDataMap.find(rpcId);
       if ( datItr == barrelDataMap.end() ) continue;
