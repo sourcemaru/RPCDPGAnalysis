@@ -39,7 +39,7 @@ public:
   void produce(edm::Event& event, const edm::EventSetup& eventSetup) override;
 
 private:
-  edm::EDGetTokenT<DTRecHitCollection> dtHitToken_;
+  edm::EDGetTokenT<DTRecHitCollection> dtHitToken_, dtCosmicHitToken_;
   edm::EDGetTokenT<CSCRecHit2DCollection> cscHitToken_;
   edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
 };
@@ -49,8 +49,10 @@ DroppedRecHitProducer::DroppedRecHitProducer(const edm::ParameterSet& pset)
   rpcHitToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcHits"));
   cscHitToken_ = consumes<CSCRecHit2DCollection>(pset.getParameter<edm::InputTag>("cscHits"));
   dtHitToken_ = consumes<DTRecHitCollection>(pset.getParameter<edm::InputTag>("dtHits"));
+  dtCosmicHitToken_ = consumes<DTRecHitCollection>(pset.getParameter<edm::InputTag>("dtCosmicHits"));
 
   produces<DTRecHitCollection>();
+  produces<DTRecHitCollection>("cosmic");
   produces<CSCRecHit2DCollection>();
   produces<RPCRecHitCollection>();
 }
@@ -58,11 +60,14 @@ DroppedRecHitProducer::DroppedRecHitProducer(const edm::ParameterSet& pset)
 void DroppedRecHitProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   std::auto_ptr<DTRecHitCollection> out_dt(new DTRecHitCollection);
+  std::auto_ptr<DTRecHitCollection> out_dtcosmic(new DTRecHitCollection);
   std::auto_ptr<CSCRecHit2DCollection> out_csc(new CSCRecHit2DCollection);
   std::auto_ptr<RPCRecHitCollection> out_rpc(new RPCRecHitCollection);
 
   edm::Handle<DTRecHitCollection> dtHitHandle;
   event.getByToken(dtHitToken_, dtHitHandle);
+  edm::Handle<DTRecHitCollection> dtCosmicHitHandle;
+  event.getByToken(dtCosmicHitToken_, dtCosmicHitHandle);
   edm::Handle<CSCRecHit2DCollection> cscHitHandle;
   event.getByToken(cscHitToken_, cscHitHandle);
   edm::Handle<RPCRecHitCollection> rpcHitHandle;
@@ -71,6 +76,10 @@ void DroppedRecHitProducer::produce(edm::Event& event, const edm::EventSetup& ev
   for ( auto dtLayerId : dtHitHandle->ids() ) {
     const auto& hits = dtHitHandle->get(dtLayerId);
     out_dt->put(dtLayerId, hits.first, hits.second);
+  }
+  for ( auto dtLayerId : dtCosmicHitHandle->ids() ) {
+    const auto& hits = dtCosmicHitHandle->get(dtLayerId);
+    out_dtcosmic->put(dtLayerId, hits.first, hits.second);
   }
   for ( auto cscId : cscHitHandle->ids() ) {
     const auto& hits = cscHitHandle->get(cscId);
@@ -83,6 +92,7 @@ void DroppedRecHitProducer::produce(edm::Event& event, const edm::EventSetup& ev
   }
 
   event.put(out_dt);
+  event.put(out_dtcosmic, "cosmic");
   event.put(out_csc);
   event.put(out_rpc);
 }
