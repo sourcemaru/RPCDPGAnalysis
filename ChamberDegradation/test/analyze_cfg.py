@@ -23,21 +23,27 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 50000
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/80X_mcRun2_asymptotic_v14-v1/00000/42AC15DA-C528-E611-9790-0CC47A78A340.root',
-        '/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/80X_mcRun2_asymptotic_v14-v1/00000/C0C012CD-C528-E611-A193-0CC47A4D7606.root',
-        #'/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-RECO/80X_mcRun2_asymptotic_v14-v1/00000/0458C823-CF28-E611-ACDE-0025905B860E.root',
-        #'/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-RECO/80X_mcRun2_asymptotic_v14-v1/00000/AEF8DC28-CF28-E611-B744-0CC47A4D75F8.root',
+        '/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-RECO/80X_mcRun2_asymptotic_v14-v1/00000/0458C823-CF28-E611-ACDE-0025905B860E.root',
+        '/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-RECO/80X_mcRun2_asymptotic_v14-v1/00000/AEF8DC28-CF28-E611-B744-0CC47A4D75F8.root',
     ),
     secondaryFileNames = cms.untracked.vstring(
+        #'/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/80X_mcRun2_asymptotic_v14-v1/00000/42AC15DA-C528-E611-9790-0CC47A78A340.root',
+        #'/store/relval/CMSSW_8_0_10/RelValSingleMuPt100_UP15/GEN-SIM-DIGI-RAW-HLTDEBUG/80X_mcRun2_asymptotic_v14-v1/00000/C0C012CD-C528-E611-A193-0CC47A4D7606.root',
     ),
     inputCommands = cms.untracked.vstring(
         'keep *',
-        'drop *_dt1DRecHits_*_*',
-        'drop *_csc2DRecHits_*_*',
         'drop *_dt4DSegments_*_*',
         'drop *_cscSegments_*_*',
     ),
 )
+
+process.droppedRecHits = cms.EDProducer("DroppedRecHitProducer",
+    rpcHits = cms.InputTag("rpcRecHits"),
+    dtHits = cms.InputTag("dt1DRecHits"),
+    cscHits = cms.InputTag("csc2DRecHits"),
+)
+process.dt4DSegments.recHits1DLabel = "droppedRecHits"
+process.cscSegments.inputObjects = "droppedRecHits"
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string("out.root"),
@@ -45,9 +51,8 @@ process.out = cms.OutputModule("PoolOutputModule",
 )
 
 process.p = cms.Path(
-    process.muonDTDigis + process.muonCSCDigis + process.muonRPCDigis
-  * process.dt1DRecHits + process.csc2DRecHits
-# * process.droppedRecHits
+#  * process.dt1DRecHits + process.csc2DRecHits
+    process.droppedRecHits
   * process.dt4DSegments * process.cscSegments
   #* process.localreco * process.globalreco
   #* process.muonshighlevelreco
