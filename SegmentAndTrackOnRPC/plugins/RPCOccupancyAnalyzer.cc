@@ -85,7 +85,7 @@ void RPCOccupancyAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& 
       const string whStr = Form("Wheel_%d", wh);
       if ( !hXYRPCBarrelByWheel_[wh] ) {
         hXYRPCBarrelByWheel_[wh] = dir.make<TH2D>(("hXYRPC_"+whStr).c_str(), ("RPC in "+whStr+";X (cm);Y (cm)").c_str(),
-                                                  2000, -1000, 1000, 2000, -1000, 1000);
+                                                  1600, -800, 800, 1600, -800, 800);
       }
 
       const int stla = st*10+la;
