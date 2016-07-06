@@ -75,17 +75,17 @@ void DroppedRecHitProducer::produce(edm::Event& event, const edm::EventSetup& ev
 
   for ( auto dtLayerId : dtHitHandle->ids() ) {
     const auto& hits = dtHitHandle->get(dtLayerId);
-    continue;
+    //continue;
     out_dt->put(dtLayerId, hits.first, hits.second);
   }
   for ( auto dtLayerId : dtCosmicHitHandle->ids() ) {
     const auto& hits = dtCosmicHitHandle->get(dtLayerId);
-    continue;
+    //continue;
     out_dtcosmic->put(dtLayerId, hits.first, hits.second);
   }
   for ( auto cscId : cscHitHandle->ids() ) {
     const auto& hits = cscHitHandle->get(cscId);
-    continue;
+    //continue;
     out_csc->put(cscId, hits.first, hits.second);
   }
 
