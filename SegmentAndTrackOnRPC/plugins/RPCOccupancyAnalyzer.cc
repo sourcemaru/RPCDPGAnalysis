@@ -25,6 +25,7 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TRandom3.h"
 
 #include <iostream>
 #include <cmath>
@@ -47,7 +48,10 @@ private:
   TH1D* hBxBarrel_, * hBxEndcapP_, * hBxEndcapM_;
 
   std::map<int, TH2D*> hXYRPCBarrelByWheel_, hXYRPCEndcapByDisk_;
+  std::map<int, TH2D*> hXYRPCDetBarrelByWheel_, hXYRPCDetEndcapByDisk_;
   std::map<int, TH2D*> hZPhiRPCBarrelByStationLayer_;
+  std::map<int, TH2D*> hZPhiRPCDetBarrelByStationLayer_;
+
 };
 
 RPCOccupancyAnalyzer::RPCOccupancyAnalyzer(const edm::ParameterSet& pset)
@@ -102,6 +106,62 @@ void RPCOccupancyAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& 
       if ( !hXYRPCEndcapByDisk_[di] ) {
         hXYRPCEndcapByDisk_[di] = dir.make<TH2D>(("hXY_"+diStr).c_str(), ("RPC in"+diStr+";X (cm);Y (cm)").c_str(),
                                                  1600, -800, 800, 1600, -800, 800);
+      }
+    }
+  }
+
+  TRandom3 rnd;
+  const int nPoint = 100000;
+  for ( const RPCRoll* roll : rpcGeom->rolls() ) {
+    const RPCDetId rpcId = roll->id();
+    const double height = roll->surface().bounds().length();
+    const double width = roll->surface().bounds().width();
+    const double area = height*roll->surface().bounds().widthAtHalfLength();
+    if ( rpcId.region() == 0 ) {
+      const int wh = rpcId.ring();
+      const int st = rpcId.station();
+      const int la = rpcId.layer();
+      const int stla = st*10+la;
+
+      if ( !hXYRPCDetBarrelByWheel_[wh] ) {
+        const string whStr = Form("Wheel_%d", wh);
+        hXYRPCDetBarrelByWheel_[wh] = dir.make<TH2D>(("hXYRPCDet_"+whStr).c_str(), ("RPCDet in "+whStr+";X (cm);Y (cm)").c_str(),
+                                                     1600, -800, 800, 1600, -800, 800);
+      }
+      if ( !hZPhiRPCDetBarrelByStationLayer_[stla] ) {
+        hZPhiRPCDetBarrelByStationLayer_[stla] = dir.make<TH2D>(Form("hZPhiRPCDetBarrel_Station%d_Layer%d", st, la),
+                                                                Form("RPCDet in Barrel station %d layer %d;Z (cm);#phi", st, la),
+                                                                1400, -700, 700, 1000, -3.14159265, 3.14159265);
+      }
+
+      for ( int i=0; i<nPoint; ++i ) {
+        const double x = rnd.Uniform(-width/2, width/2);
+        const double y = rnd.Uniform(-height/2, height/2);
+        const LocalPoint lp(x, y, 0);
+        if ( !roll->surface().bounds().inside(lp) ) continue;
+        const GlobalPoint gp = roll->toGlobal(lp);
+
+        hXYRPCDetBarrelByWheel_[wh]->Fill(gp.x(), gp.y());
+        hZPhiRPCDetBarrelByStationLayer_[stla]->Fill(gp.z(), gp.phi(), area/nPoint);
+      }
+    }
+    else {
+      const int di = rpcId.station()*rpcId.region();
+
+      if ( !hXYRPCDetEndcapByDisk_[di] ) {
+        const std::string diStr = Form("Disk_%d", di);
+        hXYRPCDetEndcapByDisk_[di] = dir.make<TH2D>(("hXYDet_"+diStr).c_str(), ("RPCDet in"+diStr+";X (cm);Y (cm)").c_str(),
+                                                    1600, -800, 800, 1600, -800, 800);
+      }
+
+      for ( int i=0; i<nPoint; ++i ) {
+        const double x = rnd.Uniform(-width/2, width/2);
+        const double y = rnd.Uniform(-height/2, height/2);
+        const LocalPoint lp(x, y, 0);
+        if ( !roll->surface().bounds().inside(lp) ) continue;
+        const GlobalPoint gp = roll->toGlobal(lp);
+
+        hXYRPCDetEndcapByDisk_[di]->Fill(gp.x(), gp.y(), area/nPoint);
       }
     }
   }
