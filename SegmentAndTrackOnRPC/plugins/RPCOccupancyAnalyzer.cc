@@ -9,6 +9,8 @@
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
 #include "DataFormats/RPCRecHit/interface/RPCRecHit.h"
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 
@@ -44,8 +46,10 @@ public:
 
 private:
   edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
+  edm::EDGetTokenT<reco::MuonCollection> muonToken_;
 
   TH1D* hBxBarrel_, * hBxEndcapP_, * hBxEndcapM_;
+  TH1D* hBxFromGlbMuBarrel_, * hBxFromGlbMuEndcapP_, * hBxFromGlbMuEndcapM_;
 
   std::map<int, TH2D*> hXYRPCBarrelByWheel_, hXYRPCEndcapByDisk_;
   std::map<int, TH2D*> hXYRPCDetBarrelByWheel_, hXYRPCDetEndcapByDisk_;
@@ -57,6 +61,7 @@ private:
 RPCOccupancyAnalyzer::RPCOccupancyAnalyzer(const edm::ParameterSet& pset)
 {
   rpcHitToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"));
+  muonToken_ = consumes<reco::MuonCollection>(pset.getParameter<edm::InputTag>("muons"));
 
   usesResource("TFileService");
   edm::Service<TFileService> fs;
@@ -64,6 +69,11 @@ RPCOccupancyAnalyzer::RPCOccupancyAnalyzer(const edm::ParameterSet& pset)
   hBxBarrel_ = fs->make<TH1D>("hBxBarrel", "Barrel bx distr;Bunch crossing", 13, -6.5, 6.5);
   hBxEndcapP_ = fs->make<TH1D>("hBxEndcapP", "Endcap+ bx distr;Bunch crossing", 13, -6.5, 6.5);
   hBxEndcapM_ = fs->make<TH1D>("hBxEndcapM", "Endcap- bx distr;Bunch crossing", 13, -6.5, 6.5);
+
+  hBxFromGlbMuBarrel_ = fs->make<TH1D>("hBxFromGlbMuBarrel", "Barrel bx distr from GlbMu;Bunch crossing", 13, -6.5, 6.5);
+  hBxFromGlbMuEndcapP_ = fs->make<TH1D>("hBxFromGlbMuEndcapP", "Endcap+ bx distr from GlbMu;Bunch crossing", 13, -6.5, 6.5);
+  hBxFromGlbMuEndcapM_ = fs->make<TH1D>("hBxFromGlbMuEndcapM", "Endcap- bx distr from GlbMu;Bunch crossing", 13, -6.5, 6.5);
+
 }
 
 void RPCOccupancyAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
@@ -199,6 +209,24 @@ void RPCOccupancyAnalyzer::analyze(const edm::Event& event, const edm::EventSetu
       else           hBxEndcapM_->Fill(bx);
 
       hXYRPCEndcapByDisk_[disk]->Fill(rpcGp.x(), rpcGp.y());
+    }
+  }
+
+  // Find RPC hits from muons
+  edm::Handle<reco::MuonCollection> muonHandle;
+  event.getByToken(muonToken_, muonHandle);
+  for ( auto mu : *muonHandle ) {
+    if ( !mu.isGlobalMuon() ) continue;
+    const auto glbTrack = mu.globalTrack();
+    for ( auto hit = glbTrack->recHitsBegin(); hit != glbTrack->recHitsEnd(); ++hit ) {
+      auto rpcHit = dynamic_cast<const RPCRecHit*>(*hit);
+      if ( !rpcHit ) continue;
+      const int reg = rpcHit->rpcId().region();
+      const int bx = rpcHit->BunchX();
+
+      if      ( reg == 0 ) hBxFromGlbMuBarrel_->Fill(bx);
+      else if ( reg > 0  ) hBxFromGlbMuEndcapP_->Fill(bx);
+      else if ( reg < 0  ) hBxFromGlbMuEndcapM_->Fill(bx);
     }
   }
 }

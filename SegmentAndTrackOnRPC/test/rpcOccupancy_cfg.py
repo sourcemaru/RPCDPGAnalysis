@@ -21,7 +21,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
 process.source.fileNames = [
 #    '/store/mc/RunIIFall15DR76/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/AODSIM/PU25nsPoisson50_76X_mcRun2_asymptotic_v12_ext1-v1/20000/0069F61C-CBF3-E511-929C-02163E01769E.root'
-    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/274/443/00000/168CC4F2-FE2D-E611-B6DB-02163E01475E.root',
+    '/store/data/Run2016B/SingleMuon/RECO/PromptReco-v2/000/273/296/00000/0C50634A-441A-E611-B4FA-02163E0137E8.root',
 ]
 
 process.goodVertices = cms.EDFilter("VertexSelector",
@@ -33,6 +33,7 @@ process.goodVertices = cms.EDFilter("VertexSelector",
 process.rpcAn = cms.EDAnalyzer("RPCOccupancyAnalyzer",
     rpcRecHits = cms.InputTag("rpcRecHits"),
     #vertex = cms.InputTag("goodVertices"),
+    muons = cms.InputTag("muons"),
 )
 
 process.TFileService = cms.Service("TFileService",
