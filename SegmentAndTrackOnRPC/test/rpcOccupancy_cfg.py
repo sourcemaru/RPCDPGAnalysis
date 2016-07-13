@@ -21,7 +21,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
 process.source.fileNames = [
 #    '/store/mc/RunIIFall15DR76/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/AODSIM/PU25nsPoisson50_76X_mcRun2_asymptotic_v12_ext1-v1/20000/0069F61C-CBF3-E511-929C-02163E01769E.root'
-    '/store/data/Run2016B/SingleMuon/RECO/PromptReco-v2/000/273/296/00000/0C50634A-441A-E611-B4FA-02163E0137E8.root',
+    '/store/data/Run2016B/SingleMuon/RECO/PromptReco-v2/000/273/450/00000/FE30AAEE-381C-E611-A67D-02163E01421E.root',
 ]
 
 process.goodVertices = cms.EDFilter("VertexSelector",
