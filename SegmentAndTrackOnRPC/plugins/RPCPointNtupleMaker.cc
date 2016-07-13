@@ -45,7 +45,8 @@ private:
   void fillHistograms(const std::map<RPCDetId, RPCBarrelData>& barrelDataMap,
                       const std::map<RPCDetId, RPCEndcapData>& endcapDataMap);
 
-  edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_, dtPointToken_, cscPointToken_;
+  edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
+  std::vector< edm::EDGetTokenT<RPCRecHitCollection>> refHitTokens_;
   edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
 
   const bool doTree_, doHist_;
@@ -73,8 +74,9 @@ RPCPointNtupleMaker::RPCPointNtupleMaker(const edm::ParameterSet& pset):
   doHist_(pset.getUntrackedParameter<bool>("doHist"))
 {
   rpcHitToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"));
-  dtPointToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("dtPoints"));
-  cscPointToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("cscPoints"));
+  for ( auto x : pset.getParameter<std::vector<edm::InputTag>>("refPoints") ) {
+    refHitTokens_.push_back(consumes<RPCRecHitCollection>(x));
+  }
   vertexToken_ = consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("vertex"));
 
   b_barrelData_.reset(new std::vector<RPCBarrelData>());
@@ -198,68 +200,37 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   std::map<RPCDetId, RPCEndcapData> endcapDataMap;
 
   // Collect extrapolated points from DT
-  edm::Handle<RPCRecHitCollection> dtPointHandle;
-  event.getByToken(dtPointToken_, dtPointHandle);
-  for ( auto rpcItr = dtPointHandle->begin(); rpcItr != dtPointHandle->end(); ++rpcItr ) {
-    const auto rpcId = rpcItr->rpcId();
-    const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
-    const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
-    const auto rpcLx = rpcLp.x();
-    const auto rpcLy = rpcLp.y();
-    if ( rpcId.region() == 0 ) {
-      auto datItr = barrelDataMap.find(rpcId);
-      if ( datItr == barrelDataMap.end() ) {
-        datItr = barrelDataMap.insert(std::make_pair(rpcId, RPCBarrelData(rpcId))).first;
+  for ( auto refHitToken : refHitTokens_ ) {
+    edm::Handle<RPCRecHitCollection> refHitHandle;
+    event.getByToken(refHitToken, refHitHandle);
+    for ( auto rpcItr = refHitHandle->begin(); rpcItr != refHitHandle->end(); ++rpcItr ) {
+      const auto rpcId = rpcItr->rpcId();
+      const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
+      const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
+      const auto rpcLx = rpcLp.x();
+      const auto rpcLy = rpcLp.y();
+      if ( rpcId.region() == 0 ) {
+        auto datItr = barrelDataMap.find(rpcId);
+        if ( datItr == barrelDataMap.end() ) {
+          datItr = barrelDataMap.insert(std::make_pair(rpcId, RPCBarrelData(rpcId))).first;
+        }
+        datItr->second.expLx.push_back(rpcLx);
+        datItr->second.expLy.push_back(rpcLy);
+        datItr->second.expGx.push_back(rpcGp.x());
+        datItr->second.expGy.push_back(rpcGp.y());
+        datItr->second.expGz.push_back(rpcGp.z());
       }
-      datItr->second.expLx.push_back(rpcLx);
-      datItr->second.expLy.push_back(rpcLy);
-      datItr->second.expGx.push_back(rpcGp.x());
-      datItr->second.expGy.push_back(rpcGp.y());
-      datItr->second.expGz.push_back(rpcGp.z());
-    }
-    else {
-      auto datItr = endcapDataMap.find(rpcId);
-      if ( datItr == endcapDataMap.end() ) {
-        datItr = endcapDataMap.insert(std::make_pair(rpcId, RPCEndcapData(rpcId))).first;
+      else {
+        auto datItr = endcapDataMap.find(rpcId);
+        if ( datItr == endcapDataMap.end() ) {
+          datItr = endcapDataMap.insert(std::make_pair(rpcId, RPCEndcapData(rpcId))).first;
+        }
+        datItr->second.expLx.push_back(rpcLx);
+        datItr->second.expLy.push_back(rpcLy);
+        datItr->second.expGx.push_back(rpcGp.x());
+        datItr->second.expGy.push_back(rpcGp.y());
+        datItr->second.expGz.push_back(rpcGp.z());
       }
-      datItr->second.expLx.push_back(rpcLx);
-      datItr->second.expLy.push_back(rpcLy);
-      datItr->second.expGx.push_back(rpcGp.x());
-      datItr->second.expGy.push_back(rpcGp.y());
-      datItr->second.expGz.push_back(rpcGp.z());
-    }
-  }
-
-  // Collect extrapolated points from CSC
-  edm::Handle<RPCRecHitCollection> cscPointHandle;
-  event.getByToken(cscPointToken_, cscPointHandle);
-  for ( auto rpcItr = cscPointHandle->begin(); rpcItr != cscPointHandle->end(); ++rpcItr ) {
-    const auto rpcId = rpcItr->rpcId();
-    const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
-    const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
-    const auto rpcLx = rpcLp.x();
-    const auto rpcLy = rpcLp.y();
-    if ( rpcId.region() == 0 ) {
-      auto datItr = barrelDataMap.find(rpcId);
-      if ( datItr == barrelDataMap.end() ) {
-        datItr = barrelDataMap.insert(std::make_pair(rpcId, RPCBarrelData(rpcId))).first;
-      }
-      datItr->second.expLx.push_back(rpcLx);
-      datItr->second.expLy.push_back(rpcLy);
-      datItr->second.expGx.push_back(rpcGp.x());
-      datItr->second.expGy.push_back(rpcGp.y());
-      datItr->second.expGz.push_back(rpcGp.z());
-    }
-    else {
-      auto datItr = endcapDataMap.find(rpcId);
-      if ( datItr == endcapDataMap.end() ) {
-        datItr = endcapDataMap.insert(std::make_pair(rpcId, RPCEndcapData(rpcId))).first;
-      }
-      datItr->second.expLx.push_back(rpcLx);
-      datItr->second.expLy.push_back(rpcLy);
-      datItr->second.expGx.push_back(rpcGp.x());
-      datItr->second.expGy.push_back(rpcGp.y());
-      datItr->second.expGz.push_back(rpcGp.z());
     }
   }
 

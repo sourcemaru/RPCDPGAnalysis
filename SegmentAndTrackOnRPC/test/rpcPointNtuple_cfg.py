@@ -21,7 +21,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
 process.source.fileNames = [
 #    '/store/mc/RunIIFall15DR76/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/AODSIM/PU25nsPoisson50_76X_mcRun2_asymptotic_v12_ext1-v1/20000/0069F61C-CBF3-E511-929C-02163E01769E.root'
-    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/274/443/00000/168CC4F2-FE2D-E611-B6DB-02163E01475E.root',
+    '/store/data/Run2016B/SingleMuon/RECO/PromptReco-v2/000/273/450/00000/FE30AAEE-381C-E611-A67D-02163E01421E.root',
 ]
 
 process.goodVertices = cms.EDFilter("VertexSelector",
@@ -37,10 +37,12 @@ process.rpcPointProducer.cscSegments = "cscSegments"
 process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
     doTree = cms.untracked.bool(False),
     doHist = cms.untracked.bool(True),
-    rpcRecHits = cms.InputTag("rpcRecHits"),
-    dtPoints = cms.InputTag("rpcPointProducer:RPCDTExtrapolatedPoints"),
-    cscPoints = cms.InputTag("rpcPointProducer:RPCCSCExtrapolatedPoints"),
     vertex = cms.InputTag("goodVertices"),
+    rpcRecHits = cms.InputTag("rpcRecHits"),
+    refPoints = cms.VInputTag(
+        cms.InputTag("rpcPointProducer:RPCDTExtrapolatedPoints"),
+        cms.InputTag("rpcPointProducer:RPCCSCExtrapolatedPoints"),
+    ),
 )
 
 process.TFileService = cms.Service("TFileService",
