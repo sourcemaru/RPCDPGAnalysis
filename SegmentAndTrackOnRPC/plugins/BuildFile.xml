@@ -12,6 +12,8 @@
 <use name="DQM/RPCMonitorDigi" />
 <use name="DQMServices/Core" />
 <use name="Geometry/RPCGeometry" />
+<use name="TrackingTools/TrackAssociator" />
+<use name="HLTrigger/HLTcore" />
 
 <library   name="RPCDPGAnalysisSegmentAndTrackOnRPC_plugins" file="*.cc">
   <flags   EDM_PLUGIN="1"/>
