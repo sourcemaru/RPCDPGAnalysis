@@ -19,7 +19,7 @@ config.Data.allowNonValidInputDataset = True
 config.section_("Site")
 # Where the output files will be transmitted to
 config.Site.storageSite = 'T2_CH_CERN'
-config.Data.outLFNDirBase = '/store/user/jhgoh/RPCChamberEfficiency/20160715_1'
+config.Data.outLFNDirBase = '/store/user/jhgoh/RPCChamberEfficiency/20160715_2'
 
 config.Data.inputDataset = '/SingleMuon/Run2016B-PromptReco-v2/AOD'
 config.Data.splitting = 'LumiBased'
