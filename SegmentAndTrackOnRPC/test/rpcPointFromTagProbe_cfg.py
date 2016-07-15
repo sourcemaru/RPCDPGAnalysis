@@ -20,7 +20,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 50000
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
 process.source.fileNames = [
-    '/store/data/Run2016B/SingleMuon/RECO/PromptReco-v2/000/273/450/00000/FE30AAEE-381C-E611-A67D-02163E01421E.root',
+    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/273/450/00000/040B6B30-241C-E611-9ADB-02163E011907.root',
 ]
 
 process.goodVertices = cms.EDFilter("VertexSelector",
@@ -47,17 +47,14 @@ process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
     ),
 )
 
-process.tpPoint = process.rpcPoint.clone(
-    refPoints = cms.VInputTag(
-        cms.InputTag("rpcPointFromTagProbe"),
-    ),
-)
+process.tpPoint = process.rpcPoint.clone(refPoints = cms.VInputTag(cms.InputTag("rpcPointFromTagProbe")))
+process.tmPoint = process.rpcPoint.clone(refPoints = cms.VInputTag(cms.InputTag("rpcPointFromTrackerMuons")))
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.tpPoint)
+process.p = cms.Path(process.tpPoint + process.tmPoint)
 
 #process.out = cms.OutputModule("PoolOutputModule",
 #    fileName = cms.untracked.string("a.root"),

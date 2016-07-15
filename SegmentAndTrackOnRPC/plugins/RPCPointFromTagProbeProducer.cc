@@ -41,24 +41,23 @@ class RPCPointFromTagProbeProducer : public edm::stream::EDProducer<>
 {
 public:
   RPCPointFromTagProbeProducer(const edm::ParameterSet& pset);
+  void produce(edm::Event& event, const edm::EventSetup&) override;
+  void beginRun(const edm::Run& run, const edm::EventSetup& eventSetup) override;
 
   constexpr static double muonMass_ = 0.1056583715;
 
 private:
-  void produce(edm::Event& event, const edm::EventSetup&) override;
-  void beginRun(const edm::Run& run, const edm::EventSetup& eventSetup) override;
-
   const edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
   const edm::EDGetTokenT<reco::VertexCollection> pvToken_;
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
   const edm::EDGetTokenT<trigger::TriggerEvent> triggerEventToken_;
-  const edm::EDGetTokenT<reco::TrackCollection> trackToken_;
 
   const double minMuonPt_, maxMuonAbsEta_, maxMuonRelIso_;
   const double minTrackPt_, maxTrackAbsEta_;
   const double minMass_, maxMass_;
   const std::vector<std::string> triggerPaths_;
 
+  const std::string propagatorName_;
   const TrackAssociatorParameters taParams_;
 
   HLTConfigProvider hltConfig_;
@@ -69,7 +68,6 @@ RPCPointFromTagProbeProducer::RPCPointFromTagProbeProducer(const edm::ParameterS
   pvToken_(consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("vertex"))),
   muonToken_(consumes<reco::MuonCollection>(pset.getParameter<edm::InputTag>("muons"))),
   triggerEventToken_(consumes<trigger::TriggerEvent>(pset.getParameter<edm::InputTag>("triggerObjects"))),
-  trackToken_(consumes<reco::TrackCollection>(pset.getParameter<edm::InputTag>("tracks"))),
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta")),
   maxMuonRelIso_(pset.getParameter<double>("maxMuonRelIso")),
@@ -78,6 +76,7 @@ RPCPointFromTagProbeProducer::RPCPointFromTagProbeProducer(const edm::ParameterS
   minMass_(pset.getParameter<double>("minMass")),
   maxMass_(pset.getParameter<double>("maxMass")),
   triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths")),
+  propagatorName_(pset.getParameter<std::string>("propagatorName")),
   taParams_(pset.getParameter<edm::ParameterSet>("TrackAssociatorParameters"), consumesCollector())
 {
   produces<RPCRecHitCollection>();
@@ -109,11 +108,8 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
   edm::Handle<trigger::TriggerEvent> triggerEventHandle;
   event.getByToken(triggerEventToken_, triggerEventHandle);
 
-  edm::Handle<reco::TrackCollection> trackHandle;
-  event.getByToken(trackToken_, trackHandle);
-
   edm::ESHandle<Propagator> propagator;
-  eventSetup.get<TrackingComponentsRecord>().get("SteppingHelixPropagatorAny", propagator);
+  eventSetup.get<TrackingComponentsRecord>().get(propagatorName_, propagator);
   TrackDetectorAssociator trackAssociator;
   trackAssociator.setPropagator(propagator.product());
 
@@ -178,28 +174,26 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
     if ( tagRef.isNull() ) break;
 
     // Find best tag + probe pair
-    reco::TrackRef probeRef;
-    for ( int i=0, n=trackHandle->size(); i<n; ++i ) {
-      const auto& track = trackHandle->at(i);
-      const double pt = track.pt();
+    reco::MuonRef probeRef;
+    for ( int i=0, n=muonHandle->size(); i<n; ++i ) {
+      const auto& mu = muonHandle->at(i);
+      if ( !mu.isTrackerMuon() ) continue;
+      if ( !muon::isGoodMuon(mu, muon::TMOneStationLoose) ) continue;
+
+      const double pt = mu.pt();
 
       // Basic kinematic cuts
-      if ( pt < minTrackPt_ or std::abs(track.eta()) > maxTrackAbsEta_ ) continue;
+      if ( pt < minTrackPt_ or std::abs(mu.eta()) > maxTrackAbsEta_ ) continue;
 
-      // track ID
-      if ( !track.quality(reco::TrackBase::highPurity) ) continue;
-
-      // Require opposite charge, overlap check is done automatically
-      if ( track.charge() == tagRef->track()->charge() ) continue;
+      // Require opposite charge. Overlap check is done automatically
+      if ( mu.charge() == tagRef->charge() ) continue;
 
       // Set four momentum with muon hypothesis, compute invariant mass
-      const double energy = hypot(track.p(), muonMass_);
-      const math::XYZTLorentzVector p4(track.px(), track.py(), track.pz(), energy);
-      const double m = (tagRef->p4()+p4).mass();
+      const double m = (tagRef->p4()+mu.p4()).mass();
       if ( m < minMass_ or m > maxMass_ ) continue;
 
       if ( probeRef.isNull() or probeRef->pt() < pt ) {
-        probeRef = reco::TrackRef(trackHandle, i);
+        probeRef = reco::MuonRef(muonHandle, i);
         mass = m;
       }
     }
@@ -207,18 +201,16 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
 
     // Now we have tag + probe pair, mass is already set to 'mass' variable
     // Next step is to find detectors where the probe track is expected to pass through
-    auto matchInfo = trackAssociator.associate(event, eventSetup, *probeRef, taParams_, TrackDetectorAssociator::Any);
     edm::OwnVector<RPCRecHit> pointVector;
-    for ( const auto& ch : matchInfo.chambers ) {
-      if ( ch.id.subdetId() != 3 ) continue;
+    for ( auto ch : probeRef->matches() ) {
+      if ( ch.detector() != 3 ) continue;
+      //auto rpcMatch = muMatch.rpcMatches;
 
-      const auto& lErr = ch.tState.localError();
-      const auto& lPos = ch.tState.localPosition();
-      //const auto& lDir = ch.tState.localDirection();
-      const auto lPosErr = lErr.positionError();
+      const LocalError lErr(ch.xErr, ch.yErr, 0);
+      const LocalPoint lPos(ch.x, ch.y, 0);
 
       pointVector.clear();
-      pointVector.push_back(RPCRecHit(ch.id, 0, lPos, lPosErr));
+      pointVector.push_back(RPCRecHit(ch.id, 0, lPos, lErr));
       out_points->put(ch.id, pointVector.begin(), pointVector.end());
     }
 

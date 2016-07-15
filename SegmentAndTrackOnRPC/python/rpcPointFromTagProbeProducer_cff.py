@@ -20,6 +20,19 @@ rpcPointFromTagProbe = cms.EDProducer("RPCPointFromTagProbeProducer",
     triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
     triggerResults = cms.InputTag("TriggerResults::HLT"),
     triggerPaths = cms.vstring("HLT_IsoMu22"),
+    propagatorName = cms.string("SteppingHelixPropagatorAny"),
+    TrackAssociatorParameters = TrackAssociatorParameterBlock.TrackAssociatorParameters,
+)
+
+rpcPointFromTrackerMuons = cms.EDProducer("RPCPointFromTrackerMuonProducer",
+    #vertex = cms.InputTag("offlinePrimaryVertices"),
+    muons = cms.InputTag("muons"),
+    minMuonPt = cms.double(25),
+    maxMuonAbsEta = cms.double(2.4),
+    #propagatorName = cms.string("SmartPropagatorAnyRKOpposite"),
+    #propagatorName = cms.string("SmartPropagatorAny"),
+    propagatorName = cms.string("SteppingHelixPropagatorAny"),
+    #propagatorName = cms.string("SteppingHelixPropagatorAlong"),
     TrackAssociatorParameters = TrackAssociatorParameterBlock.TrackAssociatorParameters,
 )
 

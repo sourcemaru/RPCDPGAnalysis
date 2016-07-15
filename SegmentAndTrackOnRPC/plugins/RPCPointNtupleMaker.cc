@@ -42,6 +42,8 @@ public:
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup) override;
 
   struct Hists {
+    std::vector<TH1D*> hFloatVars_;
+
     TH2D* hXYExpBarrel_, * hXYExpEndcapP_, * hXYExpEndcapM_;
     TH2D* hXYRPCBarrel_, * hXYRPCEndcapP_, * hXYRPCEndcapM_;
     std::map<int, TH2D*> hXYExpBarrelByWheel_, hXYRPCBarrelByWheel_;
