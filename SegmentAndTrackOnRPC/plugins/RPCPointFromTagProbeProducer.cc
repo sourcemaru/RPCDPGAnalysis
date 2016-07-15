@@ -27,9 +27,6 @@
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 #include "DataFormats/MuonDetId/interface/RPCDetId.h"
 
-#include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
-#include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
-
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include <vector>
@@ -57,9 +54,6 @@ private:
   const double minMass_, maxMass_;
   const std::vector<std::string> triggerPaths_;
 
-  const std::string propagatorName_;
-  const TrackAssociatorParameters taParams_;
-
   HLTConfigProvider hltConfig_;
 };
 
@@ -75,9 +69,7 @@ RPCPointFromTagProbeProducer::RPCPointFromTagProbeProducer(const edm::ParameterS
   maxTrackAbsEta_(pset.getParameter<double>("maxTrackAbsEta")),
   minMass_(pset.getParameter<double>("minMass")),
   maxMass_(pset.getParameter<double>("maxMass")),
-  triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths")),
-  propagatorName_(pset.getParameter<std::string>("propagatorName")),
-  taParams_(pset.getParameter<edm::ParameterSet>("TrackAssociatorParameters"), consumesCollector())
+  triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths"))
 {
   produces<RPCRecHitCollection>();
   produces<double>();
@@ -107,11 +99,6 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
 
   edm::Handle<trigger::TriggerEvent> triggerEventHandle;
   event.getByToken(triggerEventToken_, triggerEventHandle);
-
-  edm::ESHandle<Propagator> propagator;
-  eventSetup.get<TrackingComponentsRecord>().get(propagatorName_, propagator);
-  TrackDetectorAssociator trackAssociator;
-  trackAssociator.setPropagator(propagator.product());
 
   do {
     if ( pvHandle->empty() ) break;
