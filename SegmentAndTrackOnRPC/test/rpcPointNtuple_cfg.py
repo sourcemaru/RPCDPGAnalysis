@@ -37,6 +37,7 @@ process.rpcPointProducer.cscSegments = "cscSegments"
 process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
     doTree = cms.untracked.bool(False),
     doHist = cms.untracked.bool(True),
+    doHistByRun = cms.untracked.bool(False),
     vertex = cms.InputTag("goodVertices"),
     rpcRecHits = cms.InputTag("rpcRecHits"),
     refPoints = cms.VInputTag(

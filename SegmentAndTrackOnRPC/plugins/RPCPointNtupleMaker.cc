@@ -63,7 +63,7 @@ private:
   std::vector< edm::EDGetTokenT<RPCRecHitCollection>> refHitTokens_;
   edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
 
-  const bool doTree_, doHist_;
+  const bool doTree_, doHist_, doHistByRun_;
 
   // Trees and histograms
   TTree* tree_;
@@ -80,7 +80,8 @@ private:
 
 RPCPointNtupleMaker::RPCPointNtupleMaker(const edm::ParameterSet& pset):
   doTree_(pset.getUntrackedParameter<bool>("doTree")),
-  doHist_(pset.getUntrackedParameter<bool>("doHist"))
+  doHist_(pset.getUntrackedParameter<bool>("doHist")),
+  doHistByRun_(pset.getUntrackedParameter<bool>("doHistByRun"))
 {
   rpcHitToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"));
   for ( auto x : pset.getParameter<std::vector<edm::InputTag>>("refPoints") ) {
@@ -112,9 +113,9 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
   usesResource("TFileService");
   edm::Service<TFileService> fs;
 
-  const unsigned int runNumber = run.id().run();
+  const int runNumber = doHistByRun_ ? run.id().run() : 0;
   if ( hists_.count(runNumber) == 0 ) {
-    auto dir = fs->mkdir(Form("Run%06d", int(runNumber)));
+    auto dir = fs->mkdir(Form("Run%06d", runNumber));
     auto& h = hists_[runNumber] = Hists();
 
     auto dir_barrel = dir.mkdir("Barrel");
@@ -289,7 +290,7 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   }
 
   if ( doHist_ ) {
-    fillHistograms(barrelDataMap, endcapDataMap, hists_[event.id().run()]);
+    fillHistograms(barrelDataMap, endcapDataMap, hists_[doHistByRun_ ? event.id().run() : 0]);
   }
 
   if ( doTree_ ) {
