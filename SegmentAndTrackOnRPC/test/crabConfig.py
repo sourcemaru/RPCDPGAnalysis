@@ -19,9 +19,9 @@ config.Data.allowNonValidInputDataset = True
 config.section_("Site")
 # Where the output files will be transmitted to
 config.Site.storageSite = 'T2_CH_CERN'
-config.Data.outLFNDirBase = '/store/user/jhgoh/RPCChamberEfficiency/20160715_2'
+config.Data.outLFNDirBase = '/store/user/jhgoh/RPCChamberEfficiency/20160716_1'
 
 config.Data.inputDataset = '/SingleMuon/Run2016B-PromptReco-v2/AOD'
 config.Data.splitting = 'LumiBased'
-config.Data.unitsPerJob = 30
+config.Data.unitsPerJob = 50
 config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt'
