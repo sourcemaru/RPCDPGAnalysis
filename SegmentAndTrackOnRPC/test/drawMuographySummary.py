@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-run = 274442
+run = -1#274442
 padW = 500
 
 from ROOT import *
 from array import array
 gStyle.SetOptStat(0)
 
-f = TFile("%d.root" % run)
+f = TFile("SingleMuon.root")
 
 hBarrel = [
   ("Barrel/hZPhiExpBarrel_Station1_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer1"),
@@ -63,8 +63,8 @@ cBDen.Divide(3,2)
 cBEff = TCanvas("cBEff", "Barrel efficiency", 3*padW, 2*padW)
 cBEff.Divide(3,2)
 for i, (hDenName, hNumName) in enumerate(hBarrel):
-    hDen = f.Get("rpcPoint/Run%d/%s" % (run, hDenName))
-    hNum = f.Get("rpcPoint/Run%d/%s" % (run, hNumName))
+    hDen = f.Get("tpPoint/Run%06d/%s" % (run, hDenName))
+    hNum = f.Get("tpPoint/Run%06d/%s" % (run, hNumName))
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -88,8 +88,8 @@ cEPDen.Divide(2,2)
 cEPEff = TCanvas("cEPEff", "Endcap+ efficiency", 2*padW, 2*padW)
 cEPEff.Divide(2,2)
 for i, (hDenName, hNumName) in enumerate(hEndcapP):
-    hDen = f.Get("rpcPoint/Run%d/%s" % (run, hDenName))
-    hNum = f.Get("rpcPoint/Run%d/%s" % (run, hNumName))
+    hDen = f.Get("tpPoint/Run%06d/%s" % (run, hDenName))
+    hNum = f.Get("tpPoint/Run%06d/%s" % (run, hNumName))
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -117,8 +117,8 @@ cENDen.Divide(2,2)
 cENEff = TCanvas("cENEff", "Endcap- efficiency", 2*padW, 2*padW)
 cENEff.Divide(2,2)
 for i, (hDenName, hNumName) in enumerate(hEndcapN):
-    hDen = f.Get("rpcPoint/Run%d/%s" % (run, hDenName))
-    hNum = f.Get("rpcPoint/Run%d/%s" % (run, hNumName))
+    hDen = f.Get("tpPoint/Run%06d/%s" % (run, hDenName))
+    hNum = f.Get("tpPoint/Run%06d/%s" % (run, hNumName))
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
