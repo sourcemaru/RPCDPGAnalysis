@@ -156,10 +156,10 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         if ( !h.hZPhiExpBarrelByStation_[stla] ) {
           h.hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
                                                                    Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                                   500, -700, 700, 500, -3.14159265, 3.14159265);
+                                                                   700, -700, 700, 720, -3.14159265, 3.14159265);
           h.hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel_Station%d_Layer%d", st, la),
                                                                         Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                                        500, -700, 700, 500, -3.14159265, 3.14159265);
+                                                                        700, -700, 700, 720, -3.14159265, 3.14159265);
           h.hResBarrelByStation_[stla] = dir_barrel.make<TH1D>(Form("hResBarrel_Station%d_Layer%d", st, la),
                                                                Form("Residual in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 500, -50, 50);
           h.hPullBarrelByStation_[stla] = dir_barrel.make<TH1D>(Form("hPullBarrel_Station%d_Layer%d", st, la),
@@ -169,8 +169,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         auto dir_station = dir_sector.mkdir(Form("station_%d", st));
 
         const double wh2 = std::max(height, width)/2+10;
-        h.chToPoints_[chName] = dir_station.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
-        h.chToRPCs_[chName] = dir_station.make<TH2D>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
+        h.chToPoints_[chName] = dir_station.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
+        h.chToRPCs_[chName] = dir_station.make<TH2D>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
       }
       else {
         const int di = rpcId.region()*rpcId.station();
@@ -180,11 +180,11 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         const std::string diStr = Form("Disk_%d", di);
         auto dir_disk = rpcId.region() == 1 ? dir_endcapP.mkdir(diStr) : dir_endcapM.mkdir(diStr);
         if ( !h.hXYExpEndcapByDisk_[di] ) {
-          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExp_"+diStr).c_str(), ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-          h.hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYRPC_"+diStr).c_str(), ("RPC in "+diStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExp_"+diStr).c_str(), ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
+          h.hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYRPC_"+diStr).c_str(), ("RPC in "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
           h.hXYExpOnRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExpOnRPC_"+diStr).c_str(),
                                                                ("Expected points matched to RPC in "+diStr+";X (cm);Y (cm)").c_str(),
-                                                               500, -1000, 1000, 500, -1000, 1000);
+                                                               1000, -1000, 1000, 1000, -1000, 1000);
           h.hResEndcapByDisk_[di] = dir_disk.make<TH1D>(("hRes_"+diStr).c_str(), ("Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
           h.hPullEndcapByDisk_[di] = dir_disk.make<TH1D>(("hPull"+diStr).c_str(), ("Pull in "+diStr+";#DeltaX (cm)").c_str(), 100, -10, 10);
         }
@@ -194,8 +194,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
 
         const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
         const double wh2 = std::max(1.*bounds.width(), height)/2+10;
-        h.chToPoints_[chName] = dir_sector.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
-        h.chToRPCs_[chName] = dir_sector.make<TH2D>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), 100, -wh2, wh2, 100, -wh2, wh2);
+        h.chToPoints_[chName] = dir_sector.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
+        h.chToRPCs_[chName] = dir_sector.make<TH2D>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
       }
     }
   }
