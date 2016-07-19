@@ -23,8 +23,8 @@
 #include "DataFormats/GeometrySurface/interface/TrapezoidalPlaneBounds.h"
 
 #include "TTree.h"
-#include "TH1D.h"
-#include "TH2D.h"
+#include "TH1F.h"
+#include "TH2F.h"
 
 #include <iostream>
 #include <cmath>
@@ -42,16 +42,16 @@ public:
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup) override;
 
   struct Hists {
-    std::vector<TH1D*> hFloatVars_;
+    std::vector<TH1F*> hFloatVars_;
 
-    TH2D* hXYExpBarrel_, * hXYExpEndcapP_, * hXYExpEndcapM_;
-    TH2D* hXYRPCBarrel_, * hXYRPCEndcapP_, * hXYRPCEndcapM_;
-    std::map<int, TH2D*> hXYExpBarrelByWheel_, hXYRPCBarrelByWheel_;
-    std::map<int, TH2D*> hZPhiExpBarrelByStation_, hZPhiExpOnRPCBarrelByStation_;
-    std::map<int, TH2D*> hXYExpEndcapByDisk_, hXYRPCEndcapByDisk_, hXYExpOnRPCEndcapByDisk_;
-    std::map<int, TH1D*> hResBarrelByWheel_, hResBarrelByStation_, hResEndcapByDisk_;;
-    std::map<int, TH1D*> hPullBarrelByWheel_, hPullBarrelByStation_, hPullEndcapByDisk_;;
-    std::map<std::string, TH2D*> chToPoints_, chToRPCs_;
+    TH2F* hXYExpBarrel_, * hXYExpEndcapP_, * hXYExpEndcapM_;
+    TH2F* hXYRPCBarrel_, * hXYRPCEndcapP_, * hXYRPCEndcapM_;
+    std::map<int, TH2F*> hXYExpBarrelByWheel_, hXYRPCBarrelByWheel_;
+    std::map<int, TH2F*> hZPhiExpBarrelByStation_, hZPhiExpOnRPCBarrelByStation_;
+    std::map<int, TH2F*> hXYExpEndcapByDisk_, hXYRPCEndcapByDisk_, hXYExpOnRPCEndcapByDisk_;
+    std::map<int, TH1F*> hResBarrelByWheel_, hResBarrelByStation_, hResEndcapByDisk_;;
+    std::map<int, TH1F*> hPullBarrelByWheel_, hPullBarrelByStation_, hPullEndcapByDisk_;;
+    std::map<std::string, TH2F*> chToPoints_, chToRPCs_;
   };
 
 private:
@@ -119,15 +119,15 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
     auto& h = hists_[runNumber] = Hists();
 
     auto dir_barrel = dir.mkdir("Barrel");
-    h.hXYExpBarrel_  = dir_barrel.make<TH2D>("hXYExpBarrel" , "Expected points in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
-    h.hXYRPCBarrel_  = dir_barrel.make<TH2D>("hXYRPCBarrel" , "RPC in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
+    h.hXYExpBarrel_  = dir_barrel.make<TH2F>("hXYExpBarrel" , "Expected points in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
+    h.hXYRPCBarrel_  = dir_barrel.make<TH2F>("hXYRPCBarrel" , "RPC in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
 
     auto dir_endcapP = dir.mkdir("Endcap+");
-    h.hXYExpEndcapP_ = dir_endcapP.make<TH2D>("hXYExpEndcap+", "Expected points in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
-    h.hXYRPCEndcapP_ = dir_endcapP.make<TH2D>("hXYRPCEndcap+", "RPC in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
+    h.hXYExpEndcapP_ = dir_endcapP.make<TH2F>("hXYExpEndcap+", "Expected points in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
+    h.hXYRPCEndcapP_ = dir_endcapP.make<TH2F>("hXYRPCEndcap+", "RPC in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
     auto dir_endcapM = dir.mkdir("Endcap-");
-    h.hXYExpEndcapM_ = dir_endcapM.make<TH2D>("hXYExpEndcap-", "Expected points in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
-    h.hXYRPCEndcapM_ = dir_endcapM.make<TH2D>("hXYRPCEndcap-", "RPC in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
+    h.hXYExpEndcapM_ = dir_endcapM.make<TH2F>("hXYExpEndcap-", "Expected points in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
+    h.hXYRPCEndcapM_ = dir_endcapM.make<TH2F>("hXYRPCEndcap-", "RPC in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
 
     edm::ESHandle<RPCGeometry> rpcGeom;
     eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
@@ -146,31 +146,31 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         const string whStr = Form("Wheel_%d", wh);
         auto dir_wheel = dir_barrel.mkdir(whStr);
         if ( !h.hXYExpBarrelByWheel_[wh] ) {
-          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2D>(("hXYExp"+whStr).c_str(), ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-          h.hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2D>(("hXYRPC"+whStr).c_str(), ("RPC in "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-          h.hResBarrelByWheel_[wh] = dir_wheel.make<TH1D>(("hRes"+whStr).c_str(), ("Residual in "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
-          h.hPullBarrelByWheel_[wh] = dir_wheel.make<TH1D>(("hPull"+whStr).c_str(), ("Pull in "+whStr+";#DeltaX (cm)").c_str(), 100, -10, 10);
+          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>(("hXYExp"+whStr).c_str(), ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+          h.hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2F>(("hXYRPC"+whStr).c_str(), ("RPC in "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
+          h.hResBarrelByWheel_[wh] = dir_wheel.make<TH1F>(("hRes"+whStr).c_str(), ("Residual in "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
+          h.hPullBarrelByWheel_[wh] = dir_wheel.make<TH1F>(("hPull"+whStr).c_str(), ("Pull in "+whStr+";#DeltaX (cm)").c_str(), 100, -10, 10);
         }
 
         const int stla = st*10+la;
         if ( !h.hZPhiExpBarrelByStation_[stla] ) {
-          h.hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
+          h.hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2F>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
                                                                    Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
                                                                    700, -700, 700, 720, -3.14159265, 3.14159265);
-          h.hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2D>(Form("hZPhiExpOnRPCBarrel_Station%d_Layer%d", st, la),
+          h.hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2F>(Form("hZPhiExpOnRPCBarrel_Station%d_Layer%d", st, la),
                                                                         Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
                                                                         700, -700, 700, 720, -3.14159265, 3.14159265);
-          h.hResBarrelByStation_[stla] = dir_barrel.make<TH1D>(Form("hResBarrel_Station%d_Layer%d", st, la),
+          h.hResBarrelByStation_[stla] = dir_barrel.make<TH1F>(Form("hResBarrel_Station%d_Layer%d", st, la),
                                                                Form("Residual in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 500, -50, 50);
-          h.hPullBarrelByStation_[stla] = dir_barrel.make<TH1D>(Form("hPullBarrel_Station%d_Layer%d", st, la),
+          h.hPullBarrelByStation_[stla] = dir_barrel.make<TH1F>(Form("hPullBarrel_Station%d_Layer%d", st, la),
                                                                 Form("Pull in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 100, -10, 10);
         }
         auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
         auto dir_station = dir_sector.mkdir(Form("station_%d", st));
 
         const double wh2 = std::max(height, width)/2+10;
-        h.chToPoints_[chName] = dir_station.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
-        h.chToRPCs_[chName] = dir_station.make<TH2D>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
+        h.chToPoints_[chName] = dir_station.make<TH2F>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
+        h.chToRPCs_[chName] = dir_station.make<TH2F>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
       }
       else {
         const int di = rpcId.region()*rpcId.station();
@@ -180,13 +180,13 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         const std::string diStr = Form("Disk_%d", di);
         auto dir_disk = rpcId.region() == 1 ? dir_endcapP.mkdir(diStr) : dir_endcapM.mkdir(diStr);
         if ( !h.hXYExpEndcapByDisk_[di] ) {
-          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExp_"+diStr).c_str(), ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
-          h.hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYRPC_"+diStr).c_str(), ("RPC in "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
-          h.hXYExpOnRPCEndcapByDisk_[di] = dir_disk.make<TH2D>(("hXYExpOnRPC_"+diStr).c_str(),
+          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>(("hXYExp_"+diStr).c_str(), ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
+          h.hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2F>(("hXYRPC_"+diStr).c_str(), ("RPC in "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
+          h.hXYExpOnRPCEndcapByDisk_[di] = dir_disk.make<TH2F>(("hXYExpOnRPC_"+diStr).c_str(),
                                                                ("Expected points matched to RPC in "+diStr+";X (cm);Y (cm)").c_str(),
                                                                1000, -1000, 1000, 1000, -1000, 1000);
-          h.hResEndcapByDisk_[di] = dir_disk.make<TH1D>(("hRes_"+diStr).c_str(), ("Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
-          h.hPullEndcapByDisk_[di] = dir_disk.make<TH1D>(("hPull"+diStr).c_str(), ("Pull in "+diStr+";#DeltaX (cm)").c_str(), 100, -10, 10);
+          h.hResEndcapByDisk_[di] = dir_disk.make<TH1F>(("hRes_"+diStr).c_str(), ("Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
+          h.hPullEndcapByDisk_[di] = dir_disk.make<TH1F>(("hPull"+diStr).c_str(), ("Pull in "+diStr+";#DeltaX (cm)").c_str(), 100, -10, 10);
         }
 
         auto dir_ring = dir_disk.mkdir(Form("ring_%d", rn));
@@ -194,8 +194,8 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
 
         const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
         const double wh2 = std::max(1.*bounds.width(), height)/2+10;
-        h.chToPoints_[chName] = dir_sector.make<TH2D>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
-        h.chToRPCs_[chName] = dir_sector.make<TH2D>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
+        h.chToPoints_[chName] = dir_sector.make<TH2F>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
+        h.chToRPCs_[chName] = dir_sector.make<TH2F>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), int(2*wh2), -wh2, wh2, int(2*wh2), -wh2, wh2);
       }
     }
   }

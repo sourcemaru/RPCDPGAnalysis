@@ -55,7 +55,10 @@ process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.tpPoint + process.tmPoint)
+process.p = cms.Path(
+    process.rpcPoint
+  + process.tpPoint + process.tmPoint
+)
 
 #process.out = cms.OutputModule("PoolOutputModule",
 #    fileName = cms.untracked.string("a.root"),
