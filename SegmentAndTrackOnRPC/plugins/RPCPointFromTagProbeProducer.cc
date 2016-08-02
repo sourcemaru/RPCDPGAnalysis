@@ -27,6 +27,11 @@
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 #include "DataFormats/MuonDetId/interface/RPCDetId.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "Geometry/Records/interface/MuonGeometryRecord.h"
+#include "Geometry/RPCGeometry/interface/RPCGeometry.h"
+
+
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include <vector>
@@ -99,6 +104,9 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
 
   edm::Handle<trigger::TriggerEvent> triggerEventHandle;
   event.getByToken(triggerEventToken_, triggerEventHandle);
+
+  edm::ESHandle<RPCGeometry> rpcGeom;
+  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
 
   do {
     if ( pvHandle->empty() ) break;
@@ -189,16 +197,21 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
     // Now we have tag + probe pair, mass is already set to 'mass' variable
     // Next step is to find detectors where the probe track is expected to pass through
     edm::OwnVector<RPCRecHit> pointVector;
-    for ( auto ch : probeRef->matches() ) {
-      if ( ch.detector() != 3 ) continue;
+    for ( auto match : probeRef->matches() ) {
+      if ( match.detector() != 3 ) continue;
       //auto rpcMatch = muMatch.rpcMatches;
 
-      const LocalError lErr(ch.xErr, ch.yErr, 0);
-      const LocalPoint lPos(ch.x, ch.y, 0);
+      const LocalError lErr(match.xErr, match.yErr, 0);
+      const LocalPoint lPos(match.x, match.y, 0);
+
+      const RPCRoll* roll = rpcGeom->roll(match.id);
+      if ( !roll->surface().bounds().inside(lPos) ) continue;
+      //const RPCChamber* chamber = rpcGeom->chamber(match.id);
+      //if ( !chamber->surface().bounds().inside(chamber->toLocal(roll->toGlobal(lPos))) ) continue;
 
       pointVector.clear();
-      pointVector.push_back(RPCRecHit(ch.id, 0, lPos, lErr));
-      out_points->put(ch.id, pointVector.begin(), pointVector.end());
+      pointVector.push_back(RPCRecHit(match.id, 0, lPos, lErr));
+      out_points->put(match.id, pointVector.begin(), pointVector.end());
     }
 
   } while ( false );

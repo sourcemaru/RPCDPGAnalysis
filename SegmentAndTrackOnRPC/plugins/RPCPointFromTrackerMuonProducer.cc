@@ -20,6 +20,10 @@
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 #include "DataFormats/MuonDetId/interface/RPCDetId.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "Geometry/Records/interface/MuonGeometryRecord.h"
+#include "Geometry/RPCGeometry/interface/RPCGeometry.h"
+
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
 #include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
 
@@ -57,6 +61,9 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
   edm::Handle<reco::MuonCollection> muonHandle;
   event.getByToken(muonToken_, muonHandle);
 
+  edm::ESHandle<RPCGeometry> rpcGeom;
+  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+
   std::map<RPCDetId, edm::OwnVector<RPCRecHit>> pointMap;
   for ( int i=0, n=muonHandle->size(); i<n; ++i ) {
     const auto& mu = muonHandle->at(i);
@@ -67,16 +74,21 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
     if ( !mu.isTrackerMuon() ) continue;
     if ( !muon::isGoodMuon(mu, muon::TMOneStationLoose) ) continue;
 
-    for ( auto ch : mu.matches() ) {
-      if ( ch.detector() != 3 ) continue;
+    for ( auto match : mu.matches() ) {
+      if ( match.detector() != 3 ) continue;
       //auto rpcMatch = muMatch.rpcMatches;
 
-      const LocalError lErr(ch.xErr, ch.yErr, 0);
-      const LocalPoint lPos(ch.x, ch.y, 0);
+      const LocalError lErr(match.xErr, match.yErr, 0);
+      const LocalPoint lPos(match.x, match.y, 0);
 
-      auto pointItr = pointMap.find(ch.id);
-      if ( pointItr == pointMap.end() ) pointItr = pointMap.insert(std::make_pair(ch.id, edm::OwnVector<RPCRecHit>())).first;
-      pointItr->second.push_back(RPCRecHit(ch.id, 0, lPos, lErr));
+      const RPCRoll* roll = rpcGeom->roll(match.id);
+      if ( !roll->surface().bounds().inside(lPos) ) continue;
+      //const RPCChamber* chamber = rpcGeom->chamber(match.id);
+      //if ( !chamber->surface().bounds().inside(chamber->toLocal(roll->toGlobal(lPos))) ) continue;
+
+      auto pointItr = pointMap.find(match.id);
+      if ( pointItr == pointMap.end() ) pointItr = pointMap.insert(std::make_pair(match.id, edm::OwnVector<RPCRecHit>())).first;
+      pointItr->second.push_back(RPCRecHit(match.id, 0, lPos, lErr));
     }
   }
 
