@@ -23,11 +23,16 @@ config.Data.splitting = 'LumiBased'
 config.Data.unitsPerJob = 20
 
 ## Something that can be changed frequently
-dataset = "Run2016B"
-#dataset = "Run2016C"
-#dataset = "Run2016D"
-#dataset = "Run2016E"
+import os
+if 'DATASET' in os.environ: dataset = os.environ['DATASET']
+else: dataset = "Run2016B"
+
+username = os.environ['USER']
+
+from datetime import datetime as dt
+submitdate = dt.now().strftime('%Y%m%d')
+
 config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt'
-config.Data.outLFNDirBase = '/store/user/jhgoh/RPCChamberEfficiency/20160802_2'
+config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s_1' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s" % dataset
 config.Data.inputDataset = '/SingleMuon/%s-PromptReco-v2/AOD' % dataset
