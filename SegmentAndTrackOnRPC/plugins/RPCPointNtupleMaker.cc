@@ -51,7 +51,8 @@ public:
     std::map<int, TH2F*> hXYExpEndcapByDisk_, hXYRPCEndcapByDisk_, hXYExpOnRPCEndcapByDisk_;
     std::map<int, TH1F*> hResBarrelByWheel_, hResBarrelByStation_, hResEndcapByDisk_;;
     std::map<int, TH1F*> hPullBarrelByWheel_, hPullBarrelByStation_, hPullEndcapByDisk_;;
-    std::map<std::string, TH2F*> chToPoints_, chToRPCs_;
+    std::map<std::string, TH2F*> chToExps_, chToRPCs_;
+    std::map<std::string, TH1F*> chToRollExps_, chToRollRPCs_;
   };
 
 private:
@@ -168,9 +169,19 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
         auto dir_station = dir_sector.mkdir(Form("station_%d", st));
 
-        const double wh2 = std::max(height, width)/2+10;
-        h.chToPoints_[chName] = dir_station.make<TH2F>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(wh2), -wh2, wh2, int(wh2), -wh2, wh2);
-        h.chToRPCs_[chName] = dir_station.make<TH2F>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), int(wh2), -wh2, wh2, int(wh2), -wh2, wh2);
+        const int wh2 = int(std::max(height, width)/2+10);
+        h.chToExps_[chName] = dir_station.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+        h.chToRPCs_[chName] = dir_station.make<TH2F>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+
+        const auto rolls = ch->rolls();
+        const int nRoll = rolls.size();
+        h.chToRollExps_[chName] = dir_station.make<TH1F>(("RollExp_"+chName).c_str(), ("Roll Expected points "+chName).c_str(), nRoll, 1, nRoll+1);
+        h.chToRollRPCs_[chName] = dir_station.make<TH1F>(("RollRPC_"+chName).c_str(), ("RPCs "+chName).c_str(), nRoll, 1, nRoll+1);
+        for ( int i=0; i<nRoll; ++i ) {
+          const string rollName = RPCGeomServ(rolls[i]->id()).name();
+          h.chToRollExps_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          h.chToRollRPCs_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        }
       }
       else {
         const int di = rpcId.region()*rpcId.station();
@@ -193,9 +204,19 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         auto dir_sector = dir_ring.mkdir(Form("sector_%d", se));
 
         const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
-        const double wh2 = std::max(1.*bounds.width(), height)/2+10;
-        h.chToPoints_[chName] = dir_sector.make<TH2F>(("Expected_"+chName).c_str(), ("Expected points "+chName).c_str(), int(wh2), -wh2, wh2, int(wh2), -wh2, wh2);
-        h.chToRPCs_[chName] = dir_sector.make<TH2F>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), int(wh2), -wh2, wh2, int(wh2), -wh2, wh2);
+        const int wh2 = int(std::max(1.*bounds.width(), height)/2+10);
+        h.chToExps_[chName] = dir_sector.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+        h.chToRPCs_[chName] = dir_sector.make<TH2F>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+
+        const auto rolls = ch->rolls();
+        const int nRoll = rolls.size();
+        h.chToRollExps_[chName] = dir_sector.make<TH1F>(("RollExp_"+chName).c_str(), ("Roll Expected points "+chName).c_str(), nRoll, 1, nRoll+1);
+        h.chToRollRPCs_[chName] = dir_sector.make<TH1F>(("RollRPC_"+chName).c_str(), ("RPCs "+chName).c_str(), nRoll, 1, nRoll+1);
+        for ( int i=0; i<nRoll; ++i ) {
+          const string rollName = RPCGeomServ(rolls[i]->id()).name();
+          h.chToRollExps_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          h.chToRollRPCs_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        }
       }
     }
   }
@@ -315,10 +336,15 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
     const RPCBarrelData& dat = itr->second;
 
     const string chName = RPCGeomServ(id).chambername();
-    auto hPointsItr = h.chToPoints_.find(chName);
+    const string rollName = RPCGeomServ(id).name();
+    auto hExpsItr = h.chToExps_.find(chName);
     auto hRPCsItr = h.chToRPCs_.find(chName);
-    if ( hPointsItr == h.chToPoints_.end() ) continue;
+    auto hRollExpsItr = h.chToRollExps_.find(chName);
+    auto hRollRPCsItr = h.chToRollRPCs_.find(chName);
+    if ( hExpsItr == h.chToExps_.end() ) continue;
     if ( hRPCsItr == h.chToRPCs_.end() ) continue;
+    if ( hRollExpsItr == h.chToRollExps_.end() ) continue;
+    if ( hRollRPCsItr == h.chToRollRPCs_.end() ) continue;
 
     const int stla = id.station()*10+id.layer();
 
@@ -326,7 +352,9 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       h.hXYExpBarrel_->Fill(dat.expGx[i], dat.expGy[i]);
       h.hZPhiExpBarrelByStation_[stla]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
       h.hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
-      hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+      hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+
+      hRollExpsItr->second->Fill(hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str()));
 
       int matched = -1;
       double dx = 50; //dat.rpcLex[i]*3;
@@ -345,6 +373,8 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       h.hResBarrelByStation_[stla]->Fill(dx);
       h.hPullBarrelByWheel_[id.ring()]->Fill(dx/dat.rpcLex[matched]);
       h.hPullBarrelByStation_[stla]->Fill(dx/dat.rpcLex[matched]);
+
+      hRollRPCsItr->second->Fill(hRollRPCsItr->second->GetXaxis()->FindBin(rollName.c_str()));
     }
   }
   for ( auto itr = endcapDataMap.begin(); itr != endcapDataMap.end(); ++itr ) {
@@ -352,10 +382,15 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
     const RPCEndcapData& dat = itr->second;
 
     const string chName = RPCGeomServ(id).chambername();
-    auto hPointsItr = h.chToPoints_.find(chName);
+    const string rollName = RPCGeomServ(id).name().c_str();
+    auto hExpsItr = h.chToExps_.find(chName);
     auto hRPCsItr = h.chToRPCs_.find(chName);
-    if ( hPointsItr == h.chToPoints_.end() ) continue;
+    auto hRollExpsItr = h.chToRollExps_.find(chName);
+    auto hRollRPCsItr = h.chToRollRPCs_.find(chName);
+    if ( hExpsItr == h.chToExps_.end() ) continue;
     if ( hRPCsItr == h.chToRPCs_.end() ) continue;
+    if ( hRollExpsItr == h.chToRollExps_.end() ) continue;
+    if ( hRollRPCsItr == h.chToRollRPCs_.end() ) continue;
 
     const int di = id.region()*id.station();
 
@@ -363,7 +398,9 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       if      ( id.region() == +1 ) h.hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
       else if ( id.region() == -1 ) h.hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
       h.hXYExpEndcapByDisk_[di]->Fill(dat.expGx[i], dat.expGy[i]);
-      hPointsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+      hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+
+      hRollExpsItr->second->Fill(hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str()));
 
       int matched = -1;
       double dx = 50; //dat.rpcLex[i]*3;
@@ -381,6 +418,8 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
       h.hResEndcapByDisk_[di]->Fill(dx);
       h.hPullEndcapByDisk_[di]->Fill(dx/dat.rpcLex[matched]);
+
+      hRollRPCsItr->second->Fill(hRollRPCsItr->second->GetXaxis()->FindBin(rollName.c_str()));
     }
   }
 }
