@@ -20,7 +20,7 @@ config.section_("Site")
 config.Site.storageSite = 'T2_CH_CERN'
 
 config.Data.splitting = 'LumiBased'
-config.Data.unitsPerJob = 20
+config.Data.unitsPerJob = 40
 
 ## Something that can be changed frequently
 import os
