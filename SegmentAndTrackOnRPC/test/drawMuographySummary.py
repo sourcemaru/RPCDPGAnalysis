@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-run = -1#274442
+run = 0
 padW = 500
+#mode = "tmPoint"
+mode = "tpPoint"
 
 from ROOT import *
 from array import array
 gStyle.SetOptStat(0)
 
-f = TFile("SingleMuon.root")
+f = TFile("20160806/SingleMuon_Run2016BCD.root")
 
 hBarrel = [
   ("Barrel/hZPhiExpBarrel_Station1_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer1"),
@@ -33,14 +35,14 @@ hEndcapN = [
 hDens, hEffs = [], []
 maxMeanZ, maxZ = 0.0, 0.0
 
-gROOT.ProcessLine("""struct customDivide { customDivide(const TH2D* h1, const TH2D* h2, TH2D* heff) {
+gROOT.ProcessLine("""struct customDivide { customDivide(const TH2F* h1, const TH2F* h2, TH2F* heff) {
   for ( int i=0, n=(h1->GetNbinsX()+1)*(h1->GetNbinsY()); i<n; ++i ) {
     const double den = h1->GetBinContent(i);
     const double num = h2->GetBinContent(i);
     heff->SetBinContent(i, den == 0 ? -1 : num/den);
   }
 }};""")
-gROOT.ProcessLine("""struct effStat { effStat(const TH2D* h/*, const TH1D* heff*/) {
+gROOT.ProcessLine("""struct effStat { effStat(const TH2F* h/*, const TH1F* heff*/) {
   const int nBins = h->GetNbinsX()*h->GetNbinsY();
   //const double width = h->GetXaxis()->GetBinLowEdge(h->GetNbinsX()+1) - h->GetXaxis()->GetBinLowEdge(1);
   //const double height = h->GetYaxis()->GetBinLowEdge(h->GetNbinsY()+1) - h->GetYaxis()->GetBinLowEdge(1);
@@ -63,8 +65,8 @@ cBDen.Divide(3,2)
 cBEff = TCanvas("cBEff", "Barrel efficiency", 3*padW, 2*padW)
 cBEff.Divide(3,2)
 for i, (hDenName, hNumName) in enumerate(hBarrel):
-    hDen = f.Get("tpPoint/Run%06d/%s" % (run, hDenName))
-    hNum = f.Get("tpPoint/Run%06d/%s" % (run, hNumName))
+    hDen = f.Get("%s/Run%06d/%s" % (mode, run, hDenName))
+    hNum = f.Get("%s/Run%06d/%s" % (mode, run, hNumName))
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -88,8 +90,8 @@ cEPDen.Divide(2,2)
 cEPEff = TCanvas("cEPEff", "Endcap+ efficiency", 2*padW, 2*padW)
 cEPEff.Divide(2,2)
 for i, (hDenName, hNumName) in enumerate(hEndcapP):
-    hDen = f.Get("tpPoint/Run%06d/%s" % (run, hDenName))
-    hNum = f.Get("tpPoint/Run%06d/%s" % (run, hNumName))
+    hDen = f.Get("%s/Run%06d/%s" % (mode, run, hDenName))
+    hNum = f.Get("%s/Run%06d/%s" % (mode, run, hNumName))
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -117,8 +119,8 @@ cENDen.Divide(2,2)
 cENEff = TCanvas("cENEff", "Endcap- efficiency", 2*padW, 2*padW)
 cENEff.Divide(2,2)
 for i, (hDenName, hNumName) in enumerate(hEndcapN):
-    hDen = f.Get("tpPoint/Run%06d/%s" % (run, hDenName))
-    hNum = f.Get("tpPoint/Run%06d/%s" % (run, hNumName))
+    hDen = f.Get("%s/Run%06d/%s" % (mode, run, hDenName))
+    hNum = f.Get("%s/Run%06d/%s" % (mode, run, hNumName))
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -155,6 +157,7 @@ for c in (cBDen, cEPDen, cENDen):
 
 rpcPalette = array('i', [kBlack,632,632,632,632,632,632,632,807,400,416,kBlue])
 levels = array('d', [0.1*i+1e-9 for i in range(-1, 12)])
+#levels = array('d', [0.1*i for i in range(-1, 12)])
 gStyle.SetPalette(len(rpcPalette), rpcPalette);
 for h in hEffs:
     h.SetMaximum(1.1)
@@ -169,4 +172,9 @@ for c in (cBEff, cEPEff, cENEff):
         p.Update()
     c.Print("%s.png" % c.GetName())
 
-for h in hEffs: effStat(h)
+fout = TFile("Efficiency.root", "RECREATE")
+for h in hEffs:
+    effStat(h)
+    fout.cd()
+    h.Write()
+
