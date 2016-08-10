@@ -19,6 +19,7 @@ struct RPCBarrelData
   };
 
   char wheel, sector, station, layer, subsector, roll;
+  std::vector<bool> isInFiducial;
   std::vector<float> rpcLx, rpcLex, expLx, expLy;
   std::vector<float> rpcGx, rpcGy, rpcGz;
   std::vector<float> expGx, expGy, expGz; 
@@ -39,6 +40,7 @@ struct RPCEndcapData
   };
 
   char disk, sector, ring, layer, subsector, roll;
+  std::vector<bool> isInFiducial;
   std::vector<float> rpcLx, rpcLex, expLx, expLy;
   std::vector<float> rpcGx, rpcGy, rpcGz;
   std::vector<float> expGx, expGy, expGz; 
