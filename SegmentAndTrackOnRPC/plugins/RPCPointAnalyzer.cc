@@ -32,11 +32,11 @@
 
 using namespace std;
 
-class RPCPointNtupleMaker : public edm::one::EDAnalyzer<edm::one::WatchRuns, edm::one::SharedResources>
+class RPCPointAnalyzer : public edm::one::EDAnalyzer<edm::one::WatchRuns, edm::one::SharedResources>
 {
 public:
-  RPCPointNtupleMaker(const edm::ParameterSet& pset);
-  virtual ~RPCPointNtupleMaker() {};
+  RPCPointAnalyzer(const edm::ParameterSet& pset);
+  virtual ~RPCPointAnalyzer() {};
   void beginRun(const edm::Run& run, const edm::EventSetup& eventSetup) override;
   void endRun(const edm::Run&, const edm::EventSetup&) override {};
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup) override;
@@ -53,6 +53,7 @@ public:
     std::map<int, TH1F*> hPullBarrelByWheel_, hPullBarrelByStation_, hPullEndcapByDisk_;;
     std::map<std::string, TH2F*> chToExps_, chToRPCs_;
     std::map<std::string, TH1F*> chToRollExps_, chToRollRPCs_;
+    std::map<std::string, TH1F*> chToRollExpsNoFid_, chToRollRPCsNoFid_;
   };
 
 private:
@@ -65,6 +66,7 @@ private:
   edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
 
   const bool doTree_, doHist_, doHistByRun_;
+  const bool doChamberMuography_;
 
   // Trees and histograms
   TTree* tree_;
@@ -79,10 +81,11 @@ private:
   std::map<unsigned int, Hists> hists_;
 };
 
-RPCPointNtupleMaker::RPCPointNtupleMaker(const edm::ParameterSet& pset):
+RPCPointAnalyzer::RPCPointAnalyzer(const edm::ParameterSet& pset):
   doTree_(pset.getUntrackedParameter<bool>("doTree")),
   doHist_(pset.getUntrackedParameter<bool>("doHist")),
-  doHistByRun_(pset.getUntrackedParameter<bool>("doHistByRun"))
+  doHistByRun_(pset.getUntrackedParameter<bool>("doHistByRun")),
+  doChamberMuography_(pset.getUntrackedParameter<bool>("doChamberMuography"))
 {
   rpcHitToken_ = consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"));
   for ( auto x : pset.getParameter<std::vector<edm::InputTag>>("refPoints") ) {
@@ -109,7 +112,7 @@ RPCPointNtupleMaker::RPCPointNtupleMaker(const edm::ParameterSet& pset):
   }
 }
 
-void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
+void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
 {
   usesResource("TFileService");
   edm::Service<TFileService> fs;
@@ -169,18 +172,24 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
         auto dir_station = dir_sector.mkdir(Form("station_%d", st));
 
-        const int wh2 = int(std::max(height, width)/2+10);
-        h.chToExps_[chName] = dir_station.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
-        h.chToRPCs_[chName] = dir_station.make<TH2F>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+        if ( doChamberMuography_ ) {
+          const int wh2 = int(std::max(height, width)/2+10);
+          h.chToExps_[chName] = dir_station.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+          h.chToRPCs_[chName] = dir_station.make<TH2F>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+        }
 
         const auto rolls = ch->rolls();
         const int nRoll = rolls.size();
         h.chToRollExps_[chName] = dir_station.make<TH1F>(("RollExp_"+chName).c_str(), ("Roll Expected points "+chName).c_str(), nRoll, 1, nRoll+1);
         h.chToRollRPCs_[chName] = dir_station.make<TH1F>(("RollRPC_"+chName).c_str(), ("RPCs "+chName).c_str(), nRoll, 1, nRoll+1);
+        h.chToRollExpsNoFid_[chName] = dir_station.make<TH1F>(("RollExpNoFid_"+chName).c_str(), ("Roll Expected points no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
+        h.chToRollRPCsNoFid_[chName] = dir_station.make<TH1F>(("RollRPCNoFid_"+chName).c_str(), ("RPCs no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
         for ( int i=0; i<nRoll; ++i ) {
           const string rollName = RPCGeomServ(rolls[i]->id()).name();
           h.chToRollExps_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
           h.chToRollRPCs_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          h.chToRollExpsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          h.chToRollRPCsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
         }
       }
       else {
@@ -203,26 +212,32 @@ void RPCPointNtupleMaker::beginRun(const edm::Run& run, const edm::EventSetup& e
         auto dir_ring = dir_disk.mkdir(Form("ring_%d", rn));
         auto dir_sector = dir_ring.mkdir(Form("sector_%d", se));
 
-        const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
-        const int wh2 = int(std::max(1.*bounds.width(), height)/2+10);
-        h.chToExps_[chName] = dir_sector.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
-        h.chToRPCs_[chName] = dir_sector.make<TH2F>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+        if ( doChamberMuography_ ) {
+          const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
+          const int wh2 = int(std::max(1.*bounds.width(), height)/2+10);
+          h.chToExps_[chName] = dir_sector.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+          h.chToRPCs_[chName] = dir_sector.make<TH2F>(("RPC_"+chName).c_str(), ("Expected Points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
+        }
 
         const auto rolls = ch->rolls();
         const int nRoll = rolls.size();
         h.chToRollExps_[chName] = dir_sector.make<TH1F>(("RollExp_"+chName).c_str(), ("Roll Expected points "+chName).c_str(), nRoll, 1, nRoll+1);
         h.chToRollRPCs_[chName] = dir_sector.make<TH1F>(("RollRPC_"+chName).c_str(), ("RPCs "+chName).c_str(), nRoll, 1, nRoll+1);
+        h.chToRollExpsNoFid_[chName] = dir_sector.make<TH1F>(("RollExpNoFid_"+chName).c_str(), ("Roll Expected points no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
+        h.chToRollRPCsNoFid_[chName] = dir_sector.make<TH1F>(("RollRPCNoFid_"+chName).c_str(), ("RPCs no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
         for ( int i=0; i<nRoll; ++i ) {
           const string rollName = RPCGeomServ(rolls[i]->id()).name();
           h.chToRollExps_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
           h.chToRollRPCs_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          h.chToRollExpsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          h.chToRollRPCsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
         }
       }
     }
   }
 }
 
-void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
+void RPCPointAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
   b_barrelData_->clear();
   b_endcapData_->clear();
@@ -248,7 +263,10 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     event.getByToken(refHitToken, refHitHandle);
     for ( auto rpcItr = refHitHandle->begin(); rpcItr != refHitHandle->end(); ++rpcItr ) {
       const auto rpcId = rpcItr->rpcId();
-      const auto rpcGp = rpcGeom->roll(rpcId)->toGlobal(rpcItr->localPosition());
+      const auto roll = rpcGeom->roll(rpcId);
+      const auto& bound = roll->surface().bounds();
+      if ( !bound.inside(rpcItr->localPosition()) ) continue;
+      const auto rpcGp = roll->toGlobal(rpcItr->localPosition());
       const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
       const auto rpcLx = rpcLp.x();
       const auto rpcLy = rpcLp.y();
@@ -262,6 +280,16 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
         datItr->second.expGx.push_back(rpcGp.x());
         datItr->second.expGy.push_back(rpcGp.y());
         datItr->second.expGz.push_back(rpcGp.z());
+
+        datItr->second.isInFiducial.push_back([&](){
+          const double h = bound.length();
+          if ( std::abs(rpcItr->localPosition().y()) > h/2-8 ) return false;
+
+          const double w = bound.width();
+          if ( std::abs(rpcItr->localPosition().x()) > w/2-8 ) return false;
+
+          return true;
+        }());
       }
       else {
         auto datItr = endcapDataMap.find(rpcId);
@@ -273,6 +301,19 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
         datItr->second.expGx.push_back(rpcGp.x());
         datItr->second.expGy.push_back(rpcGp.y());
         datItr->second.expGz.push_back(rpcGp.z());
+
+        datItr->second.isInFiducial.push_back([&](){
+          const double h = bound.length();
+          if ( std::abs(rpcItr->localPosition().y()) > h/2-8 ) return false;
+
+          const double wT = bound.width();
+          const double w0 = bound.widthAtHalfLength();
+          const double slope = (wT-w0)/h;
+          const double w2AtY = slope*rpcItr->localPosition().y() + w0/2;
+          if ( std::abs(rpcItr->localPosition().x()) > w2AtY-8 ) return false;
+
+          return true;
+        }());
       }
     }
   }
@@ -327,24 +368,29 @@ void RPCPointNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
 }
 
-void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>& barrelDataMap,
+void RPCPointAnalyzer::fillHistograms(const std::map<RPCDetId, RPCBarrelData>& barrelDataMap,
                                          const std::map<RPCDetId, RPCEndcapData>& endcapDataMap,
-                                         RPCPointNtupleMaker::Hists& h)
+                                         RPCPointAnalyzer::Hists& h)
 {
   for ( auto itr = barrelDataMap.begin(); itr != barrelDataMap.end(); ++itr ) {
     const RPCDetId& id = itr->first;
     const RPCBarrelData& dat = itr->second;
 
-    const string chName = RPCGeomServ(id).chambername();
-    const string rollName = RPCGeomServ(id).name();
+    RPCGeomServ rpcName(id);
+    const string chName = rpcName.chambername();
+    const string rollName = rpcName.name();
     auto hExpsItr = h.chToExps_.find(chName);
     auto hRPCsItr = h.chToRPCs_.find(chName);
     auto hRollExpsItr = h.chToRollExps_.find(chName);
     auto hRollRPCsItr = h.chToRollRPCs_.find(chName);
-    if ( hExpsItr == h.chToExps_.end() ) continue;
-    if ( hRPCsItr == h.chToRPCs_.end() ) continue;
+    auto hRollExpsNoFidItr = h.chToRollExpsNoFid_.find(chName);
+    auto hRollRPCsNoFidItr = h.chToRollRPCsNoFid_.find(chName);
+    if ( doChamberMuography_ and hExpsItr == h.chToExps_.end() ) continue;
+    if ( doChamberMuography_ and hRPCsItr == h.chToRPCs_.end() ) continue;
     if ( hRollExpsItr == h.chToRollExps_.end() ) continue;
     if ( hRollRPCsItr == h.chToRollRPCs_.end() ) continue;
+    if ( hRollExpsNoFidItr == h.chToRollExpsNoFid_.end() ) continue;
+    if ( hRollRPCsNoFidItr == h.chToRollRPCsNoFid_.end() ) continue;
 
     const int stla = id.station()*10+id.layer();
 
@@ -352,9 +398,11 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       h.hXYExpBarrel_->Fill(dat.expGx[i], dat.expGy[i]);
       h.hZPhiExpBarrelByStation_[stla]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
       h.hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
-      hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+      if ( doChamberMuography_ ) hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
 
-      hRollExpsItr->second->Fill(hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str()));
+      const int binRoll = hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str());
+      hRollExpsNoFidItr->second->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) hRollExpsItr->second->Fill(binRoll);
 
       int matched = -1;
       double dx = 50; //dat.rpcLex[i]*3;
@@ -368,29 +416,35 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       h.hXYRPCBarrel_->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
       h.hZPhiExpOnRPCBarrelByStation_[stla]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
       h.hXYRPCBarrelByWheel_[id.ring()]->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
-      hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+      if ( doChamberMuography_ ) hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
       h.hResBarrelByWheel_[id.ring()]->Fill(dx);
       h.hResBarrelByStation_[stla]->Fill(dx);
       h.hPullBarrelByWheel_[id.ring()]->Fill(dx/dat.rpcLex[matched]);
       h.hPullBarrelByStation_[stla]->Fill(dx/dat.rpcLex[matched]);
 
-      hRollRPCsItr->second->Fill(hRollRPCsItr->second->GetXaxis()->FindBin(rollName.c_str()));
+      hRollRPCsNoFidItr->second->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) hRollRPCsItr->second->Fill(binRoll);
     }
   }
   for ( auto itr = endcapDataMap.begin(); itr != endcapDataMap.end(); ++itr ) {
     const RPCDetId& id = itr->first;
     const RPCEndcapData& dat = itr->second;
 
-    const string chName = RPCGeomServ(id).chambername();
-    const string rollName = RPCGeomServ(id).name().c_str();
+    RPCGeomServ rpcName(id);
+    const string chName = rpcName.chambername();
+    const string rollName = rpcName.name();
     auto hExpsItr = h.chToExps_.find(chName);
     auto hRPCsItr = h.chToRPCs_.find(chName);
     auto hRollExpsItr = h.chToRollExps_.find(chName);
     auto hRollRPCsItr = h.chToRollRPCs_.find(chName);
-    if ( hExpsItr == h.chToExps_.end() ) continue;
-    if ( hRPCsItr == h.chToRPCs_.end() ) continue;
+    auto hRollExpsNoFidItr = h.chToRollExpsNoFid_.find(chName);
+    auto hRollRPCsNoFidItr = h.chToRollRPCsNoFid_.find(chName);
+    if ( doChamberMuography_ and hExpsItr == h.chToExps_.end() ) continue;
+    if ( doChamberMuography_ and hRPCsItr == h.chToRPCs_.end() ) continue;
     if ( hRollExpsItr == h.chToRollExps_.end() ) continue;
     if ( hRollRPCsItr == h.chToRollRPCs_.end() ) continue;
+    if ( hRollExpsNoFidItr == h.chToRollExpsNoFid_.end() ) continue;
+    if ( hRollRPCsNoFidItr == h.chToRollRPCsNoFid_.end() ) continue;
 
     const int di = id.region()*id.station();
 
@@ -398,9 +452,11 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       if      ( id.region() == +1 ) h.hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
       else if ( id.region() == -1 ) h.hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
       h.hXYExpEndcapByDisk_[di]->Fill(dat.expGx[i], dat.expGy[i]);
-      hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+      if ( doChamberMuography_ ) hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
 
-      hRollExpsItr->second->Fill(hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str()));
+      const int binRoll = hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str());
+      hRollExpsNoFidItr->second->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) hRollExpsItr->second->Fill(binRoll);
 
       int matched = -1;
       double dx = 50; //dat.rpcLex[i]*3;
@@ -415,14 +471,15 @@ void RPCPointNtupleMaker::fillHistograms(const std::map<RPCDetId, RPCBarrelData>
       else if ( id.region() == -1 ) h.hXYRPCEndcapM_->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
       h.hXYRPCEndcapByDisk_[di]->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
       h.hXYExpOnRPCEndcapByDisk_[di]->Fill(dat.expGx[i], dat.expGy[i]);
-      hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
+      if ( doChamberMuography_ ) hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
       h.hResEndcapByDisk_[di]->Fill(dx);
       h.hPullEndcapByDisk_[di]->Fill(dx/dat.rpcLex[matched]);
 
-      hRollRPCsItr->second->Fill(hRollRPCsItr->second->GetXaxis()->FindBin(rollName.c_str()));
+      hRollRPCsNoFidItr->second->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) hRollRPCsItr->second->Fill(binRoll);
     }
   }
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(RPCPointNtupleMaker);
+DEFINE_FWK_MODULE(RPCPointAnalyzer);

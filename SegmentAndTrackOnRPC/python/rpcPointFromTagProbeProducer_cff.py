@@ -14,6 +14,8 @@ rpcPointFromTagProbe = cms.EDProducer("RPCPointFromTagProbeProducer",
     maxMuonRelIso = cms.double(0.25), # Loose isolation ~98% eff. (tight=0.15)
     minTrackPt = cms.double(20),
     maxTrackAbsEta = cms.double(2.1),
+    doCheckSign = cms.bool(True),
+    minDR = cms.double(0.1),
     minMass = cms.double(70),
     maxMass = cms.double(110),
     triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
@@ -28,3 +30,10 @@ rpcPointFromTrackerMuons = cms.EDProducer("RPCPointFromTrackerMuonProducer",
     maxMuonAbsEta = cms.double(2.1),
 )
 
+rpcPointFromTrackerMuonsTriggerVeto = rpcPointFromTagProbe.clone(
+    doCheckSign = cms.bool(False),
+    minDR = cms.double(0.3),
+    minMass = cms.double(1),
+    maxMass = cms.double(1e9),
+    maxMuonRelIso = cms.double(1e9), ## Ignore isolation cut
+)

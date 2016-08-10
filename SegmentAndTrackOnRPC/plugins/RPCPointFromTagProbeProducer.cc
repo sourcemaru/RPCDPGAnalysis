@@ -31,7 +31,6 @@
 #include "Geometry/Records/interface/MuonGeometryRecord.h"
 #include "Geometry/RPCGeometry/interface/RPCGeometry.h"
 
-
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include <vector>
@@ -56,7 +55,9 @@ private:
 
   const double minMuonPt_, maxMuonAbsEta_, maxMuonRelIso_;
   const double minTrackPt_, maxTrackAbsEta_;
+  const bool doCheckSign_;
   const double minMass_, maxMass_;
+  const double minDR_;
   const std::vector<std::string> triggerPaths_;
 
   HLTConfigProvider hltConfig_;
@@ -72,8 +73,10 @@ RPCPointFromTagProbeProducer::RPCPointFromTagProbeProducer(const edm::ParameterS
   maxMuonRelIso_(pset.getParameter<double>("maxMuonRelIso")),
   minTrackPt_(pset.getParameter<double>("minTrackPt")),
   maxTrackAbsEta_(pset.getParameter<double>("maxTrackAbsEta")),
+  doCheckSign_(pset.getParameter<bool>("doCheckSign")),
   minMass_(pset.getParameter<double>("minMass")),
   maxMass_(pset.getParameter<double>("maxMass")),
+  minDR_(pset.getParameter<double>("minDR")),
   triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths"))
 {
   produces<RPCRecHitCollection>();
@@ -180,8 +183,9 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
       // Basic kinematic cuts
       if ( pt < minTrackPt_ or std::abs(mu.eta()) > maxTrackAbsEta_ ) continue;
 
-      // Require opposite charge. Overlap check is done automatically
-      if ( mu.charge() == tagRef->charge() ) continue;
+      // Require opposite charge and do overlap check
+      if ( doCheckSign_ and mu.charge() == tagRef->charge() ) continue;
+      if ( deltaR(mu, tagRef->p4()) < minDR_ ) continue;
 
       // Set four momentum with muon hypothesis, compute invariant mass
       const double m = (tagRef->p4()+mu.p4()).mass();
