@@ -36,10 +36,11 @@ process.load("RecoLocalMuon.RPCRecHit.rpcPointProducer_cff")
 process.rpcPointProducer.dt4DSegments = "dt4DSegments"
 process.rpcPointProducer.cscSegments = "cscSegments"
 
-process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
+process.rpcPoint = cms.EDAnalyzer("RPCPointAnalyzer",
     doTree = cms.untracked.bool(False),
     doHist = cms.untracked.bool(True),
     doHistByRun = cms.untracked.bool(False),
+    doChamberMuography = cms.untracked.bool(False),
     vertex = cms.InputTag("goodVertices"),
     rpcRecHits = cms.InputTag("rpcRecHits"),
     refPoints = cms.VInputTag(
@@ -50,6 +51,7 @@ process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
 
 process.tpPoint = process.rpcPoint.clone(refPoints = cms.VInputTag(cms.InputTag("rpcPointFromTagProbe")))
 process.tmPoint = process.rpcPoint.clone(refPoints = cms.VInputTag(cms.InputTag("rpcPointFromTrackerMuons")))
+process.tvPoint = process.rpcPoint.clone(refPoints = cms.VInputTag(cms.InputTag("rpcPointFromTrackerMuonsTriggerVeto")))
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
@@ -58,6 +60,7 @@ process.TFileService = cms.Service("TFileService",
 process.p = cms.Path(
     process.rpcPoint
   + process.tpPoint + process.tmPoint
+  + process.tvPoint
 )
 
 #process.out = cms.OutputModule("PoolOutputModule",

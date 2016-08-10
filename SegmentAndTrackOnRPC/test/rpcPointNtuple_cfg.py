@@ -34,7 +34,7 @@ process.load("RecoLocalMuon.RPCRecHit.rpcPointProducer_cff")
 process.rpcPointProducer.dt4DSegments = "dt4DSegments"
 process.rpcPointProducer.cscSegments = "cscSegments"
 
-process.rpcPoint = cms.EDAnalyzer("RPCPointNtupleMaker",
+process.rpcPoint = cms.EDAnalyzer("RPCPointAnalyzer",
     doTree = cms.untracked.bool(False),
     doHist = cms.untracked.bool(True),
     doHistByRun = cms.untracked.bool(False),
