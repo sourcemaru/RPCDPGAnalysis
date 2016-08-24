@@ -20,8 +20,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 50000
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
 process.source.fileNames = [
-#    '/store/mc/RunIIFall15DR76/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/AODSIM/PU25nsPoisson50_76X_mcRun2_asymptotic_v12_ext1-v1/20000/0069F61C-CBF3-E511-929C-02163E01769E.root'
-    '/store/data/Run2016B/SingleMuon/RECO/PromptReco-v2/000/273/450/00000/FE30AAEE-381C-E611-A67D-02163E01421E.root',
+    'file:/afs/cern.ch/user/j/jhgoh/eos/cms/store/express/Run2016E/ExpressPhysics/FEVT/Express-v2/000/277/305/00000/FED68D83-2F52-E611-A8D3-02163E012568.root'
 ]
 
 process.goodVertices = cms.EDFilter("VertexSelector",
@@ -29,6 +28,8 @@ process.goodVertices = cms.EDFilter("VertexSelector",
     cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.rho < 2"),
     filter = cms.bool(True),
 )
+
+process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.rpcPointFromTagProbeProducer_cff")
 
 process.load("RecoLocalMuon.RPCRecHit.rpcPointProducer_cff")
 process.rpcPointProducer.dt4DSegments = "dt4DSegments"
@@ -38,6 +39,7 @@ process.rpcPoint = cms.EDAnalyzer("RPCPointAnalyzer",
     doTree = cms.untracked.bool(False),
     doHist = cms.untracked.bool(True),
     doHistByRun = cms.untracked.bool(False),
+    doChamberMuography = cms.untracked.bool(False),
     vertex = cms.InputTag("goodVertices"),
     rpcRecHits = cms.InputTag("rpcRecHits"),
     refPoints = cms.VInputTag(
@@ -45,12 +47,13 @@ process.rpcPoint = cms.EDAnalyzer("RPCPointAnalyzer",
         cms.InputTag("rpcPointProducer:RPCCSCExtrapolatedPoints"),
     ),
 )
+process.tmPoint = process.rpcPoint.clone(refPoints = cms.VInputTag(cms.InputTag("rpcPointFromTrackerMuons")))
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.rpcPoint)
+process.p = cms.Path(process.rpcPoint+process.tmPoint)
 
 #process.out = cms.OutputModule("PoolOutputModule",
 #    fileName = cms.untracked.string("a.root"),
