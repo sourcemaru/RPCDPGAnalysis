@@ -265,7 +265,7 @@ void RPCPointAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& e
       const auto rpcId = rpcItr->rpcId();
       const auto roll = rpcGeom->roll(rpcId);
       const auto& bound = roll->surface().bounds();
-      if ( !bound.inside(rpcItr->localPosition()) ) continue;
+      if ( !bound.inside(LocalPoint(rpcItr->localPosition().x(), rpcItr->localPosition().y(), 0)) ) continue;
       const auto rpcGp = roll->toGlobal(rpcItr->localPosition());
       const auto rpcLp = rpcGeom->chamber(rpcId)->toLocal(rpcGp);
       const auto rpcLx = rpcLp.x();
