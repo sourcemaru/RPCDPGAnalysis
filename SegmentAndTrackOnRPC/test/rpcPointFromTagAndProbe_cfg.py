@@ -19,10 +19,6 @@ process.options = cms.untracked.PSet(
 process.MessageLogger.cerr.FwkReport.reportEvery = 50000
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
-process.source.fileNames = [
-    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/273/450/00000/040B6B30-241C-E611-9ADB-02163E011907.root',
-]
-
 process.goodVertices = cms.EDFilter("VertexSelector",
     src = cms.InputTag("offlinePrimaryVertices"),
     cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.rho < 2"),
@@ -62,4 +58,11 @@ process.p = cms.Path(
   + process.tpPoint + process.tmPoint
   + process.tvPoint
 )
+
+process.source.fileNames = [
+    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/273/450/00000/040B6B30-241C-E611-9ADB-02163E011907.root',
+]
+import FWCore.PythonUtilities.LumiList as LumiList
+process.source.lumisToProcess = LumiList.LumiList(
+    filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-279116_13TeV_PromptReco_Collisions16_JSON_NoL1T_MuonPhys.txt').getVLuminosityBlockRange()
 

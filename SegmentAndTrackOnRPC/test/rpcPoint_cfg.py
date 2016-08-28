@@ -19,10 +19,6 @@ process.options = cms.untracked.PSet(
 process.MessageLogger.cerr.FwkReport.reportEvery = 50000
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
-process.source.fileNames = [
-    'file:/afs/cern.ch/user/j/jhgoh/eos/cms/store/express/Run2016E/ExpressPhysics/FEVT/Express-v2/000/277/305/00000/FED68D83-2F52-E611-A8D3-02163E012568.root'
-]
-
 process.goodVertices = cms.EDFilter("VertexSelector",
     src = cms.InputTag("offlinePrimaryVertices"),
     cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.rho < 2"),
@@ -55,8 +51,10 @@ process.TFileService = cms.Service("TFileService",
 
 process.p = cms.Path(process.rpcPoint+process.tmPoint)
 
-#process.out = cms.OutputModule("PoolOutputModule",
-#    fileName = cms.untracked.string("a.root"),
-#    outputCommands = cms.untracked.vstring("drop *", "keep *_*_*_RPCAnalysis"),
-#)
-#process.outPath = cms.EndPath(process.out)
+process.source.fileNames = [
+    '/store/express/Run2016F/ExpressPhysics/FEVT/Express-v1/000/278/167/0047E384-225A-E611-B0ED-FA163E8359E6.root',
+]
+import FWCore.PythonUtilities.LumiList as LumiList
+process.source.lumisToProcess = LumiList.LumiList(
+    filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-279116_13TeV_PromptReco_Collisions16_JSON_NoL1T_MuonPhys.txt').getVLuminosityBlockRange()
+
