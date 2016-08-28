@@ -167,7 +167,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
         const int di = detId.region()*detId.station(); // Signed disk number
         const int ri = detId.ring();
 
-        const std::string diStr = Form("Disk_%d", di);
+        const std::string diStr = Form("Disk%d", di);
         auto dir_disk = dir.mkdir(diStr);
 
         if ( !h.hXYExpEndcapByDisk_[di] ) {
