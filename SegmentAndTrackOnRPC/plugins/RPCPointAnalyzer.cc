@@ -44,16 +44,16 @@ public:
   struct Hists {
     std::vector<TH1F*> hFloatVars_;
 
-    TH2F* hXYExpBarrel_, * hXYExpEndcapP_, * hXYExpEndcapM_;
-    TH2F* hXYRPCBarrel_, * hXYRPCEndcapP_, * hXYRPCEndcapM_;
-    std::map<int, TH2F*> hXYExpBarrelByWheel_, hXYRPCBarrelByWheel_;
-    std::map<int, TH2F*> hZPhiExpBarrelByStation_, hZPhiExpOnRPCBarrelByStation_;
-    std::map<int, TH2F*> hXYExpEndcapByDisk_, hXYRPCEndcapByDisk_, hXYExpOnRPCEndcapByDisk_;
+    std::map<int, TH2F*> hXYExpBarrelByWheel_, hXYRecBarrelByWheel_;
+    std::map<int, TH2F*> hZPhiExpBarrelByStation_, hZPhiRecBarrelByStation_;
+    std::map<int, TH2F*> hXYExpEndcapByDisk_, hXYRecEndcapByDisk_;
     std::map<int, TH1F*> hResBarrelByWheel_, hResBarrelByStation_, hResEndcapByDisk_;;
     std::map<int, TH1F*> hPullBarrelByWheel_, hPullBarrelByStation_, hPullEndcapByDisk_;;
     std::map<std::string, TH2F*> chToExps_, chToRPCs_;
-    std::map<std::string, TH1F*> chToRollExps_, chToRollRPCs_;
-    std::map<std::string, TH1F*> chToRollExpsNoFid_, chToRollRPCsNoFid_;
+    std::map<int, TH1F*> hSubdetExpBarrelByWheelStation_, hSubdetRecBarrelByWheelStation_;
+    std::map<int, TH1F*> hSubdetExpEndcapByDiskRing_, hSubdetRecEndcapByDiskRing_;
+    std::map<int, TH1F*> hSubdetExpBarrelByWheelStationNoFid_, hSubdetRecBarrelByWheelStationNoFid_;
+    std::map<int, TH1F*> hSubdetExpEndcapByDiskRingNoFid_, hSubdetRecEndcapByDiskRingNoFid_;
   };
 
 private:
@@ -122,19 +122,10 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
     auto dir = fs->mkdir(Form("Run%06d", runNumber));
     auto& h = hists_[runNumber] = Hists();
 
-    auto dir_barrel = dir.mkdir("Barrel");
-    h.hXYExpBarrel_  = dir_barrel.make<TH2F>("hXYExpBarrel" , "Expected points in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
-    h.hXYRPCBarrel_  = dir_barrel.make<TH2F>("hXYRPCBarrel" , "RPC in Barrel;X (cm);Y (cm)" , 500, -1000, 1000, 500, -1000, 1000);
-
-    auto dir_endcapP = dir.mkdir("Endcap+");
-    h.hXYExpEndcapP_ = dir_endcapP.make<TH2F>("hXYExpEndcap+", "Expected points in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
-    h.hXYRPCEndcapP_ = dir_endcapP.make<TH2F>("hXYRPCEndcap+", "RPC in Endcap+;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
-    auto dir_endcapM = dir.mkdir("Endcap-");
-    h.hXYExpEndcapM_ = dir_endcapM.make<TH2F>("hXYExpEndcap-", "Expected points in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
-    h.hXYRPCEndcapM_ = dir_endcapM.make<TH2F>("hXYRPCEndcap-", "RPC in Endcap-;X (cm);Y (cm)", 500, -1000, 1000, 500, -1000, 1000);
-
     edm::ESHandle<RPCGeometry> rpcGeom;
     eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+
+    std::map<int, vector<string> > barrelBinLabels, endcapBinLabels;
 
     for ( const RPCChamber* ch : rpcGeom->chambers() ) {
       const RPCDetId rpcId = ch->id();
@@ -147,32 +138,33 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
         const int se = rpcId.sector();
         const int la = rpcId.layer();
 
-        const string whStr = Form("Wheel_%d", wh);
-        auto dir_wheel = dir_barrel.mkdir(whStr);
+        const string whStr = Form("Wheel%d", wh);
+        auto dir_wheel = dir.mkdir(whStr);
         if ( !h.hXYExpBarrelByWheel_[wh] ) {
-          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>(("hXYExp"+whStr).c_str(), ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-          h.hXYRPCBarrelByWheel_[wh] = dir_wheel.make<TH2F>(("hXYRPC"+whStr).c_str(), ("RPC in "+whStr+";X (cm);Y (cm)").c_str(), 500, -1000, 1000, 500, -1000, 1000);
-          h.hResBarrelByWheel_[wh] = dir_wheel.make<TH1F>(("hRes"+whStr).c_str(), ("Residual in "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
-          h.hPullBarrelByWheel_[wh] = dir_wheel.make<TH1F>(("hPull"+whStr).c_str(), ("Pull in "+whStr+";#DeltaX (cm)").c_str(), 200, -10, 10);
+          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+          h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", ("Expected points matched to RPC in "+whStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+          h.hResBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResX", ("Residual in "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
+          h.hPullBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullX", ("Pull in "+whStr+";#DeltaX (cm)").c_str(), 200, -10, 10);
         }
 
         const int stla = st*10+la;
         if ( !h.hZPhiExpBarrelByStation_[stla] ) {
-          h.hZPhiExpBarrelByStation_[stla] = dir_barrel.make<TH2F>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
-                                                                   Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                                   700, -700, 700, 720, -3.14159265, 3.14159265);
-          h.hZPhiExpOnRPCBarrelByStation_[stla] = dir_barrel.make<TH2F>(Form("hZPhiExpOnRPCBarrel_Station%d_Layer%d", st, la),
-                                                                        Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                                        700, -700, 700, 720, -3.14159265, 3.14159265);
-          h.hResBarrelByStation_[stla] = dir_barrel.make<TH1F>(Form("hResBarrel_Station%d_Layer%d", st, la),
-                                                               Form("Residual in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 500, -50, 50);
-          h.hPullBarrelByStation_[stla] = dir_barrel.make<TH1F>(Form("hPullBarrel_Station%d_Layer%d", st, la),
-                                                                Form("Pull in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 200, -10, 10);
+          h.hZPhiExpBarrelByStation_[stla] = dir.make<TH2F>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
+                                                            Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
+                                                            700, -700, 700, 720, -3.14159265, 3.14159265);
+          h.hZPhiRecBarrelByStation_[stla] = dir.make<TH2F>(Form("hZPhiRecBarrel_Station%d_Layer%d", st, la),
+                                                                 Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
+                                                                 700, -700, 700, 720, -3.14159265, 3.14159265);
+          h.hResBarrelByStation_[stla] = dir.make<TH1F>(Form("hResXBarrel_Station%d_Layer%d", st, la),
+                                                        Form("Residual in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 500, -50, 50);
+          h.hPullBarrelByStation_[stla] = dir.make<TH1F>(Form("hPullXBarrel_Station%d_Layer%d", st, la),
+                                                         Form("Pull in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 200, -10, 10);
         }
-        auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
-        auto dir_station = dir_sector.mkdir(Form("station_%d", st));
 
         if ( doChamberMuography_ ) {
+          auto dir_sector = dir_wheel.mkdir(Form("sector_%d", se));
+          auto dir_station = dir_sector.mkdir(Form("station_%d", st));
+
           const int wh2 = int(std::max(height, width)/2+10);
           h.chToExps_[chName] = dir_station.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
           h.chToRPCs_[chName] = dir_station.make<TH2F>(("RPC_"+chName).c_str(), ("Expected points matched to RPC "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
@@ -180,16 +172,26 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
 
         const auto rolls = ch->rolls();
         const int nRoll = rolls.size();
-        h.chToRollExps_[chName] = dir_station.make<TH1F>(("RollExp_"+chName).c_str(), ("Roll Expected points "+chName).c_str(), nRoll, 1, nRoll+1);
-        h.chToRollRPCs_[chName] = dir_station.make<TH1F>(("RollRPC_"+chName).c_str(), ("RPCs "+chName).c_str(), nRoll, 1, nRoll+1);
-        h.chToRollExpsNoFid_[chName] = dir_station.make<TH1F>(("RollExpNoFid_"+chName).c_str(), ("Roll Expected points no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
-        h.chToRollRPCsNoFid_[chName] = dir_station.make<TH1F>(("RollRPCNoFid_"+chName).c_str(), ("RPCs no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
+
+        const int key = wh+10*st+100*la;
+        if ( !h.hSubdetExpBarrelByWheelStation_[key] ) {
+          const string suffix = Form("Station%d_Layer%d", st, la);
+          h.hSubdetExpBarrelByWheelStation_[key] = dir_wheel.make<TH1F>(
+            ("hSubdetExpBarrel_"+suffix).c_str(), ("Expected points in Barrel "+suffix).c_str(), 50, 1, 51);
+          h.hSubdetRecBarrelByWheelStation_[key] = dir_wheel.make<TH1F>(
+            ("hSubdetRecBarrel_"+suffix).c_str(), ("Expected points matched to RecHit in Barrel "+suffix).c_str(), 50, 1, 51);
+          h.hSubdetExpBarrelByWheelStationNoFid_[key] = dir_wheel.make<TH1F>(
+            ("hSubdetExpBarrel_"+suffix+"_NoFid").c_str(),
+            ("Expected points in Barrel "+suffix+" without fiducial cut").c_str(), 50, 1, 51);
+          h.hSubdetRecBarrelByWheelStationNoFid_[key] = dir_wheel.make<TH1F>(
+            ("hSubdetRecBarrel_"+suffix+"_NoFid").c_str(),
+            ("Expected points matched to RecHit in Barrel "+suffix+"without fiducial cut").c_str(), 50, 1, 51);
+        }
+
         for ( int i=0; i<nRoll; ++i ) {
           const string rollName = RPCGeomServ(rolls[i]->id()).name();
-          h.chToRollExps_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
-          h.chToRollRPCs_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
-          h.chToRollExpsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
-          h.chToRollRPCsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          if ( barrelBinLabels.find(key) == barrelBinLabels.end() ) barrelBinLabels[key] = vector<string>();
+          barrelBinLabels[key].push_back(rollName);
         }
       }
       else {
@@ -197,22 +199,20 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
         const int rn = rpcId.ring();
         const int se = rpcId.sector();
 
-        const std::string diStr = Form("Disk_%d", di);
-        auto dir_disk = rpcId.region() == 1 ? dir_endcapP.mkdir(diStr) : dir_endcapM.mkdir(diStr);
+        const std::string diStr = Form("Disk%d", di);
+        auto dir_disk = dir.mkdir(diStr);
         if ( !h.hXYExpEndcapByDisk_[di] ) {
-          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>(("hXYExp_"+diStr).c_str(), ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
-          h.hXYRPCEndcapByDisk_[di] = dir_disk.make<TH2F>(("hXYRPC_"+diStr).c_str(), ("RPC in "+diStr+";X (cm);Y (cm)").c_str(), 1000, -1000, 1000, 1000, -1000, 1000);
-          h.hXYExpOnRPCEndcapByDisk_[di] = dir_disk.make<TH2F>(("hXYExpOnRPC_"+diStr).c_str(),
-                                                               ("Expected points matched to RPC in "+diStr+";X (cm);Y (cm)").c_str(),
-                                                               1000, -1000, 1000, 1000, -1000, 1000);
-          h.hResEndcapByDisk_[di] = dir_disk.make<TH1F>(("hRes_"+diStr).c_str(), ("Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
-          h.hPullEndcapByDisk_[di] = dir_disk.make<TH1F>(("hPull"+diStr).c_str(), ("Pull in "+diStr+";#DeltaX (cm)").c_str(), 200, -10, 10);
+          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+          h.hXYRecEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYRec", ("Expected points matched to RPC in "+diStr+";X (cm);Y (cm)").c_str(),
+                                                          800, -800, 800, 800, -800, 800);
+          h.hResEndcapByDisk_[di] = dir_disk.make<TH1F>("hResX", ("Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
+          h.hPullEndcapByDisk_[di] = dir_disk.make<TH1F>("hPull", ("Pull in "+diStr+";#DeltaX (cm)").c_str(), 200, -10, 10);
         }
 
-        auto dir_ring = dir_disk.mkdir(Form("ring_%d", rn));
-        auto dir_sector = dir_ring.mkdir(Form("sector_%d", se));
-
         if ( doChamberMuography_ ) {
+          auto dir_ring = dir_disk.mkdir(Form("ring_%d", rn));
+          auto dir_sector = dir_ring.mkdir(Form("sector_%d", se));
+
           const auto bounds = dynamic_cast<const TrapezoidalPlaneBounds&>(ch->surface().bounds());
           const int wh2 = int(std::max(1.*bounds.width(), height)/2+10);
           h.chToExps_[chName] = dir_sector.make<TH2F>(("Exp_"+chName).c_str(), ("Expected points "+chName).c_str(), wh2, -wh2, wh2, wh2, -wh2, wh2);
@@ -221,18 +221,59 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
 
         const auto rolls = ch->rolls();
         const int nRoll = rolls.size();
-        h.chToRollExps_[chName] = dir_sector.make<TH1F>(("RollExp_"+chName).c_str(), ("Roll Expected points "+chName).c_str(), nRoll, 1, nRoll+1);
-        h.chToRollRPCs_[chName] = dir_sector.make<TH1F>(("RollRPC_"+chName).c_str(), ("RPCs "+chName).c_str(), nRoll, 1, nRoll+1);
-        h.chToRollExpsNoFid_[chName] = dir_sector.make<TH1F>(("RollExpNoFid_"+chName).c_str(), ("Roll Expected points no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
-        h.chToRollRPCsNoFid_[chName] = dir_sector.make<TH1F>(("RollRPCNoFid_"+chName).c_str(), ("RPCs no fiducial cut"+chName).c_str(), nRoll, 1, nRoll+1);
+
+        const int key = di+10*rn;
+        if ( !h.hSubdetExpEndcapByDiskRing_[key] ) {
+          const string suffix = Form("Ring%d", rn);
+          h.hSubdetExpEndcapByDiskRing_[key] = dir_disk.make<TH1F>(
+            ("hSubdetExpEndcap_"+suffix).c_str(), ("Expected points in Endcap "+suffix).c_str(), 36*3, 1, 1+36*3);
+          h.hSubdetRecEndcapByDiskRing_[key] = dir_disk.make<TH1F>(
+            ("hSubdetRecEndcap_"+suffix).c_str(), ("Expected points matched to RecHit in Endcap "+suffix).c_str(), 36*3, 1, 1+36*3);
+          h.hSubdetExpEndcapByDiskRingNoFid_[key] = dir_disk.make<TH1F>(
+            ("hSubdetExpEndcap_"+suffix+"_NoFid").c_str(),
+            ("Expected points in Endcap "+suffix+" without fiducial cut").c_str(), 36*3, 1, 1+36*3);
+          h.hSubdetRecEndcapByDiskRingNoFid_[key] = dir_disk.make<TH1F>(
+            ("hSubdetRecEndcap_"+suffix+"_NoFid").c_str(),
+            ("Expected points matched to RecHit in Endcap "+suffix+" without fiducial cut").c_str(), 36*3, 1, 1+36*3);
+        }
+
         for ( int i=0; i<nRoll; ++i ) {
           const string rollName = RPCGeomServ(rolls[i]->id()).name();
-          h.chToRollExps_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
-          h.chToRollRPCs_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
-          h.chToRollExpsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
-          h.chToRollRPCsNoFid_[chName]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+          if ( endcapBinLabels.find(key) == endcapBinLabels.end() ) endcapBinLabels[key] = vector<string>();
+          endcapBinLabels[key].push_back(rollName);
         }
       }
+    }
+
+    for ( auto x : barrelBinLabels ) {
+      const int key = x.first;
+      sort(x.second.begin(), x.second.end());
+      for ( int i=0, n=x.second.size(); i<n; ++i ) {
+        const auto rollName = x.second[i];
+        h.hSubdetExpBarrelByWheelStation_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        h.hSubdetRecBarrelByWheelStation_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        h.hSubdetExpBarrelByWheelStationNoFid_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        h.hSubdetRecBarrelByWheelStationNoFid_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+      }
+      h.hSubdetExpBarrelByWheelStation_[key]->LabelsDeflate("X");
+      h.hSubdetRecBarrelByWheelStation_[key]->LabelsDeflate("X");
+      h.hSubdetExpBarrelByWheelStationNoFid_[key]->LabelsDeflate("X");
+      h.hSubdetRecBarrelByWheelStationNoFid_[key]->LabelsDeflate("X");
+    }
+    for ( auto x : endcapBinLabels ) {
+      const int key = x.first;
+      sort(x.second.begin(), x.second.end());
+      for ( int i=0, n=x.second.size(); i<n; ++i ) {
+        const auto rollName = x.second[i];
+        h.hSubdetExpEndcapByDiskRing_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        h.hSubdetRecEndcapByDiskRing_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        h.hSubdetExpEndcapByDiskRingNoFid_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+        h.hSubdetRecEndcapByDiskRingNoFid_[key]->GetXaxis()->SetBinLabel(i+1, rollName.c_str());
+      }
+      h.hSubdetExpEndcapByDiskRing_[key]->LabelsDeflate("X");
+      h.hSubdetRecEndcapByDiskRing_[key]->LabelsDeflate("X");
+      h.hSubdetExpEndcapByDiskRingNoFid_[key]->LabelsDeflate("X");
+      h.hSubdetRecEndcapByDiskRingNoFid_[key]->LabelsDeflate("X");
     }
   }
 }
@@ -381,28 +422,20 @@ void RPCPointAnalyzer::fillHistograms(const std::map<RPCDetId, RPCBarrelData>& b
     const string rollName = rpcName.name();
     auto hExpsItr = h.chToExps_.find(chName);
     auto hRPCsItr = h.chToRPCs_.find(chName);
-    auto hRollExpsItr = h.chToRollExps_.find(chName);
-    auto hRollRPCsItr = h.chToRollRPCs_.find(chName);
-    auto hRollExpsNoFidItr = h.chToRollExpsNoFid_.find(chName);
-    auto hRollRPCsNoFidItr = h.chToRollRPCsNoFid_.find(chName);
     if ( doChamberMuography_ and hExpsItr == h.chToExps_.end() ) continue;
     if ( doChamberMuography_ and hRPCsItr == h.chToRPCs_.end() ) continue;
-    if ( hRollExpsItr == h.chToRollExps_.end() ) continue;
-    if ( hRollRPCsItr == h.chToRollRPCs_.end() ) continue;
-    if ( hRollExpsNoFidItr == h.chToRollExpsNoFid_.end() ) continue;
-    if ( hRollRPCsNoFidItr == h.chToRollRPCsNoFid_.end() ) continue;
 
     const int stla = id.station()*10+id.layer();
+    const int key = id.ring()+10*id.station()+100*id.layer();
+    const int binRoll = h.hSubdetExpBarrelByWheelStationNoFid_[key]->GetXaxis()->FindBin(rollName.c_str());
 
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
-      h.hXYExpBarrel_->Fill(dat.expGx[i], dat.expGy[i]);
       h.hZPhiExpBarrelByStation_[stla]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
       h.hXYExpBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
       if ( doChamberMuography_ ) hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
 
-      const int binRoll = hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str());
-      hRollExpsNoFidItr->second->Fill(binRoll);
-      if ( dat.isInFiducial[i] ) hRollExpsItr->second->Fill(binRoll);
+      h.hSubdetExpBarrelByWheelStationNoFid_[key]->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) h.hSubdetExpBarrelByWheelStation_[key]->Fill(binRoll);
 
       int matched = -1;
       double dx = 50; //dat.rpcLex[i]*3;
@@ -413,17 +446,16 @@ void RPCPointAnalyzer::fillHistograms(const std::map<RPCDetId, RPCBarrelData>& b
       if ( matched == -1 ) continue;
       dx = dat.rpcLx[matched]-dat.expLx[i];
 
-      h.hXYRPCBarrel_->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
-      h.hZPhiExpOnRPCBarrelByStation_[stla]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
-      h.hXYRPCBarrelByWheel_[id.ring()]->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
+      h.hXYRecBarrelByWheel_[id.ring()]->Fill(dat.expGx[i], dat.expGy[i]);
+      h.hZPhiRecBarrelByStation_[stla]->Fill(dat.expGz[i], atan2(dat.expGy[i], dat.expGx[i]));
       if ( doChamberMuography_ ) hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
       h.hResBarrelByWheel_[id.ring()]->Fill(dx);
       h.hResBarrelByStation_[stla]->Fill(dx);
       h.hPullBarrelByWheel_[id.ring()]->Fill(dx/dat.rpcLex[matched]);
       h.hPullBarrelByStation_[stla]->Fill(dx/dat.rpcLex[matched]);
 
-      hRollRPCsNoFidItr->second->Fill(binRoll);
-      if ( dat.isInFiducial[i] ) hRollRPCsItr->second->Fill(binRoll);
+      h.hSubdetRecBarrelByWheelStationNoFid_[key]->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) h.hSubdetRecBarrelByWheelStation_[key]->Fill(binRoll);
     }
   }
   for ( auto itr = endcapDataMap.begin(); itr != endcapDataMap.end(); ++itr ) {
@@ -435,28 +467,19 @@ void RPCPointAnalyzer::fillHistograms(const std::map<RPCDetId, RPCBarrelData>& b
     const string rollName = rpcName.name();
     auto hExpsItr = h.chToExps_.find(chName);
     auto hRPCsItr = h.chToRPCs_.find(chName);
-    auto hRollExpsItr = h.chToRollExps_.find(chName);
-    auto hRollRPCsItr = h.chToRollRPCs_.find(chName);
-    auto hRollExpsNoFidItr = h.chToRollExpsNoFid_.find(chName);
-    auto hRollRPCsNoFidItr = h.chToRollRPCsNoFid_.find(chName);
     if ( doChamberMuography_ and hExpsItr == h.chToExps_.end() ) continue;
     if ( doChamberMuography_ and hRPCsItr == h.chToRPCs_.end() ) continue;
-    if ( hRollExpsItr == h.chToRollExps_.end() ) continue;
-    if ( hRollRPCsItr == h.chToRollRPCs_.end() ) continue;
-    if ( hRollExpsNoFidItr == h.chToRollExpsNoFid_.end() ) continue;
-    if ( hRollRPCsNoFidItr == h.chToRollRPCsNoFid_.end() ) continue;
 
     const int di = id.region()*id.station();
+    const int key = di+10*id.ring();
+    const int binRoll = h.hSubdetExpEndcapByDiskRing_[key]->GetXaxis()->FindBin(rollName.c_str());
 
     for ( int i=0, n=dat.expLx.size(); i<n; ++i ) {
-      if      ( id.region() == +1 ) h.hXYExpEndcapP_->Fill(dat.expGx[i], dat.expGy[i]);
-      else if ( id.region() == -1 ) h.hXYExpEndcapM_->Fill(dat.expGx[i], dat.expGy[i]);
       h.hXYExpEndcapByDisk_[di]->Fill(dat.expGx[i], dat.expGy[i]);
       if ( doChamberMuography_ ) hExpsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
 
-      const int binRoll = hRollExpsItr->second->GetXaxis()->FindBin(rollName.c_str());
-      hRollExpsNoFidItr->second->Fill(binRoll);
-      if ( dat.isInFiducial[i] ) hRollExpsItr->second->Fill(binRoll);
+      h.hSubdetExpEndcapByDiskRingNoFid_[key]->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) h.hSubdetExpEndcapByDiskRing_[key]->Fill(binRoll);
 
       int matched = -1;
       double dx = 50; //dat.rpcLex[i]*3;
@@ -467,16 +490,13 @@ void RPCPointAnalyzer::fillHistograms(const std::map<RPCDetId, RPCBarrelData>& b
       if ( matched == -1 ) continue;
       dx = dat.rpcLx[matched]-dat.expLx[i];
 
-      if      ( id.region() == +1 ) h.hXYRPCEndcapP_->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
-      else if ( id.region() == -1 ) h.hXYRPCEndcapM_->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
-      h.hXYRPCEndcapByDisk_[di]->Fill(dat.rpcGx[matched], dat.rpcGy[matched]);
-      h.hXYExpOnRPCEndcapByDisk_[di]->Fill(dat.expGx[i], dat.expGy[i]);
+      h.hXYRecEndcapByDisk_[di]->Fill(dat.expGx[i], dat.expGy[i]);
       if ( doChamberMuography_ ) hRPCsItr->second->Fill(dat.expLx[i], dat.expLy[i]);
       h.hResEndcapByDisk_[di]->Fill(dx);
       h.hPullEndcapByDisk_[di]->Fill(dx/dat.rpcLex[matched]);
 
-      hRollRPCsNoFidItr->second->Fill(binRoll);
-      if ( dat.isInFiducial[i] ) hRollRPCsItr->second->Fill(binRoll);
+      h.hSubdetRecEndcapByDiskRingNoFid_[key]->Fill(binRoll);
+      if ( dat.isInFiducial[i] ) h.hSubdetRecEndcapByDiskRing_[key]->Fill(binRoll);
     }
   }
 }

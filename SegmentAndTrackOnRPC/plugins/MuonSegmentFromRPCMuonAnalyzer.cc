@@ -113,12 +113,12 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
       const string whStr = Form("Wheel%d", wh);
       auto dir_wheel = dir.mkdir(whStr);
       if ( !h.hXYExpBarrelByWheel_[wh] ) {
-        h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", "Expected points;X (cm);Y (cm)", 800, -800, 800, 800, -800, 800);
-        h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", "Expected points matched to Segment;X (cm);Y (cm)", 800, -800, 800, 800, -800, 800);
-        h.hResXBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResX", "X Residual;#DeltaX (cm)", 500, -50, 50);
-        h.hResYBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResY", "Y Residual;#DeltaY (cm)", 500, -50, 50);
-        h.hPullXBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullX", "X Pull;Pull X", 200, -10, 10);
-        h.hPullYBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullY", "Y Pull;Pull Y", 200, -10, 10);
+        h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+        h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", ("Expected points matched to Segment "+whStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+        h.hResXBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResX", ("X Residual "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
+        h.hResYBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResY", ("Y Residual "+whStr+";#DeltaY (cm)").c_str(), 500, -50, 50);
+        h.hPullXBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullX", ("X Pull "+whStr+";Pull X").c_str(), 200, -10, 10);
+        h.hPullYBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullY", ("Y Pull "+whStr+";Pull Y").c_str(), 200, -10, 10);
       }
 
       if ( !h.hZPhiExpBarrelByStation_[st] ) {
@@ -143,15 +143,15 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
       if ( !h.hSubdetExpBarrelByWheelStation_[key] ) {
         const string suffix = Form("Station%d", st);
         h.hSubdetExpBarrelByWheelStation_[key] = dir_wheel.make<TH1F>(
-          ("hSubdetExpBarrel_"+suffix).c_str(), ("Expected points in Barrel "+suffix+";Sector").c_str(), 12, 1, 13);
+          ("hSubdetExpBarrel_"+suffix).c_str(), ("Expected points in Barrel "+whStr+" "+suffix+";Sector").c_str(), 12, 1, 13);
         h.hSubdetRecBarrelByWheelStation_[key] = dir_wheel.make<TH1F>(
-          ("hSubdetRecBarrel_"+suffix).c_str(), ("Expected points matched to Segment in Barrel "+suffix+";Sector").c_str(), 12, 1, 13);
+          ("hSubdetRecBarrel_"+suffix).c_str(), ("Expected points matched to Segment in Barrel "+whStr+" "+suffix+";Sector").c_str(), 12, 1, 13);
         h.hSubdetExpBarrelByWheelStationNoFid_[key] = dir_wheel.make<TH1F>(
           ("hSubdetExpBarrel_"+suffix+"_NoFid").c_str(),
-          ("Expected points in Barrel "+suffix+" without fiducial cut;Sector").c_str(), 12, 1, 13);
+          ("Expected points in Barrel "+whStr+" "+suffix+" without fiducial cut;Sector").c_str(), 12, 1, 13);
         h.hSubdetRecBarrelByWheelStationNoFid_[key] = dir_wheel.make<TH1F>(
           ("hSubdetRecBarrel_"+suffix+"_NoFid").c_str(),
-          ("Expected points matched to Segment in Barrel "+suffix+" without fiducial cut;Sector").c_str(), 12, 1, 13);
+          ("Expected points matched to Segment in Barrel "+whStr+" "+suffix+" without fiducial cut;Sector").c_str(), 12, 1, 13);
       }
     } // Booking DT chambers
 
@@ -168,27 +168,27 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
       auto dir_disk = dir.mkdir(diStr);
 
       if ( !h.hXYExpEndcapByDisk_[di] ) {
-        h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", "Expected points;X (cm);Y (cm)", 800, -800, 800, 800, -800, 800);
-        h.hXYRecEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYRec", "Expected points matched to Segment;X (cm);Y (cm)", 800, -800, 800, 800, -800, 800);
-        h.hResXEndcapByDisk_[di] = dir_disk.make<TH1F>("hResX", "X Residual;#DeltaX (cm)", 500, -50, 50);
-        h.hResYEndcapByDisk_[di] = dir_disk.make<TH1F>("hResY", "Y Residual;#DeltaY (cm)", 500, -50, 50);
-        h.hPullXEndcapByDisk_[di] = dir_disk.make<TH1F>("hPullX", "X Pull;Pull X", 200, -10, 10);
-        h.hPullYEndcapByDisk_[di] = dir_disk.make<TH1F>("hPullY", "Y Pull;Pull Y", 200, -10, 10);
+        h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+        h.hXYRecEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYRec", ("Expected points matched to Segment "+diStr+";X (cm);Y (cm)").c_str(), 800, -800, 800, 800, -800, 800);
+        h.hResXEndcapByDisk_[di] = dir_disk.make<TH1F>("hResX", ("X Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
+        h.hResYEndcapByDisk_[di] = dir_disk.make<TH1F>("hResY", ("Y Residual "+diStr+";#DeltaY (cm)").c_str(), 500, -50, 50);
+        h.hPullXEndcapByDisk_[di] = dir_disk.make<TH1F>("hPullX", ("X Pull "+diStr+";Pull X").c_str(), 200, -10, 10);
+        h.hPullYEndcapByDisk_[di] = dir_disk.make<TH1F>("hPullY", ("Y Pull "+diStr+";Pull Y").c_str(), 200, -10, 10);
       }
 
       const int key = di+10*ri;
       if ( !h.hSubdetExpEndcapByDiskRing_[key] ) {
-        const string suffix = Form("Disk%d_Ring%d", di, ri);
+        const string suffix = Form("Ring%d", ri);
         h.hSubdetExpEndcapByDiskRing_[key] = dir_disk.make<TH1F>(
-          ("hSubdetExpEndcap_"+suffix).c_str(), ("Expected points in Endcap "+suffix+";Chamber").c_str(), 36, 1, 37);
+          ("hSubdetExpEndcap_"+suffix).c_str(), ("Expected points in Endcap "+diStr+" "+suffix+";Chamber").c_str(), 36, 1, 37);
         h.hSubdetRecEndcapByDiskRing_[key] = dir_disk.make<TH1F>(
-          ("hSubdetRecEndcap_"+suffix).c_str(), ("Expected points matched to Segment in Endcap "+suffix+";Chamber").c_str(), 36, 1, 37);
+          ("hSubdetRecEndcap_"+suffix).c_str(), ("Expected points matched to Segment in Endcap "+diStr+" "+suffix+";Chamber").c_str(), 36, 1, 37);
         h.hSubdetExpEndcapByDiskRingNoFid_[key] = dir_disk.make<TH1F>(
           ("hSubdetExpEndcap_"+suffix+"_NoFid").c_str(),
-          ("Expected points in Endcap "+suffix+" without fiducial cut;Chamber").c_str(), 36, 1, 37);
+          ("Expected points in Endcap "+diStr+" "+suffix+" without fiducial cut;Chamber").c_str(), 36, 1, 37);
         h.hSubdetRecEndcapByDiskRingNoFid_[key] = dir_disk.make<TH1F>(
           ("hSubdetRecEndcap_"+suffix+"_NoFid").c_str(),
-          ("Expected points matched to Segment in Endcap "+suffix+" without fiducial cut;Chamber").c_str(), 36, 1, 37);
+          ("Expected points matched to Segment in Endcap "+diStr+" "+suffix+" without fiducial cut;Chamber").c_str(), 36, 1, 37);
       }
     } // Booking CSC chambers
   }
