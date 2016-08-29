@@ -132,7 +132,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
         h.hResXBarrelByStation_[st] = dir.make<TH1F>(
           ("hResXBarrel_"+suffix).c_str(), ("X Residual in Barrel "+suffix+";#DeltaX (cm)").c_str(), 500, -50, 50);
         h.hResYBarrelByStation_[st] = dir.make<TH1F>(
-          ("hResYBarrel_"+suffix).c_str(), ("X Residual in Barrel "+suffix+";#DeltaY (cm)").c_str(), 500, -50, 50);
+          ("hResYBarrel_"+suffix).c_str(), ("Y Residual in Barrel "+suffix+";#DeltaY (cm)").c_str(), 500, -50, 50);
         h.hPullXBarrelByStation_[st] = dir.make<TH1F>(
           ("hPullXBarrel_"+suffix).c_str(), ("X Pull in Barrel "+suffix+";Pull X").c_str(), 200, -10, 10);
         h.hPullYBarrelByStation_[st] = dir.make<TH1F>(
