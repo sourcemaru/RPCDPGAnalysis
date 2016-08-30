@@ -141,8 +141,8 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
         const string whStr = Form("Wheel%d", wh);
         auto dir_wheel = dir.mkdir(whStr);
         if ( !h.hXYExpBarrelByWheel_[wh] ) {
-          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
-          h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", ("Expected points matched to RPC in "+whStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
+          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
+          h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", ("Expected points matched to RPC in "+whStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
           h.hResBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResX", ("Residual in "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
           h.hPullBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullX", ("Pull in "+whStr+";#DeltaX (cm)").c_str(), 200, -10, 10);
         }
@@ -151,10 +151,10 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
         if ( !h.hZPhiExpBarrelByStation_[stla] ) {
           h.hZPhiExpBarrelByStation_[stla] = dir.make<TH2F>(Form("hZPhiExpBarrel_Station%d_Layer%d", st, la),
                                                             Form("Expected points in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                            1400, -700, 700, 360*3, -3.14159265, 3.14159265);
+                                                            2800, -700, 700, 360*5, -3.14159265, 3.14159265);
           h.hZPhiRecBarrelByStation_[stla] = dir.make<TH2F>(Form("hZPhiRecBarrel_Station%d_Layer%d", st, la),
                                                                  Form("Expected Points matched to RPC in Barrel station %d layer %d;Z (cm);#phi", st, la),
-                                                                 1400, -700, 700, 360*3, -3.14159265, 3.14159265);
+                                                                 2800, -700, 700, 360*5, -3.14159265, 3.14159265);
           h.hResBarrelByStation_[stla] = dir.make<TH1F>(Form("hResXBarrel_Station%d_Layer%d", st, la),
                                                         Form("Residual in Barrel Station %d layer %d;#DeltaX (cm)", st, la), 500, -50, 50);
           h.hPullBarrelByStation_[stla] = dir.make<TH1F>(Form("hPullXBarrel_Station%d_Layer%d", st, la),
@@ -202,9 +202,9 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
         const std::string diStr = Form("Disk%d", di);
         auto dir_disk = dir.mkdir(diStr);
         if ( !h.hXYExpEndcapByDisk_[di] ) {
-          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
+          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
           h.hXYRecEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYRec", ("Expected points matched to RPC in "+diStr+";X (cm);Y (cm)").c_str(),
-                                                          1600, -800, 800, 1600, -800, 800);
+                                                          3200, -800, 800, 3200, -800, 800);
           h.hResEndcapByDisk_[di] = dir_disk.make<TH1F>("hResX", ("Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
           h.hPullEndcapByDisk_[di] = dir_disk.make<TH1F>("hPull", ("Pull in "+diStr+";#DeltaX (cm)").c_str(), 200, -10, 10);
         }

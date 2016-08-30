@@ -115,8 +115,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
         const string whStr = Form("Wheel%d", wh);
         auto dir_wheel = dir.mkdir(whStr);
         if ( !h.hXYExpBarrelByWheel_[wh] ) {
-          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
-          h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", ("Expected points matched to RecHit "+whStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
+          h.hXYExpBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYExp", ("Expected points "+whStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
+          h.hXYRecBarrelByWheel_[wh] = dir_wheel.make<TH2F>("hXYRec", ("Expected points matched to RecHit "+whStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
           h.hResXBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResX", ("X Residual "+whStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
           h.hResYBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hResY", ("Y Residual "+whStr+";#DeltaY (cm)").c_str(), 500, -50, 50);
           h.hPullXBarrelByWheel_[wh] = dir_wheel.make<TH1F>("hPullX", ("X Pull "+whStr+";Pull X").c_str(), 200, -10, 10);
@@ -128,10 +128,10 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
           const string suffix = Form("Station%d_Layer%d", st, la);
           h.hZPhiExpBarrelByStation_[stla] = dir.make<TH2F>(
             ("hZPhiExpBarrel_"+suffix).c_str(), ("Expected points in "+suffix+";Z (cm);#phi").c_str(),
-            1400, -700, 700, 360*3, -3.14159265, 3.14159265);
+            2800, -700, 700, 360*5, -3.14159265, 3.14159265);
           h.hZPhiRecBarrelByStation_[stla] = dir.make<TH2F>(
             ("hZPhiRecBarrel_"+suffix).c_str(), ("Expected Points matched to RecHit in Barrel "+suffix+";Z (cm);#phi").c_str(),
-            1400, -700, 700, 360*3, -3.14159265, 3.14159265);
+            2800, -700, 700, 360*5, -3.14159265, 3.14159265);
           h.hResXBarrelByStation_[stla] = dir.make<TH1F>(
             ("hResXBarrel_"+suffix).c_str(), ("X Residual in "+suffix+";#DeltaX (cm)").c_str(), 500, -50, 50);
           h.hResYBarrelByStation_[stla] = dir.make<TH1F>(
@@ -171,8 +171,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
         auto dir_disk = dir.mkdir(diStr);
 
         if ( !h.hXYExpEndcapByDisk_[di] ) {
-          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
-          h.hXYRecEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYRec", ("Expected points matched to RecHit "+diStr+";X (cm);Y (cm)").c_str(), 1600, -800, 800, 1600, -800, 800);
+          h.hXYExpEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYExp", ("Expected points "+diStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
+          h.hXYRecEndcapByDisk_[di] = dir_disk.make<TH2F>("hXYRec", ("Expected points matched to RecHit "+diStr+";X (cm);Y (cm)").c_str(), 3200, -800, 800, 3200, -800, 800);
           h.hResXEndcapByDisk_[di] = dir_disk.make<TH1F>("hResX", ("X Residual "+diStr+";#DeltaX (cm)").c_str(), 500, -50, 50);
           h.hResYEndcapByDisk_[di] = dir_disk.make<TH1F>("hResY", ("Y Residual "+diStr+";#DeltaY (cm)").c_str(), 500, -50, 50);
           h.hPullXEndcapByDisk_[di] = dir_disk.make<TH1F>("hPullX", ("X Pull "+diStr+";Pull X").c_str(), 200, -10, 10);
