@@ -20,6 +20,7 @@ config.section_("Site")
 config.Site.storageSite = 'T2_CH_CERN'
 
 config.Data.splitting = 'LumiBased'
+#config.Data.unitsPerJob = 1
 config.Data.unitsPerJob = 40
 
 ## Something that can be changed frequently
@@ -27,12 +28,13 @@ import os
 if 'DATASET' in os.environ: dataset = os.environ['DATASET']
 else: dataset = "Run2016B"
 
+primDSet = "SingleMuon"
+#primDSet = "JetHT"
 if dataset[:-1] == "Run2016":
     if dataset[-1] in "BCDE":
-        #/MET/Run2016B-01Jul2016-v2/AOD
-        config.Data.inputDataset = '/MET/%s-PromptReco-v2/AOD' % dataset
+        config.Data.inputDataset = '/%s/%s-PromptReco-v2/AOD' % (primDSet, dataset)
     else:
-        config.Data.inputDataset = '/MET/%s-PromptReco-v1/AOD' % dataset
+        config.Data.inputDataset = '/%s/%s-PromptReco-v1/AOD' % (primDSet, dataset)
 
 username = os.environ['USER']
 
@@ -40,6 +42,7 @@ from datetime import datetime as dt
 submitdate = dt.now().strftime('%Y%m%d')
 
 config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-279116_13TeV_PromptReco_Collisions16_JSON_NoL1T_MuonPhys.txt'
+#config.Data.lumiMask = 'notFinishedLumis.json'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s_1' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s" % dataset
 
