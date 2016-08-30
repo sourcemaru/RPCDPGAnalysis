@@ -21,7 +21,7 @@ config.Site.storageSite = 'T2_CH_CERN'
 
 config.Data.splitting = 'LumiBased'
 #config.Data.unitsPerJob = 1
-config.Data.unitsPerJob = 40
+config.Data.unitsPerJob = 20
 
 ## Something that can be changed frequently
 import os

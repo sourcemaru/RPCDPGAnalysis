@@ -6,6 +6,7 @@ padW = 500
 #mode = "tpPoint"
 #mode = "efficienyRPCHit"
 #mode = "efficiencySegment"
+#mode = "rpcExt"
 mode = "rpcPoint"
 
 from ROOT import *
@@ -14,7 +15,9 @@ gStyle.SetOptStat(0)
 
 #f = TFile("SingleMuon_Run2016BCDE.root")
 #f = TFile("SingleMuon_273730.root")
-f = TFile("RPCMonitor_273730.root")
+#f = TFile("SingleMuon_273730_VF_NoTnP.root")
+#f = TFile("SingleMuon_273730_VF_TnP.root")
+f = TFile("RPCMonitor_273730_VF.root")
 #f = TFile("MET_Run2016BCDE.root")
 
 hBarrel = [
@@ -148,6 +151,7 @@ for i, (hDenName, hNumName) in enumerate(hEndcapN):
     hEff.Draw("COLZ")
     hEff.GetXaxis().SetRangeUser(-800, 800)
     hEff.GetYaxis().SetRangeUser(-800, 800)
+maxMeanZ = max(1, maxMeanZ)
 
 gStyle.SetPalette(kBird)
 for h in hDens:

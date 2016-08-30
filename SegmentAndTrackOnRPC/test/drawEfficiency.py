@@ -2,13 +2,15 @@
 
 mode = "RPC"
 #mode = "DTCSC"
-dataset = "SingleMuon"
-era = "Run2016BCDE"
-#era = "273730"
+#dataset = "SingleMuon"
+dataset = "RPCMonitor"
+#era = "Run2016BCDE"
+era = "273730_VF_1"
 
 if mode == "RPC":
-    #module = "rpcPoint"
-    module = "tpPoint"
+    #module = "rpcExt"
+    module = "rpcPoint"
+    #module = "tpPoint"
     #module = "tvPoint"
     #module = "tmPoint"
     chTitle = "Rolls"
@@ -16,8 +18,9 @@ else:
     module = "efficiencySegment"
     chTitle = "Chambers"
 
-if era == "Run2016BCDE": lumi = 16.094782029242 
-elif era == "273730":    lumi = 0.112
+lumiVal = 0.
+if era == "Run2016BCDE": lumiVal = 16.094782029242 
+elif era == "273730":    lumiVal = 0.112
 
 run = 0#274442
 binW, xmin, xmax = 0.5, 70.5, 100
@@ -118,7 +121,7 @@ for i in range(2):
     header.Draw()
 
     lumi = TLatex().DrawLatexNDC(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                                 "%.1f fb^{-1} (13 TeV)" % lumi)
+                                 "%.1f fb^{-1} (13 TeV)" % lumiVal)
     lumi.SetTextAlign(31)
     lumi.SetTextFont(42)
 
