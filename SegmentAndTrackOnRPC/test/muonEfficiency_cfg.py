@@ -25,7 +25,7 @@ process.goodVertices = cms.EDFilter("VertexSelector",
     filter = cms.bool(True),
 )
 
-process.efficiencySegment = cms.EDAnalyzer("MuonSegmentFromRPCMuonAnalyzer",
+process.segmentExt = cms.EDAnalyzer("MuonSegmentFromRPCMuonAnalyzer",
     doHistByRun = cms.untracked.bool(False),
     vertex = cms.InputTag("goodVertices"),
     dtSegments = cms.InputTag("dt4DSegments"),
@@ -35,7 +35,7 @@ process.efficiencySegment = cms.EDAnalyzer("MuonSegmentFromRPCMuonAnalyzer",
     maxMuonAbsEta = cms.double(2.5),
 )
 
-process.efficienyRPCHit = cms.EDAnalyzer("MuonHitFromTrackerMuonAnalyzer",
+process.rpcExt = cms.EDAnalyzer("MuonHitFromTrackerMuonAnalyzer",
     doHistByRun = cms.untracked.bool(False),
     vertex = cms.InputTag("goodVertices"),
     rpcRecHits = cms.InputTag("rpcRecHits"),
@@ -63,13 +63,33 @@ process.trigger = cms.EDFilter("HLTHighLevel",
     ),
 )
 
+process.probeMuons = cms.EDProducer("RPCTrackerMuonProbeProducer",
+    vertex = cms.InputTag("offlinePrimaryVertices"),
+    muons = cms.InputTag("muons"),
+    minMuonPt = cms.double(25),
+    maxMuonAbsEta = cms.double(2.4),
+    maxMuonRelIso = cms.double(0.25), # Loose isolation ~98% eff. (tight=0.15)
+    minTrackPt = cms.double(20),
+    maxTrackAbsEta = cms.double(2.1),
+    doCheckSign = cms.bool(True),
+    minDR = cms.double(0.1),
+    minMass = cms.double(70),
+    maxMass = cms.double(110),
+    triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
+    triggerResults = cms.InputTag("TriggerResults::HLT"),
+    triggerPaths = cms.vstring("HLT_IsoMu22", "HLT_IsoMu22_eta2p1", "HLT_IsoTkMu22", "HLT_Mu50", "HLT_TkMu50"),
+)
+process.segmentExt.muons = "probeMuons"
+process.rpcExt.muons = "probeMuons"
+
 process.p = cms.Path(
-    process.trigger
-  * process.efficiencySegment+process.efficienyRPCHit
+#    process.trigger
+    process.segmentExt + process.rpcExt
 )
 
 process.source.fileNames = [
-    '/store/data/Run2016B/MET/AOD/01Jul2016-v1/20000/B0368187-794F-E611-9A86-02163E01156C.root',
+    #'/store/data/Run2016B/MET/AOD/01Jul2016-v1/20000/B0368187-794F-E611-9A86-02163E01156C.root',
+    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/273/450/00000/040B6B30-241C-E611-9ADB-02163E011907.root',
 ]
 import FWCore.PythonUtilities.LumiList as LumiList
 process.source.lumisToProcess = LumiList.LumiList(
