@@ -3,33 +3,39 @@
 run = 0
 padW = 500
 #mode = "tmPoint"
-mode = "tpPoint"
+#mode = "tpPoint"
+#mode = "efficienyRPCHit"
+#mode = "efficiencySegment"
+mode = "rpcPoint"
 
 from ROOT import *
 from array import array
 gStyle.SetOptStat(0)
 
-f = TFile("20160806/SingleMuon_Run2016BCD.root")
+#f = TFile("SingleMuon_Run2016BCDE.root")
+#f = TFile("SingleMuon_273730.root")
+f = TFile("RPCMonitor_273730.root")
+#f = TFile("MET_Run2016BCDE.root")
 
 hBarrel = [
-  ("Barrel/hZPhiExpBarrel_Station1_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer1"),
-  ("Barrel/hZPhiExpBarrel_Station2_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station2_Layer1"),
-  ("Barrel/hZPhiExpBarrel_Station3_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station3_Layer1"),
-  ("Barrel/hZPhiExpBarrel_Station1_Layer2", "Barrel/hZPhiExpOnRPCBarrel_Station1_Layer2"),
-  ("Barrel/hZPhiExpBarrel_Station2_Layer2", "Barrel/hZPhiExpOnRPCBarrel_Station2_Layer2"),
-  ("Barrel/hZPhiExpBarrel_Station4_Layer1", "Barrel/hZPhiExpOnRPCBarrel_Station4_Layer1"),
+  ("hZPhiExpBarrel_Station1_Layer1", "hZPhiRecBarrel_Station1_Layer1"),
+  ("hZPhiExpBarrel_Station2_Layer1", "hZPhiRecBarrel_Station2_Layer1"),
+  ("hZPhiExpBarrel_Station3_Layer1", "hZPhiRecBarrel_Station3_Layer1"),
+  ("hZPhiExpBarrel_Station1_Layer2", "hZPhiRecBarrel_Station1_Layer2"),
+  ("hZPhiExpBarrel_Station2_Layer2", "hZPhiRecBarrel_Station2_Layer2"),
+  ("hZPhiExpBarrel_Station4_Layer1", "hZPhiRecBarrel_Station4_Layer1"),
 ]
 hEndcapP = [
-  ("Endcap+/Disk_1/hXYExp_Disk_1", "Endcap+/Disk_1/hXYExpOnRPC_Disk_1"),
-  ("Endcap+/Disk_2/hXYExp_Disk_2", "Endcap+/Disk_2/hXYExpOnRPC_Disk_2"),
-  ("Endcap+/Disk_3/hXYExp_Disk_3", "Endcap+/Disk_3/hXYExpOnRPC_Disk_3"),
-  ("Endcap+/Disk_4/hXYExp_Disk_4", "Endcap+/Disk_4/hXYExpOnRPC_Disk_4"),
+  ("Disk1/hXYExp", "Disk1/hXYRec"),
+  ("Disk2/hXYExp", "Disk2/hXYRec"),
+  ("Disk3/hXYExp", "Disk3/hXYRec"),
+  ("Disk4/hXYExp", "Disk4/hXYRec"),
 ]
 hEndcapN = [
-  ("Endcap-/Disk_-1/hXYExp_Disk_-1", "Endcap-/Disk_-1/hXYExpOnRPC_Disk_-1"),
-  ("Endcap-/Disk_-2/hXYExp_Disk_-2", "Endcap-/Disk_-2/hXYExpOnRPC_Disk_-2"),
-  ("Endcap-/Disk_-3/hXYExp_Disk_-3", "Endcap-/Disk_-3/hXYExpOnRPC_Disk_-3"),
-  ("Endcap-/Disk_-4/hXYExp_Disk_-4", "Endcap-/Disk_-4/hXYExpOnRPC_Disk_-4"),
+  ("Disk-1/hXYExp", "Disk-1/hXYRec"),
+  ("Disk-2/hXYExp", "Disk-2/hXYRec"),
+  ("Disk-3/hXYExp", "Disk-3/hXYRec"),
+  ("Disk-4/hXYExp", "Disk-4/hXYRec"),
 ]
 
 hDens, hEffs = [], []
