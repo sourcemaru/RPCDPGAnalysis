@@ -7,7 +7,8 @@ config.General.transferOutputs = True
 
 config.section_("JobType")
 config.JobType.pluginName  = 'Analysis'
-config.JobType.psetName    = 'muonEfficiency_cfg.py'
+config.JobType.psetName    = 'analyzeRPCwithTnP_cfg.py'
+#config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
 
 config.section_("Data")
 config.Data.publication  = False
