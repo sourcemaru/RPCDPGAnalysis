@@ -37,7 +37,7 @@ git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG
 git clone https://:@gitlab.cern.ch:8443/jhgoh/RPCDPGAnalysis.git
 scram b -j8
 cd RPCDPGAnalysis/SegmentAndTrackOnRPC/test
-cmsRun rpcPointFromMuons_cfg.py
+cmsRun analyzeRPCwithTnP_cfg.py
 ```
 
 The crab configuration files are also available to run 2016 datasets,
