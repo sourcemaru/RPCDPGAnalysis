@@ -55,8 +55,16 @@ The crab configuration files are also available to run 2016 datasets, modify the
 Of course you have to change the output directory, lumiMask.
 
 ```
-DATASET=Run2016B crab submit
+DATASET=SingleMuon ERA=Run2016B crab submit
 ```
+
+To submit all dataset, you can do something like
+```
+for J in Run2016{B..E}; do
+    DATASET=SingleMuon ERA=$J crab submit
+done
+```
+Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/ by default. Please modify the crabConfig.py if you want to set different destination.
 
 When jobs are finished, simply add all output root files with hadd command. 
 The x-y and z-phi view of efficiency plots can be obtained by running the drawMuographySummary.py.
