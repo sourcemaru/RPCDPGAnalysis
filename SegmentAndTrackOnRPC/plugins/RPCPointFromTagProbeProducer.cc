@@ -177,6 +177,7 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
       const auto& mu = muonHandle->at(i);
       if ( !mu.isTrackerMuon() ) continue;
       if ( !muon::isGoodMuon(mu, muon::TMOneStationLoose) ) continue;
+      if ( mu.track()->originalAlgo() == reco::TrackBase::muonSeededStepOutIn ) continue; // To avoid bias from muon seeded one
 
       const double pt = mu.pt();
 

@@ -263,6 +263,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
     if ( pt < minMuonPt_ or std::abs(mu.eta()) > maxMuonAbsEta_ ) continue;
     if ( !mu.isTrackerMuon() ) continue;
     if ( !muon::isGoodMuon(mu, muon::TMOneStationLoose) ) continue;
+    if ( mu.track()->originalAlgo() == reco::TrackBase::muonSeededStepOutIn ) continue; // To avoid bias from muon seeded one
 
     for ( auto match : mu.matches() ) {
       if ( match.detector() != 3 ) continue;

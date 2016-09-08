@@ -58,6 +58,8 @@ private:
   const double minDR_;
   const std::vector<std::string> triggerPaths_;
 
+  enum class IDType { RPC, Tracker } idType_;
+
   HLTConfigProvider hltConfig_;
 };
 
@@ -77,6 +79,10 @@ RPCTrackerMuonProbeProducer::RPCTrackerMuonProbeProducer(const edm::ParameterSet
   minDR_(pset.getParameter<double>("minDR")),
   triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths"))
 {
+  const std::string idTypeName = pset.getParameter<std::string>("probeIdType");
+  if ( idTypeName == "RPC" ) idType_ = IDType::RPC;
+  else idType_ = IDType::Tracker;
+
   produces<reco::MuonCollection>();
   produces<reco::MuonCollection>("tag");
   produces<double>("mass");
@@ -172,8 +178,15 @@ void RPCTrackerMuonProbeProducer::produce(edm::Event& event, const edm::EventSet
     // Find best tag + probe pair
     for ( int i=0, n=muonHandle->size(); i<n; ++i ) {
       const auto& mu = muonHandle->at(i);
-      if ( !mu.isTrackerMuon() ) continue;
-      if ( !muon::isGoodMuon(mu, muon::TMOneStationLoose) ) continue;
+      if ( idType_ == IDType::Tracker ) {
+        if ( !mu.isTrackerMuon() ) continue;
+        if ( !muon::isGoodMuon(mu, muon::TMOneStationLoose) ) continue;
+      }
+      else if ( idType_ == IDType::RPC ) {
+        if ( !mu.isRPCMuon() ) continue;
+        if ( !muon::isGoodMuon(mu, muon::RPCMuLoose) ) continue;
+      }
+      if ( mu.track()->originalAlgo() == reco::TrackBase::muonSeededStepOutIn ) continue;
 
       const double pt = mu.pt();
 
