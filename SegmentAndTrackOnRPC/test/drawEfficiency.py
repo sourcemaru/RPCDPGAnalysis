@@ -4,8 +4,7 @@ mode = "RPC"
 #mode = "DTCSC"
 #dataset = "SingleMuon"
 dataset = "RPCMonitor"
-#era = "Run2016BCDE"
-era = "273730_VF_1"
+era = "Run2016BCDE"
 
 if mode == "RPC":
     #module = "rpcExt"
