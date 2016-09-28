@@ -69,17 +69,20 @@ private:
   const edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
   //const edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
+  const edm::EDGetTokenT<double> tpMassToken_;
 
   const bool doHistByRun_;
   const double minMuonPt_, maxMuonAbsEta_;
 
   std::map<unsigned int, Hists> hists_;
+  std::map<unsigned int, TH1F*> hMass_;
 };
 
 MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::ParameterSet& pset):
   rpcHitToken_(consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"))),
   //vertexToken_(consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("vertex"))),
   muonToken_(consumes<reco::MuonCollection>(pset.getParameter<edm::InputTag>("muons"))),
+  tpMassToken_(consumes<double>(pset.getParameter<edm::InputTag>("tpMass"))),
   doHistByRun_(pset.getUntrackedParameter<bool>("doHistByRun")),
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta"))
@@ -94,6 +97,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   const int runNumber = doHistByRun_ ? run.id().run() : 0;
   if ( hists_.count(runNumber) == 0 ) {
     auto dir = fs->mkdir(Form("Run%06d", runNumber));
+
+    hMass_[runNumber] = dir.make<TH1F>("hMass", "hMass;Tag-Probe mass (GeV);Events", 160, 70, 110);
     auto& h = hists_[runNumber] = Hists();
 
     // Book histograms for the DTs
@@ -255,10 +260,15 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
   edm::Handle<reco::MuonCollection> muonHandle;
   event.getByToken(muonToken_, muonHandle);
 
+  edm::Handle<double> tpMassHandle;
+  if ( event.getByToken(tpMassToken_, tpMassHandle) ) {
+    hMass_[doHistByRun_ ? event.id().run() : 0]->Fill(*tpMassHandle);
+  }
+
   for ( int i=0, n=muonHandle->size(); i<n; ++i ) {
     const auto& mu = muonHandle->at(i);
     const double pt = mu.pt();
-  
+
     // Basic cuts
     if ( pt < minMuonPt_ or std::abs(mu.eta()) > maxMuonAbsEta_ ) continue;
     if ( !mu.isTrackerMuon() ) continue;
@@ -285,7 +295,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         const int key = wh+10*st+100*la;
 
         const auto& bound = roll->surface().bounds();
-        const bool isInFiducial = (std::abs(lPos.y()) <= bound.length()/2-8 and 
+        const bool isInFiducial = (std::abs(lPos.y()) <= bound.length()/2-8 and
                                    std::abs(lPos.x()) <= bound.width()/2-8 );
 
         h.hXYExpBarrelByWheel_[wh]->Fill(gp.x(), gp.y());
