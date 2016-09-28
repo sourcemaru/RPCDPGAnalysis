@@ -48,8 +48,9 @@ process.rpcExt = cms.EDAnalyzer("MuonHitFromTrackerMuonAnalyzer",
     vertex = cms.InputTag("goodVertices"),
     rpcRecHits = cms.InputTag("rpcRecHits"),
     muons = cms.InputTag("probeTrackerMuons"),
-    minMuonPt = cms.double(20),
-    maxMuonAbsEta = cms.double(2.5),
+    minMuonPt = cms.double(10),
+    maxMuonAbsEta = cms.double(2.1),
+    tpMass = cms.InputTag("probeTrackerMuons", "mass"),
 )
 
 process.TFileService = cms.Service("TFileService",

@@ -12,7 +12,7 @@ rpcPointFromTagProbe = cms.EDProducer("RPCPointFromTagProbeProducer",
     minMuonPt = cms.double(25),
     maxMuonAbsEta = cms.double(2.4),
     maxMuonRelIso = cms.double(0.25), # Loose isolation ~98% eff. (tight=0.15)
-    minTrackPt = cms.double(20),
+    minTrackPt = cms.double(10),
     maxTrackAbsEta = cms.double(2.1),
     doCheckSign = cms.bool(True),
     minDR = cms.double(0.1),
