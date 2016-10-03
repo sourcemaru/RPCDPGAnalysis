@@ -40,6 +40,7 @@ blacklist = []
 #blacklist.extend(["RE-2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
 
 f = TFile(fName)
+fout = open(fName.replace(".root",".txt"), "w")
 
 rollNames = [[], []]
 nExps = [[], []]
@@ -61,8 +62,6 @@ for s in [x.GetName() for x in f.GetListOfKeys()]:
         if s.startswith("hSubdetExp"): nExps[category].extend(n)
         if s.startswith("hSubdetRec"): nRecs[category].extend(n)
         if s.startswith("hSubdetExp"): rollNames[category].extend([h.GetXaxis().GetBinLabel(i+1) for i in range(h.GetNbinsX())])
-
-print rollNames
 
 nbin = int((xmax-xmin)/binW)
 objs = []
@@ -131,7 +130,7 @@ for i in range(2):
     objs.extend([header, lumi, statPanel])
 
     for l in effs:
-        print l[0], l[1]
+        print>>fout, l[0], l[1]
 
 for c in canvs:
     c.Update()
