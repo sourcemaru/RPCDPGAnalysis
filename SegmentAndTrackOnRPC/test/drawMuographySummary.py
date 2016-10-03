@@ -2,23 +2,14 @@
 
 run = 0
 padW = 500
-#mode = "tmPoint"
-#mode = "tpPoint"
-#mode = "efficienyRPCHit"
-#mode = "efficiencySegment"
-#mode = "rpcExt"
-mode = "rpcPoint"
 
 from ROOT import *
 from array import array
+import os, sys
 gStyle.SetOptStat(0)
 
-#f = TFile("SingleMuon_Run2016BCDE.root")
-#f = TFile("SingleMuon_273730.root")
-#f = TFile("SingleMuon_273730_VF_NoTnP.root")
-#f = TFile("SingleMuon_273730_VF_TnP.root")
-f = TFile("RPCMonitor_273730_VF.root")
-#f = TFile("MET_Run2016BCDE.root")
+fName = sys.argv[1]
+f = TFile(fName)
 
 hBarrel = [
   ("hZPhiExpBarrel_Station1_Layer1", "hZPhiRecBarrel_Station1_Layer1"),
@@ -74,8 +65,8 @@ cBDen.Divide(3,2)
 cBEff = TCanvas("cBEff", "Barrel efficiency", 3*padW, 2*padW)
 cBEff.Divide(3,2)
 for i, (hDenName, hNumName) in enumerate(hBarrel):
-    hDen = f.Get("%s/Run%06d/%s" % (mode, run, hDenName))
-    hNum = f.Get("%s/Run%06d/%s" % (mode, run, hNumName))
+    hDen = f.Get(hDenName)
+    hNum = f.Get(hNumName)
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -99,8 +90,8 @@ cEPDen.Divide(2,2)
 cEPEff = TCanvas("cEPEff", "Endcap+ efficiency", 2*padW, 2*padW)
 cEPEff.Divide(2,2)
 for i, (hDenName, hNumName) in enumerate(hEndcapP):
-    hDen = f.Get("%s/Run%06d/%s" % (mode, run, hDenName))
-    hNum = f.Get("%s/Run%06d/%s" % (mode, run, hNumName))
+    hDen = f.Get(hDenName)
+    hNum = f.Get(hNumName)
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -128,8 +119,8 @@ cENDen.Divide(2,2)
 cENEff = TCanvas("cENEff", "Endcap- efficiency", 2*padW, 2*padW)
 cENEff.Divide(2,2)
 for i, (hDenName, hNumName) in enumerate(hEndcapN):
-    hDen = f.Get("%s/Run%06d/%s" % (mode, run, hDenName))
-    hNum = f.Get("%s/Run%06d/%s" % (mode, run, hNumName))
+    hDen = f.Get(hDenName)
+    hNum = f.Get(hNumName)
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -163,11 +154,13 @@ for c in (cBDen, cEPDen, cENDen):
         if p == None: break
         p.Modified()
         p.Update()
-    c.Print("%s.png" % c.GetName())
+    c.Print("%s_%s.png" % (fName[:-5], c.GetName()))
+    c.Print("%s_%s.pdf" % (fName[:-5], c.GetName()))
 
-rpcPalette = array('i', [kBlack,632,632,632,632,632,632,632,807,400,416,kBlue])
-levels = array('d', [0.1*i+1e-9 for i in range(-1, 12)])
-#levels = array('d', [0.1*i for i in range(-1, 12)])
+levels     = array('d', [-1    ] + [0.1*i+1e-9 for i in range(8)]
+                       +[x+1e-9 for x in [0.75, 0.80, 0.85, 0.90, 0.95, 1.0, 1.1]])
+rpcPalette = array('i', [kBlack] + [kRed]*6
+                       +[kOrange+7, kOrange-3, kOrange, kYellow, kSpring+8, kSpring+7, kSpring, kBlue])
 gStyle.SetPalette(len(rpcPalette), rpcPalette);
 for h in hEffs:
     h.SetMaximum(1.1)
@@ -180,7 +173,8 @@ for c in (cBEff, cEPEff, cENEff):
         if p == None: break
         p.Modified()
         p.Update()
-    c.Print("%s.png" % c.GetName())
+    c.Print("%s_%s.png" % (fName[:-5], c.GetName()))
+    c.Print("%s_%s.pdf" % (fName[:-5], c.GetName()))
 
 fout = TFile("Efficiency.root", "RECREATE")
 for h in hEffs:

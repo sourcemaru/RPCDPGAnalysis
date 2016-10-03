@@ -2,33 +2,20 @@
 
 mode = "RPC"
 #mode = "DTCSC"
-#dataset = "SingleMuon"
-dataset = "RPCMonitor"
-era = "Run2016BCDE"
 
-if mode == "RPC":
-    #module = "rpcExt"
-    module = "rpcPoint"
-    #module = "tpPoint"
-    #module = "tvPoint"
-    #module = "tmPoint"
-    chTitle = "Rolls"
-else:
-    module = "efficiencySegment"
-    chTitle = "Chambers"
+if mode == "RPC": chTitle = "Rolls"
+else: chTitle = "Chambers"
 
-lumiVal = 0.
-if era == "Run2016BCDE": lumiVal = 16.094782029242 
-elif era == "273730":    lumiVal = 0.112
+lumiVal = 16.1
 
-run = 0#274442
 binW, xmin, xmax = 0.5, 70.5, 100
 #binW, xmin, xmax = 1, -0.5, 100
 
 from ROOT import *
 from array import array
-import os
+import os, sys
 from math import sqrt
+fName = sys.argv[1]
 
 gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
 setTDRStyle()
@@ -41,18 +28,29 @@ gStyle.SetPadBottomMargin(0.12)
 gStyle.SetTitleSize(0.06, "X");
 gStyle.SetTitleSize(0.06, "Y");
 
-f = TFile("%s_%s.root" % (dataset, era))
+blacklist = []
+#blacklist.extend([x.strip().split()[1] for x in open("blackList_18May.txt").readlines() if x.strip() != ""])
+#blacklist.extend(["RE+3_R2_CH%02d_C" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE-3_R2_CH%02d_C" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE+4_R2_CH%02d_B" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE-4_R2_CH%02d_B" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE+4_R2_CH%02d_C" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE-4_R2_CH%02d_C" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE+2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
+#blacklist.extend(["RE-2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
+
+f = TFile(fName)
 
 rollNames = [[], []]
 nExps = [[], []]
 nRecs = [[], []]
 
-for s in [x.GetName() for x in f.Get("%s/Run%06d" % (module, run)).GetListOfKeys()]:
+for s in [x.GetName() for x in f.GetListOfKeys()]:
     if s.startswith("Wheel"): category = 0
     elif s.startswith("Disk"): category = 1
     else: continue
 
-    d = f.Get("%s/Run%06d/%s" % (module, run, s))
+    d = f.Get(s)
 
     for s in [x.GetName() for x in d.GetListOfKeys()]:
         if not s.startswith("hSubdet"): continue
@@ -63,6 +61,8 @@ for s in [x.GetName() for x in f.Get("%s/Run%06d" % (module, run)).GetListOfKeys
         if s.startswith("hSubdetExp"): nExps[category].extend(n)
         if s.startswith("hSubdetRec"): nRecs[category].extend(n)
         if s.startswith("hSubdetExp"): rollNames[category].extend([h.GetXaxis().GetBinLabel(i+1) for i in range(h.GetNbinsX())])
+
+print rollNames
 
 nbin = int((xmax-xmin)/binW)
 objs = []
@@ -75,7 +75,8 @@ canvs = [
     TCanvas("cEndcap", "cEndcap", 800, 585),
 ]
 for i in range(2):
-    effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 0]
+    effs = []
+    effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 0 and name not in blacklist]
     #effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 100]
     effs.sort(reverse=True, key=lambda x : x[1])
 
@@ -86,9 +87,9 @@ for i in range(2):
 
     peak = hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin())
     effsNoZero = [x[1] for x in effs if x[1] != 0.0]
-    median = 0
-    if len(effsNoZero)%2 == 1: median = effsNoZero[len(effsNoZero)/2]
-    else: median = (effsNoZero[len(effsNoZero)/2]+effsNoZero[len(effsNoZero)/2+1])/2
+    #median = 0
+    #if len(effsNoZero)%2 == 1: median = effsNoZero[len(effsNoZero)/2]
+    #else: median = (effsNoZero[len(effsNoZero)/2]+effsNoZero[len(effsNoZero)/2+1])/2
 
     header = TLatex(gStyle.GetPadLeftMargin(), 1-gStyle.GetPadTopMargin()+0.01,
                     "Overall Efficiency - %s" % hEffs[i].GetTitle())
@@ -98,11 +99,12 @@ for i in range(2):
 
     stats = []
     stats.append("Entries %d" % hEffs[i].GetEntries())
-    stats.append("Mean   (w/o zero)  = %.1f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
-    stats.append("RMS    (w/o zero)  = %.2f" % sqrt(sum([x**2 for x in effsNoZero])/len(effsNoZero) - (sum([x for x in effsNoZero])/len(effsNoZero))**2))
-    stats.append("Mean   (with zero) = %.1f" % (sum([x[1] for x in effs])/len(effs)))
-    stats.append("Median (w/o zero)  = %.1f" % median)
-    stats.append("Peak at            = %.1f" % hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin()))
+    stats.append("Mean      = %.1f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
+    stats.append("RMS       = %.2f" % sqrt(sum([x**2 for x in effsNoZero])/len(effsNoZero) - (sum([x for x in effsNoZero])/len(effsNoZero))**2))
+    stats.append("Underflow = %d" % len([x[1] for x in effs if x[1] < xmin]))
+    #stats.append("Mean   (with zero) = %.1f" % (sum([x[1] for x in effs])/len(effs)))
+    #stats.append("Median (w/o zero)  = %.1f" % median)
+    #stats.append("Peak at            = %.1f" % hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin()))
 
     statPanel = TPaveText(gStyle.GetPadLeftMargin()+0.05, 1-gStyle.GetPadTopMargin()-len(stats)*0.06,
                           gStyle.GetPadLeftMargin()+0.5, 1-gStyle.GetPadTopMargin()-0.06, "NDC")
@@ -133,5 +135,6 @@ for i in range(2):
 
 for c in canvs:
     c.Update()
-    c.Print(c.GetName()+".png")
-    c.Print(c.GetName()+".C")
+    c.Print("%s_%s.png" % (fName[:-5], c.GetName()))
+    c.Print("%s_%s.pdf" % (fName[:-5], c.GetName()))
+    c.Print("%s_%s.C" % (fName[:-5], c.GetName()))
