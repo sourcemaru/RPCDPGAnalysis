@@ -70,15 +70,18 @@ hEffs = [
     TH1F("hEffEndcap", "Endcap;Efficiency [%];Number of "+chTitle, nbin+1, xmin, xmax+binW),
 ]
 canvs = [
-    TCanvas("cBarrel", "cBarrel", 800, 585),
-    TCanvas("cEndcap", "cEndcap", 800, 585),
+    TCanvas("cBarrel", "cBarrel", 485, 176, 800, 600),
+    TCanvas("cEndcap", "cEndcap", 485, 176, 800, 600),
 ]
+hEffs[0].SetFillColor(30)
+hEffs[1].SetFillColor(38)
+
 for i in range(2):
     effs = []
     effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 0 and name not in blacklist]
-    #effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 100]
     effs.sort(reverse=True, key=lambda x : x[1])
 
+    hEffs[i].SetLineColor(TColor.GetColor("#000099"))
     hEffs[i].GetYaxis().SetNdivisions(505)
     hEffs[i].GetYaxis().SetTitleOffset(1.0)
 
@@ -86,38 +89,62 @@ for i in range(2):
 
     peak = hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin())
     effsNoZero = [x[1] for x in effs if x[1] != 0.0]
-    #median = 0
-    #if len(effsNoZero)%2 == 1: median = effsNoZero[len(effsNoZero)/2]
-    #else: median = (effsNoZero[len(effsNoZero)/2]+effsNoZero[len(effsNoZero)/2+1])/2
 
     header = TLatex(gStyle.GetPadLeftMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                    "Overall Efficiency - %s" % hEffs[i].GetTitle())
+                    "RPC Overall Efficiency - %s" % hEffs[i].GetTitle())
     header.SetNDC()
     header.SetTextAlign(11)
     header.SetTextFont(42)
 
-    stats = []
-    stats.append("Entries %d" % hEffs[i].GetEntries())
-    stats.append("Mean      = %.1f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
-    stats.append("RMS       = %.2f" % sqrt(sum([x**2 for x in effsNoZero])/len(effsNoZero) - (sum([x for x in effsNoZero])/len(effsNoZero))**2))
-    stats.append("Underflow = %d" % len([x[1] for x in effs if x[1] < xmin]))
-    #stats.append("Mean   (with zero) = %.1f" % (sum([x[1] for x in effs])/len(effs)))
-    #stats.append("Median (w/o zero)  = %.1f" % median)
-    #stats.append("Peak at            = %.1f" % hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin()))
+    coverText1 = TLatex(0.17,0.82,"CMS")
+    coverText2 = TLatex(0.17,0.80,"Preliminary")
+    coverText3 = TLatex(0.17,0.75,"Data 2016")
+    coverText1.SetNDC()
+    coverText2.SetNDC()
+    coverText3.SetNDC()
+    coverText1.SetTextFont(62)
+    coverText2.SetTextFont(52)
+    coverText3.SetTextFont(52)
+    coverText1.SetTextAlign(11)
+    coverText2.SetTextAlign(13)
+    coverText3.SetTextAlign(13)
+    coverText1.SetTextSize(0.06)
+    coverText2.SetTextSize(0.0456)
+    coverText3.SetTextSize(0.0456)
 
-    statPanel = TPaveText(gStyle.GetPadLeftMargin()+0.05, 1-gStyle.GetPadTopMargin()-len(stats)*0.06,
-                          gStyle.GetPadLeftMargin()+0.5, 1-gStyle.GetPadTopMargin()-0.06, "NDC")
-    #statPanel = TPaveText(1-gStyle.GetPadRightMargin()-0.5, 1-gStyle.GetPadTopMargin()-len(stats)*0.06,
-    #                      1-gStyle.GetPadRightMargin()-0.1, 1-gStyle.GetPadTopMargin()-0.06, "NDC")
-    statPanel.SetFillStyle(0)
-    statPanel.SetTextAlign(11)
-    statPanel.SetBorderSize(0)
-    statPanel.SetTextFont(102)
-    for s in stats: statPanel.AddText(s)
+    stats = ["Entries", "Mean", "RMS", "Underflow"], []
+    stats[1].append("%d" % hEffs[i].GetEntries())
+    stats[1].append("%.2f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
+    stats[1].append("%.2f" % sqrt(sum([x**2 for x in effsNoZero])/len(effsNoZero) - (sum([x for x in effsNoZero])/len(effsNoZero))**2))
+    stats[1].append("%d" % len([x[1] for x in effs if x[1] < xmin]))
+
+    statPanel1 = TPaveText(0.53,0.68,0.76,0.85,"brNDC")
+    statPanel2 = TPaveText(0.53,0.68,0.76,0.85,"brNDC")
+    for s in zip(stats[0], stats[1]):
+        statPanel1.AddText(s[0])
+        statPanel2.AddText(s[1])
+    statPanel1.SetBorderSize(0)
+    statPanel1.SetFillColor(0)
+    statPanel1.SetFillStyle(0)
+    statPanel1.SetTextSize(0.04)
+    statPanel1.SetTextAlign(10)
+    statPanel1.SetBorderSize(0)
+    statPanel1.SetTextFont(62)
+    statPanel2.SetBorderSize(0)
+    statPanel2.SetFillColor(0)
+    statPanel2.SetFillStyle(0)
+    statPanel2.SetTextSize(0.04)
+    statPanel2.SetTextAlign(31)
+    statPanel2.SetBorderSize(0)
+    statPanel2.SetTextFont(62)
 
     canvs[i].cd()
     hEffs[i].Draw()
-    statPanel.Draw()
+    coverText1.Draw()
+    coverText2.Draw()
+    coverText3.Draw()
+    statPanel1.Draw()
+    statPanel2.Draw()
     header.Draw()
 
     lumi = TLatex().DrawLatexNDC(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
@@ -127,13 +154,30 @@ for i in range(2):
 
     fixOverlay()
 
-    objs.extend([header, lumi, statPanel])
+    objs.extend([header, lumi, statPanel1, statPanel2])
+    objs.extend([coverText1, coverText2, coverText3])
 
     for l in effs:
         print>>fout, l[0], l[1]
 
 for c in canvs:
+    c.cd()
+
+    c.SetFillColor(0)
+    c.SetBorderMode(0)
+    c.SetBorderSize(2)
+    c.SetLeftMargin(0.12)
+    c.SetRightMargin(0.04)
+    c.SetTopMargin(0.08)
+    c.SetBottomMargin(0.12)
+    c.SetFrameFillStyle(0)
+    c.SetFrameBorderMode(0)
+    c.SetFrameFillStyle(0)
+    c.SetFrameBorderMode(0)
+
+    c.Modified()
     c.Update()
+
     c.Print("%s_%s.png" % (fName[:-5], c.GetName()))
     c.Print("%s_%s.pdf" % (fName[:-5], c.GetName()))
     c.Print("%s_%s.C" % (fName[:-5], c.GetName()))
