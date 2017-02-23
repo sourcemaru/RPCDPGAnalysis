@@ -210,6 +210,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       vars[STATION] = detId.station();
       vars[SECTOR] = detId.sector();
       vars[LAYER] = detId.layer();
+      vars[ROLL] = detId.roll();
       vars[ROLLNAME] = axis->FindBin(rollName.c_str());
 
       if ( detId.region() == 0 ) {
@@ -280,8 +281,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
         vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
       }
+      hInfo_->Fill(vars);
     }
-    hInfo_->Fill(vars);
   }
 }
 

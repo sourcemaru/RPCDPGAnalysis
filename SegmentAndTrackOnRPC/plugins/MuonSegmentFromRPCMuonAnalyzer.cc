@@ -279,8 +279,8 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[PULLX] = (segLPos.x()-match.x)/std::sqrt(segLErr.xx()+match.xErr*match.xErr);
         vars[PULLY] = (segLPos.y()-match.y)/std::sqrt(segLErr.yy()+match.yErr*match.yErr);
       }
+      hInfo_->Fill(vars);
     }
-    hInfo_->Fill(vars);
   }
 }
 
