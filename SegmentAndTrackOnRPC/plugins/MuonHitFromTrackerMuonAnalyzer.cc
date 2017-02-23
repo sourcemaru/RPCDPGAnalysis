@@ -61,6 +61,7 @@ private:
     ISMATCHED, ISFIDUCIAL,
     LX, LY, RESX, RESY, PULLX, PULLY,
     GX, GY, GZ, GPHI,
+    CLS, BX,
     MASS, PT, ETA, PHI,
     NVARS
   };
@@ -91,6 +92,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "isMatched", "isFiducial",
     "lX", "lY", "resX", "resY", "pullX", "pullY",
     "gX", "gY", "gZ", "gPhi", 
+    "cls", "bx",
     "mass", "pt", "eta", "phi",
   };
   const char* varTitles[NVARS] = {
@@ -100,6 +102,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "isMatched", "isFiducial",
     "Expected local x(cm)", "Expected local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
     "Expected global x(cm)", "Expected global y(cm)", "Expected global z(cm)", "Expected global phi",
+    "Cluster size", "Bunch crossing",
     "mass (GeV)", "pt (GeV)", "#eta", "#phi",
   };
   int nbins[NVARS] = {
@@ -109,6 +112,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     2, 2,
     400, 400, 100, 100, 100, 100,
     1600, 1600, 2400, 360*3,
+    10, 13,
     120, 20, 10, 24,
   };
   double xmins[NVARS] = {
@@ -118,6 +122,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     0, 0,
     -200, -200, -50, -50, -5, -5,
     -800, -800, -1200, -3.14159265,
+    0, -6.5,
     60, 0, -2.5, -3.14159265,
   };
   double xmaxs[NVARS] = {
@@ -127,6 +132,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     2, 2,
     200, 200, 50, 50, 5, 5,
     800, 800, 1200, 3.14159265,
+    10, 6.5,
     120, 100, 2.5, 3.14159265,
   };
   hInfo_ = fs->make<THnSparseF>("hInfo", "hInfo", NVARS, nbins, xmins, xmaxs);
@@ -244,6 +250,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[RESY] = hitLPos.y()-match.y;
         vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
         vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
+        vars[CLS] = matchedHit->clusterSize();
+        vars[BX] = matchedHit->BunchX();
       }
       else {
         vars[REGION] = 1;
@@ -280,6 +288,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[RESY] = hitLPos.y()-match.y;
         vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
         vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
+        vars[CLS] = matchedHit->clusterSize();
+        vars[BX] = matchedHit->BunchX();
       }
       hInfo_->Fill(vars);
     }
