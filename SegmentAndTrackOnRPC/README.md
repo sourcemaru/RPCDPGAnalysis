@@ -31,8 +31,8 @@ to get correct per-chamber muography plots. The RPCPointProducer in the CMSSW is
 outdated, this should be updated as well (under development yet, but this is not crucial).
 
 ```
-cmsrel CMSSW_8_0_10
-cd CMSSW_8_0_10/src
+cmsrel CMSSW_8_0_26_patch2
+cd CMSSW_8_0_26_patch2/src
 cmsenv
 git-cms-init
 git-cms-merge-topic jhgoh:RPCChamberSurface80X
@@ -55,18 +55,28 @@ The crab configuration files are also available to run 2016 datasets, modify the
 Of course you have to change the output directory, lumiMask.
 
 ```
-DATASET=SingleMuon ERA=Run2016B crab submit
+DATASET=/SingleMuon/Run2016B-23Sep2016-v3/AOD crab submit crabConfig.py
 ```
 
 To submit all dataset, you can do something like
 ```
-for J in Run2016{B..E}; do
-    DATASET=SingleMuon ERA=$J crab submit
-done
+DATASET=/SingleMuon/Run2016B-23Sep2016-v3/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016C-23Sep2016-v1/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016D-23Sep2016-v1/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016E-23Sep2016-v1/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016F-23Sep2016-v1/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016G-23Sep2016-v1/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016H-PromptReco-v2/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2016H-PromptReco-v3/AOD crab submit crabConfig.py
 ```
 Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/ by default. Please modify the crabConfig.py if you want to set different destination.
 
 When jobs are finished, simply add all output root files with hadd command. 
+The root file contains the hit occupancy informations in ThnSparseD, n-dimensional histogram format. You can play with this to project on 1D histograms
+or use the macros to obtain usual efficiency plots.
+
+... Below are to be updated ...
+
 The x-y and z-phi view of efficiency plots can be obtained by running the drawMuographySummary.py.
 Please modify this pyROOT script if necessary.
 
