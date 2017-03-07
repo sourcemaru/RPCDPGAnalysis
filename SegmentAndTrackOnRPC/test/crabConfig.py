@@ -37,10 +37,12 @@ else:
 
 username = os.environ['USER']
 
-from datetime import datetime as dt
-submitdate = dt.now().strftime('%Y%m%d')
-
 config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
-config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s_1' % (username, submitdate)
+#config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_MuonPhys.txt'
+submitdate = '20170303_1'
+config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
+
+#config.Data.unitsPerJob = 1
+#config.Data.lumiMask = 'resub/crab_%s/results/notFinishedLumis.json' % config.General.requestName
 
