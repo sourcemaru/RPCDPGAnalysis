@@ -1,48 +1,40 @@
 #!/usr/bin/env python
 
 run = 0
-padW = 500
+#padW = 500
+padW = 250
 
 from ROOT import *
 from array import array
 import os, sys
+from math import floor
 gStyle.SetOptStat(0)
 
-fName = sys.argv[1]
-f = TFile(fName)
+f = TFile(sys.argv[1])
+fName = os.path.basename(sys.argv[1])
+hBarrelDen, hEndcapPDen, hEndcapNDen = [], [], []
+hBarrelNum, hEndcapPNum, hEndcapNNum = [], [], []
+for hName in [key.GetName() for key in f.GetListOfKeys()]:
+    h = f.Get(hName)
+    if not h.IsA().InheritsFrom("TH2"): continue
 
-hBarrel = [
-  ("hZPhiExpBarrel_Station1_Layer1", "hZPhiRecBarrel_Station1_Layer1"),
-  ("hZPhiExpBarrel_Station2_Layer1", "hZPhiRecBarrel_Station2_Layer1"),
-  ("hZPhiExpBarrel_Station3_Layer1", "hZPhiRecBarrel_Station3_Layer1"),
-  ("hZPhiExpBarrel_Station1_Layer2", "hZPhiRecBarrel_Station1_Layer2"),
-  ("hZPhiExpBarrel_Station2_Layer2", "hZPhiRecBarrel_Station2_Layer2"),
-  ("hZPhiExpBarrel_Station4_Layer1", "hZPhiRecBarrel_Station4_Layer1"),
-]
-hEndcapP = [
-  ("Disk1/hXYExp", "Disk1/hXYRec"),
-  ("Disk2/hXYExp", "Disk2/hXYRec"),
-  ("Disk3/hXYExp", "Disk3/hXYRec"),
-  ("Disk4/hXYExp", "Disk4/hXYRec"),
-]
-hEndcapN = [
-  ("Disk-1/hXYExp", "Disk-1/hXYRec"),
-  ("Disk-2/hXYExp", "Disk-2/hXYRec"),
-  ("Disk-3/hXYExp", "Disk-3/hXYRec"),
-  ("Disk-4/hXYExp", "Disk-4/hXYRec"),
-]
+    if hName.endswith("Den"):
+        if "Barrel" in hName: hBarrelDen.append(h)
+        elif "EndcapP" in hName: hEndcapPDen.append(h)
+        elif "EndcapN" in hName: hEndcapNDen.append(h)
+    elif hName.endswith("Num"):
+        if "Barrel" in hName: hBarrelNum.append(h)
+        elif "EndcapP" in hName: hEndcapPNum.append(h)
+        elif "EndcapN" in hName: hEndcapNNum.append(h)
 
-hDens, hEffs = [], []
-maxMeanZ, maxZ = 0.0, 0.0
-
-gROOT.ProcessLine("""struct customDivide { customDivide(const TH2F* h1, const TH2F* h2, TH2F* heff) {
+gROOT.ProcessLine("""struct customDivide { customDivide(const TH2D* h1, const TH2D* h2, TH2D* heff) {
   for ( int i=0, n=(h1->GetNbinsX()+1)*(h1->GetNbinsY()); i<n; ++i ) {
     const double den = h1->GetBinContent(i);
     const double num = h2->GetBinContent(i);
     heff->SetBinContent(i, den == 0 ? -1 : num/den);
   }
 }};""")
-gROOT.ProcessLine("""struct effStat { effStat(const TH2F* h/*, const TH1F* heff*/) {
+gROOT.ProcessLine("""struct effStat { effStat(const TH2D* h/*, const TH1D* heff*/) {
   const int nBins = h->GetNbinsX()*h->GetNbinsY();
   //const double width = h->GetXaxis()->GetBinLowEdge(h->GetNbinsX()+1) - h->GetXaxis()->GetBinLowEdge(1);
   //const double height = h->GetYaxis()->GetBinLowEdge(h->GetNbinsY()+1) - h->GetYaxis()->GetBinLowEdge(1);
@@ -60,13 +52,18 @@ gROOT.ProcessLine("""struct effStat { effStat(const TH2F* h/*, const TH1F* heff*
   cout << "RPC dead fraction = " << (100.0*deadFrac) << "% at " << h->GetTitle() << " \\n";
 }};""")
 
+hDens, hEffs = [], []
+maxMeanZ, maxZ = 0.0, 0.0
+
+hBarrel = zip(hBarrelDen, hBarrelNum)
+hEndcapP = zip(hEndcapPDen, hEndcapPNum)
+hEndcapN = zip(hEndcapNDen, hEndcapNNum)
+
 cBDen = TCanvas("cBDen", "Barrel statistics", 3*padW, 2*padW)
 cBDen.Divide(3,2)
 cBEff = TCanvas("cBEff", "Barrel efficiency", 3*padW, 2*padW)
 cBEff.Divide(3,2)
-for i, (hDenName, hNumName) in enumerate(hBarrel):
-    hDen = f.Get(hDenName)
-    hNum = f.Get(hNumName)
+for i, (hDen, hNum) in enumerate(hBarrel):
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -89,9 +86,7 @@ cEPDen = TCanvas("cEPDen", "Endcap+ statistics", 2*padW, 2*padW)
 cEPDen.Divide(2,2)
 cEPEff = TCanvas("cEPEff", "Endcap+ efficiency", 2*padW, 2*padW)
 cEPEff.Divide(2,2)
-for i, (hDenName, hNumName) in enumerate(hEndcapP):
-    hDen = f.Get(hDenName)
-    hNum = f.Get(hNumName)
+for i, (hDen, hNum) in enumerate(hEndcapP):
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -118,9 +113,7 @@ cENDen = TCanvas("cENDen", "Endcap- statistics", 2*padW, 2*padW)
 cENDen.Divide(2,2)
 cENEff = TCanvas("cENEff", "Endcap- efficiency", 2*padW, 2*padW)
 cENEff.Divide(2,2)
-for i, (hDenName, hNumName) in enumerate(hEndcapN):
-    hDen = f.Get(hDenName)
-    hNum = f.Get(hNumName)
+for i, (hDen, hNum) in enumerate(hEndcapN):
     hDens.append(hDen)
     hEff = hNum.Clone()
     hEff.Reset()
@@ -181,4 +174,3 @@ for h in hEffs:
     effStat(h)
     fout.cd()
     h.Write()
-
