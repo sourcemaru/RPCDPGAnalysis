@@ -107,7 +107,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   int nbins[NVARS] = {
     1000000,
-    2, 5, 5, 12, 6, 9, 5, 36,
+    3, 5, 5, 12, 6, 9, 5, 36,
     //5000,
     2, 2,
     400, 400, 100, 100, 100, 100,
@@ -116,7 +116,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   double xmins[NVARS] = {
     0,
-    0, -2.5, 0, 1, 0, -4.5, 0, 1,
+    -1, -2.5, 0, 1, 0, 0, 0, 1,
     //0,
     0, 0,
     -200, -200, -50, -50, -5, -5,
@@ -125,7 +125,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   double xmaxs[NVARS] = {
     1000000,
-    2, 2.5, 5, 13, 6, 4.5, 5, 37,
+    2, 2.5, 5, 13, 6, 5, 5, 37,
     //5000,
     2, 2,
     200, 200, 50, 50, 5, 5,
@@ -185,6 +185,10 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
     for ( auto match : mu.matches() ) {
       if ( match.detector() == 3 ) continue;
 
+      vars[REGION] = vars[WHEEL] = vars[DISK] = vars[RING] = vars[TRSECTOR] = 0;
+      vars[ISMATCHED] = vars[ISFIDUCIAL] = 0;
+      vars[RESX] = vars[RESY] = vars[PULLX] = vars[PULLY] = 0;
+
       const LocalPoint lPos(match.x, match.y, 0);
       if ( match.detector() == 1 ) { // DT matches
         const DTChamber* ch = dtGeom->chamber(match.id);
@@ -237,14 +241,14 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
         const auto gp = ch->toGlobal(lPos);
 
         const CSCDetId cscId(match.id);
-        vars[REGION] = 1;
+        vars[REGION] = cscId.endcap();
         vars[LX] = lPos.x();
         vars[LY] = lPos.y();
         vars[GX] = gp.x();
         vars[GY] = gp.y();
         vars[GZ] = gp.z();
         vars[GPHI] = gp.phi();
-        vars[DISK] = cscId.endcap()*cscId.station();
+        vars[DISK] = cscId.station();
         vars[RING] = cscId.ring();
         vars[TRSECTOR] = cscId.triggerSector();
 

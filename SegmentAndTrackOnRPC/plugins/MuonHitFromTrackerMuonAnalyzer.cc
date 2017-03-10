@@ -107,7 +107,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   int nbins[NVARS] = {
     1000000,
-    2, 5, 5, 4, 12, 6, 9, 5,
+    3, 5, 5, 4, 12, 6, 5, 5,
     5000,
     2, 2,
     400, 400, 100, 100, 100, 100,
@@ -117,7 +117,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   double xmins[NVARS] = {
     0,
-    0, -2.5, 0, 0, 1, 0, -4.5, 0,
+    -1, -2.5, 0, 0, 1, 0, 0, 0,
     0,
     0, 0,
     -200, -200, -50, -50, -5, -5,
@@ -127,7 +127,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   double xmaxs[NVARS] = {
     1000000,
-    2, 2.5, 5, 3, 13, 6, 4.5, 5,
+    2, 2.5, 5, 3, 13, 6, 5, 5,
     5000,
     2, 2,
     200, 200, 50, 50, 5, 5,
@@ -207,6 +207,11 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       const string rollName = RPCGeomServ(detId).name();
       const auto axis = hInfo_->GetAxis(ROLLNAME);
 
+      vars[REGION] = vars[WHEEL] = vars[DISK] = vars[RING] = 0;
+      vars[ISMATCHED] = vars[ISFIDUCIAL] = 0;
+      vars[RESX] = vars[RESY] = vars[PULLX] = vars[PULLY] = 0;
+      vars[CLS] = vars[BX] = 0;
+
       vars[LX] = lPos.x();
       vars[LY] = lPos.y();
       vars[GX] = gp.x();
@@ -254,8 +259,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[BX] = matchedHit->BunchX();
       }
       else {
-        vars[REGION] = 1;
-        vars[DISK] = detId.region()*detId.station();
+        vars[REGION] = detId.region();
+        vars[DISK] = detId.station();
         vars[RING] = detId.ring();
 
         const auto& bound = roll->surface().bounds();
