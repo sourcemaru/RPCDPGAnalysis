@@ -235,28 +235,28 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
         // Find best-matching RPCRecHit
         auto rpcHitRange = rpcHitHandle->get(detId);
-        if ( rpcHitRange.first == rpcHitRange.second ) continue;
-
-        auto matchedHit = rpcHitRange.first;
-        double minDX = 1e9;
-        for ( auto rpcHit = rpcHitRange.first; rpcHit != rpcHitRange.second; ++rpcHit ) {
-          //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
-          const double dx = std::abs(rpcHit->localPosition().x()-match.x);
-          if ( dx < minDX ) {
-            matchedHit = rpcHit;
-            minDX = dx;
+        if ( rpcHitRange.first != rpcHitRange.second ) {
+          auto matchedHit = rpcHitRange.first;
+          double minDX = 1e9;
+          for ( auto rpcHit = rpcHitRange.first; rpcHit != rpcHitRange.second; ++rpcHit ) {
+            //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
+            const double dx = std::abs(rpcHit->localPosition().x()-match.x);
+            if ( dx < minDX ) {
+              matchedHit = rpcHit;
+              minDX = dx;
+            }
           }
-        }
-        const auto hitLPos = matchedHit->localPosition();
-        const auto hitLErr = matchedHit->localPositionError();
+          const auto hitLPos = matchedHit->localPosition();
+          const auto hitLErr = matchedHit->localPositionError();
 
-        vars[ISMATCHED] = 1;
-        vars[RESX] = hitLPos.x()-match.x;
-        vars[RESY] = hitLPos.y()-match.y;
-        vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
-        vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
-        vars[CLS] = matchedHit->clusterSize();
-        vars[BX] = matchedHit->BunchX();
+          vars[ISMATCHED] = 1;
+          vars[RESX] = hitLPos.x()-match.x;
+          vars[RESY] = hitLPos.y()-match.y;
+          vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
+          vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
+          vars[CLS] = matchedHit->clusterSize();
+          vars[BX] = matchedHit->BunchX();
+        }
       }
       else {
         vars[REGION] = detId.region();
@@ -273,28 +273,28 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
         // Find best-matching RPCRecHit
         auto rpcHitRange = rpcHitHandle->get(detId);
-        if ( rpcHitRange.first == rpcHitRange.second ) continue;
-
-        auto matchedHit = rpcHitRange.first;
-        double minDX = 1e9;
-        for ( auto hit = rpcHitRange.first; hit != rpcHitRange.second; ++hit ) {
-          //const double dr = std::hypot(hit->localPosition().x(), hit->localPosition().y());
-          const double dx = std::abs(hit->localPosition().x()-match.x);
-          if ( dx < minDX ) {
-            matchedHit = hit;
-            minDX = dx;
+        if ( rpcHitRange.first != rpcHitRange.second ) {
+          auto matchedHit = rpcHitRange.first;
+          double minDX = 1e9;
+          for ( auto hit = rpcHitRange.first; hit != rpcHitRange.second; ++hit ) {
+            //const double dr = std::hypot(hit->localPosition().x(), hit->localPosition().y());
+            const double dx = std::abs(hit->localPosition().x()-match.x);
+            if ( dx < minDX ) {
+              matchedHit = hit;
+              minDX = dx;
+            }
           }
-        }
-        const auto hitLPos = matchedHit->localPosition();
-        const auto hitLErr = matchedHit->localPositionError();
+          const auto hitLPos = matchedHit->localPosition();
+          const auto hitLErr = matchedHit->localPositionError();
 
-        vars[ISMATCHED] = 1;
-        vars[RESX] = hitLPos.x()-match.x;
-        vars[RESY] = hitLPos.y()-match.y;
-        vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
-        vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
-        vars[CLS] = matchedHit->clusterSize();
-        vars[BX] = matchedHit->BunchX();
+          vars[ISMATCHED] = 1;
+          vars[RESX] = hitLPos.x()-match.x;
+          vars[RESY] = hitLPos.y()-match.y;
+          vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
+          vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
+          vars[CLS] = matchedHit->clusterSize();
+          vars[BX] = matchedHit->BunchX();
+        }
       }
       hInfo_->Fill(vars);
     }

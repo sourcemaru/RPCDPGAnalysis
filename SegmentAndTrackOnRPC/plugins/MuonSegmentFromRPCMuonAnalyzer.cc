@@ -214,26 +214,26 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
         // Find best-matching DT segment
         auto dtSegmentRange = dtSegmentHandle->get(dtId);
-        if ( dtSegmentRange.first == dtSegmentRange.second ) continue;
-
-        auto matchedSegment = dtSegmentRange.first;
-        double minDX = 1e9;
-        for ( auto segment = dtSegmentRange.first; segment != dtSegmentRange.second; ++segment ) {
-          //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
-          const double dx = std::abs(segment->localPosition().x()-match.x);
-          if ( dx < minDX ) {
-            matchedSegment = segment;
-            minDX = dx;
+        if ( dtSegmentRange.first != dtSegmentRange.second ) {
+          auto matchedSegment = dtSegmentRange.first;
+          double minDX = 1e9;
+          for ( auto segment = dtSegmentRange.first; segment != dtSegmentRange.second; ++segment ) {
+            //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
+            const double dx = std::abs(segment->localPosition().x()-match.x);
+            if ( dx < minDX ) {
+              matchedSegment = segment;
+              minDX = dx;
+            }
           }
-        }
-        const auto segLPos = matchedSegment->localPosition();
-        const auto segLErr = matchedSegment->localPositionError();
+          const auto segLPos = matchedSegment->localPosition();
+          const auto segLErr = matchedSegment->localPositionError();
 
-        vars[ISMATCHED] = 1;
-        vars[RESX] = segLPos.x()-match.x;
-        vars[RESY] = segLPos.y()-match.y;
-        vars[PULLX] = (segLPos.x()-match.x)/std::sqrt(segLErr.xx()+match.xErr*match.xErr);
-        vars[PULLY] = (segLPos.y()-match.y)/std::sqrt(segLErr.yy()+match.yErr*match.yErr);
+          vars[ISMATCHED] = 1;
+          vars[RESX] = segLPos.x()-match.x;
+          vars[RESY] = segLPos.y()-match.y;
+          vars[PULLX] = (segLPos.x()-match.x)/std::sqrt(segLErr.xx()+match.xErr*match.xErr);
+          vars[PULLY] = (segLPos.y()-match.y)/std::sqrt(segLErr.yy()+match.yErr*match.yErr);
+        }
       }
       else if ( match.detector() == 2 ) { // CSC matches
         const CSCChamber* ch = cscGeom->chamber(match.id);
@@ -262,26 +262,26 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
         // Find best-matching CSC segment
         auto cscSegmentRange = cscSegmentHandle->get(cscId);
-        if ( cscSegmentRange.first == cscSegmentRange.second ) continue;
-
-        auto matchedSegment = cscSegmentRange.first;
-        double minDX = 1e9;
-        for ( auto segment = cscSegmentRange.first; segment != cscSegmentRange.second; ++segment ) {
-          //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
-          const double dx = std::abs(segment->localPosition().x()-match.x);
-          if ( dx < minDX ) {
-            matchedSegment = segment;
-            minDX = dx;
+        if ( cscSegmentRange.first != cscSegmentRange.second ) {
+          auto matchedSegment = cscSegmentRange.first;
+          double minDX = 1e9;
+          for ( auto segment = cscSegmentRange.first; segment != cscSegmentRange.second; ++segment ) {
+            //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
+            const double dx = std::abs(segment->localPosition().x()-match.x);
+            if ( dx < minDX ) {
+              matchedSegment = segment;
+              minDX = dx;
+            }
           }
-        }
-        const auto segLPos = matchedSegment->localPosition();
-        const auto segLErr = matchedSegment->localPositionError();
+          const auto segLPos = matchedSegment->localPosition();
+          const auto segLErr = matchedSegment->localPositionError();
 
-        vars[ISMATCHED] = 1;
-        vars[RESX] = segLPos.x()-match.x;
-        vars[RESY] = segLPos.y()-match.y;
-        vars[PULLX] = (segLPos.x()-match.x)/std::sqrt(segLErr.xx()+match.xErr*match.xErr);
-        vars[PULLY] = (segLPos.y()-match.y)/std::sqrt(segLErr.yy()+match.yErr*match.yErr);
+          vars[ISMATCHED] = 1;
+          vars[RESX] = segLPos.x()-match.x;
+          vars[RESY] = segLPos.y()-match.y;
+          vars[PULLX] = (segLPos.x()-match.x)/std::sqrt(segLErr.xx()+match.xErr*match.xErr);
+          vars[PULLY] = (segLPos.y()-match.y)/std::sqrt(segLErr.yy()+match.yErr*match.yErr);
+        }
       }
       hInfo_->Fill(vars);
     }
