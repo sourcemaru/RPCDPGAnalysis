@@ -22,24 +22,46 @@ class THnSparseSelector:
                 'nbins':axis.GetNbins(), 'min':axis.GetXmin(), 'max':axis.GetXmax(),
             }
 
-    def Project2D(self, axisName1, axisName2, axisRanges, suffix=""):
-        if axisName1 not in self.axisInfo: return None
-        if axisName2 not in self.axisInfo: return None
-
-        index1 = self.axisInfo[axisName1]['index']
-        index2 = self.axisInfo[axisName2]['index']
+    def Project1D(self, axisName, axisRanges, suffix=""):
+        if axisName not in self.axisInfo: return None
 
         for name, (lo, hi) in axisRanges.iteritems():
             if name not in self.axisInfo: continue
 
             index = self.axisInfo[name]['index']
-
             axis = self.hist.GetAxis(index)
             binLo, binHi = axis.FindBin(lo), axis.FindBin(hi)
-
             self.hist.GetAxis(index).SetRange(binLo, binHi)
 
         if suffix != "": suffix = "_"+suffix
+        index = self.axisInfo[axisName]['index']
+        h = self.hist.Projection(index)
+        h.SetName("h_%s%s" % (axisName, suffix))
+
+        for name, (lo, hi) in axisRanges.iteritems():
+            if name not in self.axisInfo: continue
+
+            index = self.axisInfo[name]['index']
+            axis = self.hist.GetAxis(index)
+            self.hist.GetAxis(index).SetRange(1, self.axisInfo[name]['nbins'])
+
+        return h
+
+    def Project2D(self, axisName1, axisName2, axisRanges, suffix=""):
+        if axisName1 not in self.axisInfo: return None
+        if axisName2 not in self.axisInfo: return None
+
+        for name, (lo, hi) in axisRanges.iteritems():
+            if name not in self.axisInfo: continue
+
+            index = self.axisInfo[name]['index']
+            axis = self.hist.GetAxis(index)
+            binLo, binHi = axis.FindBin(lo), axis.FindBin(hi)
+            self.hist.GetAxis(index).SetRange(binLo, binHi)
+
+        if suffix != "": suffix = "_"+suffix
+        index1 = self.axisInfo[axisName1]['index']
+        index2 = self.axisInfo[axisName2]['index']
         h = self.hist.Projection(index2, index1)
         h.SetName("h_%s_%s%s" % (axisName1, axisName2, suffix))
 
@@ -47,9 +69,7 @@ class THnSparseSelector:
             if name not in self.axisInfo: continue
 
             index = self.axisInfo[name]['index']
-
             axis = self.hist.GetAxis(index)
-
             self.hist.GetAxis(index).SetRange(1, self.axisInfo[name]['nbins'])
 
         return h
@@ -59,15 +79,18 @@ hInfo = f.Get("rpcExt/hInfo")
 hSel = THnSparseSelector(hInfo)
 
 plots = {
-    'Barrel':['gZ', 'gPhi', {'region':(0,0), 'gZ':(-700, 700), 'isFiducial':(1,1)}],
-    'EndcapP':['gX', 'gY', {'region':(1,1), 'isFiducial':(1,1)}],
-    'EndcapN':['gX', 'gY', {'region':(-1,-1), 'isFiducial':(1,1)}],
+    'Barrel_ZPhi':[['gZ', 'gPhi'], {'region':(0,0), 'gZ':(-700, 700), 'isFiducial':(1,1)}],
+    'EndcapP_XY':[['gX', 'gY'], {'region':(1,1), 'isFiducial':(1,1)}],
+    'EndcapN_XY':[['gX', 'gY'], {'region':(-1,-1), 'isFiducial':(1,1)}],
 #    'lX_lY':['lX', 'lY', {'isFiducial':(1,1)}],
+    'Barrel_detId':[['rollName'], {'region':(0,0), 'isFiducial':(1,1)}],
+    'EndcapP_detId':[['rollName'], {'region':(1,1), 'isFiducial':(1,1)}],
+    'EndcapN_detId':[['rollName'], {'region':(-1,-1), 'isFiducial':(1,1)}],
 }
 
 if not os.path.exists("hists"): os.mkdir("hists")
 f = TFile("hists/%s" % (os.path.basename(sys.argv[1])), "RECREATE")
-for name, (xVar, yVar, ranges) in plots.iteritems():
+for name, (variables, ranges) in plots.iteritems():
     subsels = []
     if name.startswith("Barrel"):
         for station in range(1,5):
@@ -84,10 +107,18 @@ for name, (xVar, yVar, ranges) in plots.iteritems():
         subname = name + '_' + ('_'.join("%s%d" % (n, r[0]) for n, r in subsel.iteritems()))
 
         subranges.update(subsel)
-        hDen = hSel.Project2D(xVar, yVar, subranges, subname+"_Den")
+        if len(variables) == 1:
+            xVar = variables[0]
+            hDen = hSel.Project1D(xVar, subranges, subname+"_Den")
 
-        subranges.update({'isMatched':(1,1)})
-        hNum = hSel.Project2D(xVar, yVar, subranges, subname+"_Num")
+            subranges.update({'isMatched':(1,1)})
+            hNum = hSel.Project1D(xVar, subranges, subname+"_Num")
+        elif len(variables) == 2:
+            xVar, yVar = variables
+            hDen = hSel.Project2D(xVar, yVar, subranges, subname+"_Den")
+
+            subranges.update({'isMatched':(1,1)})
+            hNum = hSel.Project2D(xVar, yVar, subranges, subname+"_Num")
 
         hDen.Write()
         hNum.Write()
