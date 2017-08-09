@@ -59,10 +59,10 @@ DroppedRecHitProducer::DroppedRecHitProducer(const edm::ParameterSet& pset)
 
 void DroppedRecHitProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  std::auto_ptr<DTRecHitCollection> out_dt(new DTRecHitCollection);
-  std::auto_ptr<DTRecHitCollection> out_dtcosmic(new DTRecHitCollection);
-  std::auto_ptr<CSCRecHit2DCollection> out_csc(new CSCRecHit2DCollection);
-  std::auto_ptr<RPCRecHitCollection> out_rpc(new RPCRecHitCollection);
+  std::unique_ptr<DTRecHitCollection> out_dt(new DTRecHitCollection);
+  std::unique_ptr<DTRecHitCollection> out_dtcosmic(new DTRecHitCollection);
+  std::unique_ptr<CSCRecHit2DCollection> out_csc(new CSCRecHit2DCollection);
+  std::unique_ptr<RPCRecHitCollection> out_rpc(new RPCRecHitCollection);
 
   edm::Handle<DTRecHitCollection> dtHitHandle;
   event.getByToken(dtHitToken_, dtHitHandle);
@@ -94,10 +94,10 @@ void DroppedRecHitProducer::produce(edm::Event& event, const edm::EventSetup& ev
     out_rpc->put(rpcId, hits.first, hits.second);
   }
 
-  event.put(out_dt);
-  event.put(out_dtcosmic, "cosmic");
-  event.put(out_csc);
-  event.put(out_rpc);
+  event.put(std::move(out_dt));
+  event.put(std::move(out_dtcosmic), "cosmic");
+  event.put(std::move(out_csc));
+  event.put(std::move(out_rpc));
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

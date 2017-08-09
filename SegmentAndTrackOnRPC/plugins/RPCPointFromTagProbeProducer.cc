@@ -93,7 +93,7 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
 {
   using namespace std;
 
-  std::auto_ptr<RPCRecHitCollection> out_points(new RPCRecHitCollection);
+  std::unique_ptr<RPCRecHitCollection> out_points(new RPCRecHitCollection);
   double mass = -1;
 
   edm::Handle<edm::TriggerResults> triggerResultsHandle;
@@ -221,8 +221,8 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
 
   } while ( false );
 
-  event.put(out_points);
-  event.put(std::auto_ptr<double>(new double(mass)));
+  event.put(std::move(out_points));
+  event.put(std::make_unique<double>(mass));
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
