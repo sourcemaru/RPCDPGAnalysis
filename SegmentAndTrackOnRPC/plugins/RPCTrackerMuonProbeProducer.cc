@@ -98,8 +98,8 @@ void RPCTrackerMuonProbeProducer::produce(edm::Event& event, const edm::EventSet
 {
   using namespace std;
 
-  std::auto_ptr<reco::MuonCollection> out_tag(new reco::MuonCollection);
-  std::auto_ptr<reco::MuonCollection> out_probe(new reco::MuonCollection);
+  std::unique_ptr<reco::MuonCollection> out_tag(new reco::MuonCollection);
+  std::unique_ptr<reco::MuonCollection> out_probe(new reco::MuonCollection);
   double mass = -1;
 
   edm::Handle<edm::TriggerResults> triggerResultsHandle;
@@ -215,9 +215,9 @@ void RPCTrackerMuonProbeProducer::produce(edm::Event& event, const edm::EventSet
   if ( tagRef.isNonnull() ) out_tag->push_back(*tagRef);
   if ( probeRef.isNonnull() ) out_probe->push_back(*probeRef);
 
-  event.put(out_probe);
-  event.put(out_tag, "tag");
-  event.put(std::auto_ptr<double>(new double(mass)), "mass");
+  event.put(std::move(out_probe));
+  event.put(std::move(out_tag), "tag");
+  event.put(std::make_unique<double>(mass), "mass");
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
