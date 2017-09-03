@@ -22,22 +22,19 @@ config.Data.splitting = 'LumiBased'
 
 ## Something that can be changed frequently
 import os
-if 'ERA' not in os.environ: era = "Run2016B"
-else: era = os.environ['ERA']
-if 'DATASET' not in os.environ: dataset = "SingleMuon"
-else: dataset = os.environ['DATASET']
+if 'DATASET' not in os.environ:
+    config.Data.inputDataset = "/SingleMuon/Run2017D-PromptReco-v1/AOD"
+else:
+    config.Data.inputDataset = os.environ['DATASET']
+datasetSafeName = config.Data.inputDataset.replace('/', '_')
+pd, sd, tier = config.Data.inputDataset.split('/')
 
-if era[:-1] == "Run2016" and era[-1] in "BCDE": datasetVer = 'v2'
-else: datasetVer = 'v1'
-
-if dataset == 'RPCMonitor':
+if pd == 'RPCMonitor':
     config.Data.unitsPerJob = 10
     config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
-    config.Data.inputDataset = "/%s/%s-%s/RAW" % (dataset, era, datasetVer)
 else:
     config.Data.unitsPerJob = 40
     config.JobType.psetName    = 'analyzeRPCwithTnP_cfg.py'
-    config.Data.inputDataset = "/%s/%s-PromptReco-%s/AOD" % (dataset, era, datasetVer)
 
 username = os.environ['USER']
 
@@ -48,5 +45,5 @@ submitdate = dt.now().strftime('%Y%m%d')
 config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-277148_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt'
 #config.Data.lumiMask = 'notFinishedLumis.json'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s_1' % (username, submitdate)
-config.General.requestName = "RPCEfficiency_%s_%s" % (dataset, era)
+config.General.requestName = "RPCEfficiency_%s" % (datasetSafeName)
 
