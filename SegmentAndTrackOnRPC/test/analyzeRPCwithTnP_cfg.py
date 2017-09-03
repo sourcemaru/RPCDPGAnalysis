@@ -39,7 +39,8 @@ process.probeTrackerMuons = cms.EDProducer("RPCTrackerMuonProbeProducer",
     maxMass = cms.double(110),
     triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
     triggerResults = cms.InputTag("TriggerResults::HLT"),
-    triggerPaths = cms.vstring("HLT_IsoMu22", "HLT_IsoMu22_eta2p1", "HLT_IsoTkMu22", "HLT_Mu50", "HLT_TkMu50"),
+    #triggerPaths = cms.vstring("HLT_IsoMu24", "HLT_IsoMu24_eta2p1", "HLT_IsoTkMu24", "HLT_IsoTkMu24_eta2p1", "HLT_Mu50", "HLT_Mu55", "HLT_TkMu50"), ## Paths in Run2016
+    triggerPaths = cms.vstring("HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", "HLT_Mu50", "HLT_Mu55", ), ## Paths in Run2017 (except emergency)
     probeIdType = cms.string("Tracker"),
 )
 
@@ -57,13 +58,15 @@ process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.rpcExt)
+process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcExt)
 
 process.source.fileNames = [
-    #'/store/data/Run2016B/MET/AOD/01Jul2016-v1/20000/B0368187-794F-E611-9A86-02163E01156C.root',
-    '/store/data/Run2016B/SingleMuon/AOD/PromptReco-v2/000/273/450/00000/040B6B30-241C-E611-9ADB-02163E011907.root',
+    #'/store/data/Run2016H/SingleMuon/AOD/07Aug17-v1/50001/16496FB9-9080-E711-BAB1-001E675799D0.root',
+    '/store/data/Run2017C/SingleMuon/AOD/PromptReco-v2/000/300/122/00000/005F1A9F-4077-E711-BEA4-02163E0135A0.root',
+
 ]
 import FWCore.PythonUtilities.LumiList as LumiList
 process.source.lumisToProcess = LumiList.LumiList(
-    filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-277148_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt').getVLuminosityBlockRange()
+    #filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Final/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt').getVLuminosityBlockRange()
+    filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/PromptReco/Cert_294927-301567_13TeV_PromptReco_Collisions17_JSON.txt').getVLuminosityBlockRange()
 
