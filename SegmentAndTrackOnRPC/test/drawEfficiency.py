@@ -6,7 +6,7 @@ mode = "RPC"
 if mode == "RPC": chTitle = "Rolls"
 else: chTitle = "Chambers"
 
-lumiVal = 16.1
+lumiVal = 0.0
 
 binW, xmin, xmax = 0.5, 70.5, 100
 #binW, xmin, xmax = 1, -0.5, 100
@@ -98,7 +98,7 @@ for i in range(2):
 
     coverText1 = TLatex(0.17,0.82,"CMS")
     coverText2 = TLatex(0.17,0.80,"Preliminary")
-    coverText3 = TLatex(0.17,0.75,"Data 2016")
+    coverText3 = TLatex(0.17,0.75,"Data 2017")
     coverText1.SetNDC()
     coverText2.SetNDC()
     coverText3.SetNDC()
