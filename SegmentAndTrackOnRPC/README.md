@@ -31,12 +31,11 @@ to get correct per-chamber muography plots. The RPCPointProducer in the CMSSW is
 outdated, this should be updated as well (under development yet, but this is not crucial).
 
 ```
-cmsrel CMSSW_8_0_26_patch2
-cd CMSSW_8_0_26_patch2/src
+cmsrel CMSSW_9_2_10
+cd CMSSW_9_2_10/src
 cmsenv
 git-cms-init
-git-cms-merge-topic jhgoh:RPCChamberSurface80X
-git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG
+git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG92X
 git clone https://:@gitlab.cern.ch:8443/jhgoh/RPCDPGAnalysis.git
 scram b -j8
 ```
@@ -51,23 +50,23 @@ cmsRun analyzeRPCwithTnP_cfg.py
 
 Please modify the cfg file to change the input root file and JSON file.
 
-The crab configuration files are also available to run 2016 datasets, modify the crabConfig.py file to process interested datasets.
-Of course you have to change the output directory, lumiMask.
+The crab configuration files are done to run on 2017 datasets, modify the crabConfig.py file to process interested datasets.
+You have to change the output directory, lumiMask.
 
 ```
-DATASET=/SingleMuon/Run2016B-23Sep2016-v3/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2017D-PromptReco-v3/AOD crab submit
 ```
 
 To submit all dataset, you can do something like
 ```
-DATASET=/SingleMuon/Run2016B-23Sep2016-v3/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016C-23Sep2016-v1/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016D-23Sep2016-v1/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016E-23Sep2016-v1/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016F-23Sep2016-v1/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016G-23Sep2016-v1/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016H-PromptReco-v2/AOD crab submit crabConfig.py
-DATASET=/SingleMuon/Run2016H-PromptReco-v3/AOD crab submit crabConfig.py
+DATASET=/SingleMuon/Run2017A-PromptReco-v2/AOD crab submit
+DATASET=/SingleMuon/Run2017A-PromptReco-v3/AOD crab submit
+DATASET=/SingleMuon/Run2017B-PromptReco-v1/AOD crab submit
+DATASET=/SingleMuon/Run2017B-PromptReco-v2/AOD crab submit
+DATASET=/SingleMuon/Run2017C-PromptReco-v1/AOD crab submit
+DATASET=/SingleMuon/Run2017C-PromptReco-v2/AOD crab submit
+DATASET=/SingleMuon/Run2017C-PromptReco-v3/AOD crab submit
+DATASET=/SingleMuon/Run2017D-PromptReco-v1/AOD crab submit
 ```
 Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/ by default. Please modify the crabConfig.py if you want to set different destination.
 

@@ -22,14 +22,14 @@ config.Data.splitting = 'LumiBased'
 
 ## Something that can be changed frequently
 import os
-config.Data.inputDataset = "/SingleMuon/Run2016B-23Sep2016-v3/AOD"
+config.Data.inputDataset = "/SingleMuon/Run2017D-PromptReco-v1/AOD"
 if 'DATASET' in os.environ:
     config.Data.inputDataset = os.environ['DATASET']
 
 pd, sd = config.Data.inputDataset.split('/')[1:3]
 
 if pd == 'RPCMonitor':
-    config.Data.unitsPerJob = 50
+    config.Data.unitsPerJob = 10
     config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
 else:
     config.Data.unitsPerJob = 200
@@ -44,6 +44,5 @@ submitdate = '20170904_1'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
 
-#config.Data.unitsPerJob = 1
-#config.Data.lumiMask = 'resub/crab_%s/results/notFinishedLumis.json' % config.General.requestName
+#config.Data.lumiMask = 'notFinishedLumis.json'
 
