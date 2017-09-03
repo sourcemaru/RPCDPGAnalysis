@@ -56,7 +56,7 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
 {
   using namespace std;
 
-  std::auto_ptr<RPCRecHitCollection> out_points(new RPCRecHitCollection);
+  std::unique_ptr<RPCRecHitCollection> out_points(new RPCRecHitCollection);
 
   edm::Handle<reco::MuonCollection> muonHandle;
   event.getByToken(muonToken_, muonHandle);
@@ -98,7 +98,7 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
     auto pointVector = itr->second;
     out_points->put(id, pointVector.begin(), pointVector.end());
   }
-  event.put(out_points);
+  event.put(std::move(out_points));
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
