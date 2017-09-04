@@ -22,7 +22,7 @@ class THnSparseSelector:
                 'nbins':axis.GetNbins(), 'min':axis.GetXmin(), 'max':axis.GetXmax(),
             }
 
-    def Project1D(self, axisName, axisRanges, suffix=""):
+    def Project1D(self, axisName, axisRanges, **kwargs):
         if axisName not in self.axisInfo: return None
 
         for name, (lo, hi) in axisRanges.iteritems():
@@ -33,7 +33,9 @@ class THnSparseSelector:
             binLo, binHi = axis.FindBin(lo), axis.FindBin(hi)
             self.hist.GetAxis(index).SetRange(binLo, binHi)
 
-        if suffix != "": suffix = "_"+suffix
+        suffix = ''
+        if 'suffix' in kwargs: suffix = "_"+kwargs['suffix']
+
         index = self.axisInfo[axisName]['index']
         h = self.hist.Projection(index)
         h.SetName("h_%s%s" % (axisName, suffix))
@@ -45,9 +47,18 @@ class THnSparseSelector:
             axis = self.hist.GetAxis(index)
             self.hist.GetAxis(index).SetRange(1, self.axisInfo[name]['nbins'])
 
+        if 'copyAxisLabel' in kwargs and kwargs['copyAxisLabel'] == True:
+            index = self.axisInfo[axisName]['index']
+            sourceAxis = self.hist.GetAxis(index)
+            targetAxis = h.GetXaxis()
+            for b in range(1, targetAxis.GetNbins()+1):
+                label = sourceAxis.GetBinLabel(b)
+                if label == '': continue
+                targetAxis.SetBinLabel(b, label)
+
         return h
 
-    def Project2D(self, axisName1, axisName2, axisRanges, suffix=""):
+    def Project2D(self, axisName1, axisName2, axisRanges, **kwargs):
         if axisName1 not in self.axisInfo: return None
         if axisName2 not in self.axisInfo: return None
 
@@ -59,7 +70,9 @@ class THnSparseSelector:
             binLo, binHi = axis.FindBin(lo), axis.FindBin(hi)
             self.hist.GetAxis(index).SetRange(binLo, binHi)
 
-        if suffix != "": suffix = "_"+suffix
+        suffix = ''
+        if 'suffix' in kwargs: suffix = "_"+kwargs['suffix']
+
         index1 = self.axisInfo[axisName1]['index']
         index2 = self.axisInfo[axisName2]['index']
         h = self.hist.Projection(index2, index1)
@@ -71,6 +84,23 @@ class THnSparseSelector:
             index = self.axisInfo[name]['index']
             axis = self.hist.GetAxis(index)
             self.hist.GetAxis(index).SetRange(1, self.axisInfo[name]['nbins'])
+
+        if 'copyXAxisLabel' in kwargs and kwargs['copyXAxisLabel'] == True:
+            index = self.axisInfo[axisName1]['index']
+            sourceAxis = self.hist.GetAxis(index)
+            targetAxis = h.GetXaxis()
+            for b in range(1, targetAxis.GetNbins()+1):
+                label = sourceAxis.GetBinLabel(b)
+                if label == '': continue
+                targetAxis.SetBinLabel(b, label)
+        if 'copyYAxisLabel' in kwargs and kwargs['copyYAxisLabel'] == True:
+            index = self.axisInfo[axisName2]['index']
+            sourceAxis = self.hist.GetAxis(index)
+            targetAxis = h.GetYaxis()
+            for b in range(1, targetAxis.GetNbins()+1):
+                label = sourceAxis.GetBinLabel(b)
+                if label == '': continue
+                targetAxis.SetBinLabel(b, label)
 
         return h
 
@@ -91,6 +121,16 @@ plots = {
 if not os.path.exists("hists"): os.mkdir("hists")
 f = TFile("hists/%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 for name, (variables, ranges) in plots.iteritems():
+    subranges = ranges.copy()
+    xVar = variables[0]
+    hDen = hSel.Project1D(xVar, subranges, name+"_Den", copyAxisLabel=True)
+    subranges.update({'isMatched':(1,1)})
+    hNum = hSel.Project1D(xVar, subranges, name+"_Num", copyAxislabel=True)
+    hDen.Write()
+    hNum.Write()
+
+for name, (variables, ranges) in plots.iteritems():
+    subranges = ranges.copy()
     subsels = []
     if name.startswith("Barrel"):
         for station in range(1,5):
