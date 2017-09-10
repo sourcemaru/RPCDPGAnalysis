@@ -123,9 +123,9 @@ f = TFile("hists/%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 for name, (variables, ranges) in plots.iteritems():
     subranges = ranges.copy()
     xVar = variables[0]
-    hDen = hSel.Project1D(xVar, subranges, name+"_Den", copyAxisLabel=True)
+    hDen = hSel.Project1D(xVar, subranges, suffix=name+"_Den", copyAxisLabel=True)
     subranges.update({'isMatched':(1,1)})
-    hNum = hSel.Project1D(xVar, subranges, name+"_Num", copyAxislabel=True)
+    hNum = hSel.Project1D(xVar, subranges, suffix=name+"_Num", copyAxislabel=True)
     hDen.Write()
     hNum.Write()
 
@@ -149,16 +149,16 @@ for name, (variables, ranges) in plots.iteritems():
         subranges.update(subsel)
         if len(variables) == 1:
             xVar = variables[0]
-            hDen = hSel.Project1D(xVar, subranges, subname+"_Den")
+            hDen = hSel.Project1D(xVar, subranges, suffix=subname+"_Den")
 
             subranges.update({'isMatched':(1,1)})
-            hNum = hSel.Project1D(xVar, subranges, subname+"_Num")
+            hNum = hSel.Project1D(xVar, subranges, suffix=subname+"_Num")
         elif len(variables) == 2:
             xVar, yVar = variables
-            hDen = hSel.Project2D(xVar, yVar, subranges, subname+"_Den")
+            hDen = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Den")
 
             subranges.update({'isMatched':(1,1)})
-            hNum = hSel.Project2D(xVar, yVar, subranges, subname+"_Num")
+            hNum = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Num")
 
         hDen.Write()
         hNum.Write()
