@@ -17,11 +17,7 @@ from Configuration.AlCa.autoCond_condDBv2 import autoCond
 #process.GlobalTag.globaltag = autoCond['run2_mc']
 process.GlobalTag.globaltag = autoCond['run2_data']
 
-process.load("MuonTools.StandardSequences.RecoStandAloneMuon_cff")
-process.load("MuonTools.Configuration.HltMuonDigis_cff")
-process.load("MuonTools.Configuration.HltMuonSegments_cff")
-process.load("MuonTools.Configuration.StandAloneNoRpc_cff")
-process.load("RecoTracker.CkfPattern.GroupedCkfTrajectoryBuilder_cff")
+process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.standAloneMuonsNoRPC_cff")
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet(
@@ -51,18 +47,9 @@ process.normfilter = cms.EDFilter("HLTHighLevel",
     throw = cms.bool(True)
 )
 
-process.triggerFilter = cms.EDFilter('TriggerFilter',
-    gtDigis = cms.untracked.InputTag('hltGtDigis')
-    #gtDigis = cms.untracked.InputTag('hltGtStage2Digis')
-    #gtDigis = cms.untracked.InputTag('gtDigis')
-)
-
-process.rpcPoint = cms.EDAnalyzer("RPCPointAnalyzer",
-    doTree = cms.untracked.bool(False),
-    doHist = cms.untracked.bool(True),
-    doHistByRun = cms.untracked.bool(True),
-    doChamberMuography = cms.untracked.bool(False),
-    vertex = cms.InputTag("goodVertices"),
+process.rpcExt = cms.EDAnalyzer("RPCPointAnalyzer",
+    minMuonPt = cms.double(4),
+    maxMuonAbsEta = cms.double(2.1),
     rpcRecHits = cms.InputTag("hltRpcRecHits"),
     refPoints = cms.VInputTag(
         cms.InputTag("rpcPointProducer:RPCDTExtrapolatedPoints"),
@@ -75,8 +62,10 @@ process.TFileService = cms.Service("TFileService",
 )
 
 process.p = cms.Path(
-    process.normfilter*process.muonstandalonereco*process.dTandCSCSegmentsinTracks
-  * process.rpcPointProducer * process.rpcPoint
+    process.normfilter
+  * process.standAloneMuonNoRPCSequence
+  * process.dTandCSCSegmentsinTracks
+  * process.rpcPointProducer * process.rpcExt
 )
 
 process.source.fileNames = [
