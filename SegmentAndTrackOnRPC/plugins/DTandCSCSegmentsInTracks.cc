@@ -1,10 +1,10 @@
 /** \class DTandCSCSegmentsinTracks
  *
- *  Producer which take as input a muon track and return two containers 
+ *  Producer which take as input a muon track and return two containers
  *  with the DTSegments and CSCSegments (respectively) used to fit it
  *
  *  $Date: 2012/02/15 14:19:57 $
- *  
+ *
  *  \author Juan Pablo Gomez - Uniandes
  */
 #include <vector>
@@ -17,7 +17,7 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
-#include "TrackingTools/PatternTools/interface/TrajectoryMeasurement.h" 
+#include "TrackingTools/PatternTools/interface/TrajectoryMeasurement.h"
 #include "TrackingTools/DetLayers/interface/DetLayer.h"
 #include "TrackingTools/PatternTools/interface/TrajMeasLessEstim.h"
 #include "RecoMuon/TrackingTools/interface/MuonPatternRecoDumper.h"
@@ -78,119 +78,92 @@ public:
   void produce(edm::Event&, const edm::EventSetup&) override;
 
 private:
-
-  edm::EDGetTokenT<DTRecSegment4DCollection> dt4DSegments;
-  edm::EDGetTokenT<CSCSegmentCollection> cscSegments;
-  edm::EDGetTokenT<reco::TrackCollection> tracks;
+  edm::EDGetTokenT<DTRecSegment4DCollection> dt4DSegmentsToken;
+  edm::EDGetTokenT<CSCSegmentCollection> cscSegmentsToken;
+  edm::EDGetTokenT<reco::TrackCollection> tracksToken;
 
 };
 
 DTandCSCSegmentsinTracks::DTandCSCSegmentsinTracks(const edm::ParameterSet& iConfig)
 {
-  dt4DSegments = consumes<DTRecSegment4DCollection>(iConfig.getUntrackedParameter < edm::InputTag > ("dt4DSegments"));
-  cscSegments = consumes<CSCSegmentCollection>(iConfig.getUntrackedParameter < edm::InputTag > ("cscSegments"));
-  tracks = consumes<reco::TrackCollection>(iConfig.getUntrackedParameter < edm::InputTag > ("tracks"));
+  dt4DSegmentsToken = consumes<DTRecSegment4DCollection>(iConfig.getUntrackedParameter<edm::InputTag>("dt4DSegments"));
+  cscSegmentsToken = consumes<CSCSegmentCollection>(iConfig.getUntrackedParameter<edm::InputTag>("cscSegments"));
+  tracksToken = consumes<reco::TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("tracks"));
 
   produces<DTRecSegment4DCollection>("SelectedDtSegments");
-  produces<CSCSegmentCollection>("SelectedCscSegments");  
+  produces<CSCSegmentCollection>("SelectedCscSegments");
 }
 
 void DTandCSCSegmentsinTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  edm::ESHandle<GlobalTrackingGeometry> theTrackingGeometry;
-  iSetup.get<GlobalTrackingGeometryRecord>().get(theTrackingGeometry);
+  edm::ESHandle<GlobalTrackingGeometry> trackingGeom;
+  iSetup.get<GlobalTrackingGeometryRecord>().get(trackingGeom);
 
-  edm::Handle<DTRecSegment4DCollection> all4DSegments;
-  iEvent.getByToken(dt4DSegments, all4DSegments); 
+  edm::Handle<DTRecSegment4DCollection> dt4DSegmentsHandle;
+  iEvent.getByToken(dt4DSegmentsToken, dt4DSegmentsHandle);
 
-  edm::Handle<CSCSegmentCollection> allCSCSegments;
-  iEvent.getByToken(cscSegments, allCSCSegments);
+  edm::Handle<CSCSegmentCollection> cscSegmentsHandle;
+  iEvent.getByToken(cscSegmentsToken, cscSegmentsHandle);
 
-  edm::Handle<reco::TrackCollection> alltracks;
-  iEvent.getByToken(tracks,alltracks);
+  edm::Handle<reco::TrackCollection> tracksHandle;
+  iEvent.getByToken(tracksToken,tracksHandle);
 
   auto selectedDtSegments = std::make_unique<DTRecSegment4DCollection>();
   auto selectedCscSegments = std::make_unique<CSCSegmentCollection>();
 
-  std::vector<CSCDetId> chamberIdCSC;
-  std::vector<DTLayerId> chamberIdDT;
+  std::vector<DTLayerId> chamberIdsDT;
+  std::vector<CSCDetId> chamberIdsCSC;
 
-  for  ( auto Track=alltracks->begin(); Track!=alltracks->end();   Track++) {
-    for( auto recHit = Track->recHitsBegin(); recHit != Track->recHitsEnd(); ++recHit) {
-      const GeomDet* geomDet = theTrackingGeometry->idToDet( (*recHit)->geographicalId() );
+  for ( auto track : *tracksHandle ) {
+    for( auto recHit = track.recHitsBegin(); recHit != track.recHitsEnd(); ++recHit) {
+      const GeomDet* geomDet = trackingGeom->idToDet( (*recHit)->geographicalId() );
 
       if( geomDet->subDetector() == GeomDetEnumerators::DT ) {
-        edm::OwnVector<DTRecSegment4D> DTSegmentsVector;
-        //Take the layer associated to this hit                                                                                                                                         
+        //Take the layer associated to this hit
         DTLayerId myLayer( (*recHit)->geographicalId().rawId() );
-        DTRecSegment4DCollection::range  range = all4DSegments->get(myLayer);
+        DTRecSegment4DCollection::range  range = dt4DSegmentsHandle->get(myLayer);
 
-        // Loop over the 4Dsegments of this *ChamberId=myLayer
-        int counter=0;  
-        for ( auto segmentDT = range.first; segmentDT!=range.second; ++segmentDT) {
-          counter++;      
+        const int nSegment = range.second-range.first;
+        if ( nSegment != 1 ) continue;
+
+        bool isNewChamber = true;
+        for( auto chamberIdDT : chamberIdsDT ) {
+          if( myLayer.wheel() == chamberIdDT.wheel() && myLayer.station() == chamberIdDT.station() && myLayer.sector() == chamberIdDT.sector() ) {
+            isNewChamber = false;
+            break;
+          }
         }
+        if ( !isNewChamber ) continue;
 
-        //if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
-        if (counter==1){
-          //By default the chamber associated to the segment is new  
-          bool isNewChamber = true;
-          //Loop over DTChambers already used 
-          for( std::vector<DTLayerId>::iterator chamberIdDTIt = chamberIdDT.begin(); chamberIdDTIt != chamberIdDT.end(); chamberIdDTIt++ )
-          {
-            //If this chamber has been used before isNewChamber = false
-            if( myLayer.wheel() == (*chamberIdDTIt).wheel() &&  myLayer.station() == (*chamberIdDTIt).station() && myLayer.sector() == (*chamberIdDTIt).sector() ) 
-            {
-              isNewChamber = false;
-            }
-          }//Loop over DTChambers already used
-          if (isNewChamber)
-          {
-            chamberIdDT.push_back(myLayer);
-            DTSegmentsVector.push_back(*(range.first));
-            selectedDtSegments->put(myLayer, DTSegmentsVector.begin(), DTSegmentsVector.end());
-          }
-        }//if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
-
-      }//It's a DTHit                                                                                                                                                                   
-      //It's a CSCHit
-      if( geomDet->subDetector() == GeomDetEnumerators::CSC ) {
-        edm::OwnVector<CSCSegment> CSCSegmentsVector;
-        //Take the layer associated to this hit                                                                                                                                         
+        chamberIdsDT.emplace_back(myLayer);
+        edm::OwnVector<DTRecSegment4D> dtSegmentsVector;
+        dtSegmentsVector.push_back(*(range.first));
+        selectedDtSegments->put(myLayer, dtSegmentsVector.begin(), dtSegmentsVector.end());
+      }
+      else if ( geomDet->subDetector() == GeomDetEnumerators::CSC ) {
+        //Take the layer associated to this hit
         CSCDetId myLayer( (*recHit)->geographicalId().rawId() );
-        CSCSegmentCollection::range  range = allCSCSegments->get(myLayer);
-        // Loop over the CSCsegments of this *ChamberId=myLayer
-        int counter=0;  
-        for ( auto segmentCSC = range.first; segmentCSC!=range.second; ++segmentCSC) 
-        {
-          counter++;      
-        }//Loop over the CSCsegments of this *ChamberId=myLayer
-        //if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
-        if (counter==1){
-          //By default the chamber associated to the segment is new  
-          bool isNewChamber = true;
-          //Loop over CSCChambers already used 
-          for( std::vector<CSCDetId>::iterator chamberIdCSCIt = chamberIdCSC.begin(); chamberIdCSCIt != chamberIdCSC.end(); chamberIdCSCIt++ )
-          {
-            //If this chamber has been used before isNewChamber = false
-            if( myLayer.chamberId() == (*chamberIdCSCIt).chamberId() ) 
-            {
-              isNewChamber = false;
-            }
-          }//Loop over CSCChambers already used
-          if (isNewChamber)
-          {
-            //std::cout<<"paso8a"<<std::endl;
-            chamberIdCSC.push_back(myLayer);
-            CSCSegmentsVector.push_back(*(range.first));
-            selectedCscSegments->put(myLayer, CSCSegmentsVector.begin(), CSCSegmentsVector.end());
+        CSCSegmentCollection::range  range = cscSegmentsHandle->get(myLayer);
+        const int nSegments = range.second-range.first;
+        if ( nSegments != 1 ) continue;
+
+        bool isNewChamber = true;
+        for( auto chamberIdCSC : chamberIdsCSC ) {
+          if( myLayer.chamberId() == chamberIdCSC.chamberId() ) {
+            isNewChamber = false;
+            break;
           }
-        }//if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
+        }
+        if ( !isNewChamber ) continue;
 
-      }//It's a CSCHit
-    }//Loop over the trackingRecHits
+        chamberIdsCSC.emplace_back(myLayer);
+        edm::OwnVector<CSCSegment> cscSegmentsVector;
+        cscSegmentsVector.push_back(*(range.first));
+        selectedCscSegments->put(myLayer, cscSegmentsVector.begin(), cscSegmentsVector.end());
+      }
+    }
+  }
 
-  }//loop over alltracks
   iEvent.put(std::move(selectedCscSegments),"SelectedCscSegments");
   iEvent.put(std::move(selectedDtSegments),"SelectedDtSegments");
 }
