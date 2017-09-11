@@ -6,7 +6,7 @@ mode = "RPC"
 if mode == "RPC": chTitle = "Rolls"
 else: chTitle = "Chambers"
 
-lumiVal = 0.0
+lumiVal = 14139.173/1000
 
 binW, xmin, xmax = 0.5, 70.5, 100
 #binW, xmin, xmax = 1, -0.5, 100
