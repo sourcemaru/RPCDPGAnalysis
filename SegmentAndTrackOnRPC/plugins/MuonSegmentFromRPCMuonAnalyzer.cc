@@ -185,7 +185,7 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
     for ( auto match : mu.matches() ) {
       if ( match.detector() == 3 ) continue;
 
-      vars[REGION] = vars[WHEEL] = vars[DISK] = vars[RING] = vars[TRSECTOR] = 0;
+      vars[REGION] = vars[WHEEL] = vars[STATION] = vars[DISK] = vars[RING] = vars[TRSECTOR] = 0;
       vars[ISMATCHED] = vars[ISFIDUCIAL] = 0;
       vars[RESX] = vars[RESY] = vars[PULLX] = vars[PULLY] = 0;
 

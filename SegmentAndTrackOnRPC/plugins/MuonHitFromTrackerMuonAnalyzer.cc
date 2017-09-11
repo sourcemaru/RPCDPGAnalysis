@@ -25,9 +25,6 @@
 #include "Geometry/RPCGeometry/interface/RPCGeomServ.h"
 #include "DataFormats/GeometrySurface/interface/TrapezoidalPlaneBounds.h"
 
-#include "TTree.h"
-#include "TH1F.h"
-#include "TH2F.h"
 #include "THnSparse.h"
 
 #include <iostream>
@@ -75,7 +72,7 @@ MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::Parame
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta"))
 {
-  hInfo_ = 0;
+  hInfo_ = nullptr;
 }
 
 void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
@@ -200,14 +197,15 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
       const LocalPoint lPos(match.x, match.y, 0);
       const RPCRoll* roll = rpcGeom->roll(match.id);
-      if ( !roll->surface().bounds().inside(lPos) ) continue;
+      const auto& bound = roll->surface().bounds();
+      if ( !bound.inside(lPos) ) continue;
 
       const auto gp = roll->toGlobal(lPos);
       const RPCDetId detId(match.id);
       const string rollName = RPCGeomServ(detId).name();
       const auto axis = hInfo_->GetAxis(ROLLNAME);
 
-      vars[REGION] = vars[WHEEL] = vars[DISK] = vars[RING] = 0;
+      vars[REGION] = vars[WHEEL] = vars[STATION] = vars[DISK] = vars[RING] = 0;
       vars[ISMATCHED] = vars[ISFIDUCIAL] = 0;
       vars[RESX] = vars[RESY] = vars[PULLX] = vars[PULLY] = 0;
       vars[CLS] = vars[BX] = 0;
@@ -218,7 +216,6 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       vars[GY] = gp.y();
       vars[GZ] = gp.z();
       vars[GPHI] = gp.phi();
-      vars[STATION] = detId.station();
       vars[SECTOR] = detId.sector();
       vars[LAYER] = detId.layer();
       vars[ROLL] = detId.roll();
@@ -227,8 +224,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       if ( detId.region() == 0 ) {
         vars[REGION] = 0;
         vars[WHEEL] = detId.ring();
+        vars[STATION] = detId.station();
 
-        const auto& bound = roll->surface().bounds();
         const bool isInFiducial = (std::abs(lPos.y()) <= bound.length()/2-8 and
                                    std::abs(lPos.x()) <= bound.width()/2-8 );
         vars[ISFIDUCIAL] = isInFiducial;
@@ -263,7 +260,6 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[DISK] = detId.station();
         vars[RING] = detId.ring();
 
-        const auto& bound = roll->surface().bounds();
         const double wT = bound.width(), w0 = bound.widthAtHalfLength();
         const double slope = (wT-w0)/bound.length();
         const double w2AtY = slope*lPos.y() + w0/2;
