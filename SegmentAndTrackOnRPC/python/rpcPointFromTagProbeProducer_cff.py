@@ -20,7 +20,13 @@ rpcPointFromTagProbe = cms.EDProducer("RPCPointFromTagProbeProducer",
     maxMass = cms.double(110),
     triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
     triggerResults = cms.InputTag("TriggerResults::HLT"),
-    triggerPaths = cms.vstring("HLT_IsoMu22", "HLT_IsoMu22_eta2p1", "HLT_IsoTkMu22", "HLT_Mu50", "HLT_TkMu50"),
+    triggerPaths = cms.vstring(
+        "HLT_Mu50",
+        "HLT_IsoMu18", ## 2015C-D 25ns, 76X MC
+        "HLT_IsoMu20", ## 2015B-C 50ns, 74X MC
+        "HLT_IsoMu22", "HLT_IsoMuTk22", ## Do we need these paths?
+        "HLT_IsoMu24", "HLT_IsoTkMu24", "HLT_IsoMu22_eta2p1", "HLT_IsoTkMu22_eta2p1", ## 2016B-H 25ns 80X MC
+    ),
 )
 
 rpcPointFromTrackerMuons = cms.EDProducer("RPCPointFromTrackerMuonProducer",

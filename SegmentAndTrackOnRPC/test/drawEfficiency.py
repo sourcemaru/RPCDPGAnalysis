@@ -6,7 +6,7 @@ mode = "RPC"
 if mode == "RPC": chTitle = "Rolls"
 else: chTitle = "Chambers"
 
-lumiVal = 0.0
+lumiVal = 14139.173/1000
 
 binW, xmin, xmax = 0.5, 70.5, 100
 #binW, xmin, xmax = 1, -0.5, 100
@@ -46,22 +46,24 @@ rollNames = [[], []]
 nExps = [[], []]
 nRecs = [[], []]
 
-for s in [x.GetName() for x in f.GetListOfKeys()]:
-    if s.startswith("Wheel"): category = 0
-    elif s.startswith("Disk"): category = 1
-    else: continue
+hBarrel_Den  = f.Get("h_rollName_Barrel_detId_Den")
+hBarrel_Num  = f.Get("h_rollName_Barrel_detId_Num")
+hEndcapP_Den = f.Get("h_rollName_EndcapP_detId_Den")
+hEndcapP_Num = f.Get("h_rollName_EndcapP_detId_Num")
+hEndcapN_Den = f.Get("h_rollName_EndcapN_detId_Den")
+hEndcapN_Num = f.Get("h_rollName_EndcapN_detId_Num")
+for b in range(1, hBarrel_Den.GetNbinsX()+1):
+    name = hBarrel_Den.GetXaxis().GetBinLabel(b+1)
+    if name == '': break
 
-    d = f.Get(s)
-
-    for s in [x.GetName() for x in d.GetListOfKeys()]:
-        if not s.startswith("hSubdet"): continue
-        if s.endswith("NoFid"): continue
-
-        h = d.Get(s)
-        n = [h.GetBinContent(i+1) for i in range(h.GetNbinsX())]
-        if s.startswith("hSubdetExp"): nExps[category].extend(n)
-        if s.startswith("hSubdetRec"): nRecs[category].extend(n)
-        if s.startswith("hSubdetExp"): rollNames[category].extend([h.GetXaxis().GetBinLabel(i+1) for i in range(h.GetNbinsX())])
+    if name.startswith('W'):
+        nExps[0].append(hBarrel_Den.GetBinContent(b))
+        nRecs[0].append(hBarrel_Num.GetBinContent(b))
+        rollNames[0].append(name)
+    else:
+        nExps[1].append(hEndcapP_Den.GetBinContent(b)+hEndcapN_Den.GetBinContent(b))
+        nRecs[1].append(hEndcapP_Num.GetBinContent(b)+hEndcapN_Num.GetBinContent(b))
+        rollNames[1].append(name)
 
 nbin = int((xmax-xmin)/binW)
 objs = []
