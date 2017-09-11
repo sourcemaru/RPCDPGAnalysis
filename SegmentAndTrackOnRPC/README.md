@@ -31,8 +31,8 @@ to get correct per-chamber muography plots. The RPCPointProducer in the CMSSW is
 outdated, this should be updated as well (under development yet, but this is not crucial).
 
 ```
-cmsrel CMSSW_9_2_10
-cd CMSSW_9_2_10/src
+cmsrel CMSSW_9_2_11
+cd CMSSW_9_2_11/src
 cmsenv
 git-cms-init
 git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG92X
@@ -70,21 +70,29 @@ DATASET=/SingleMuon/Run2017D-PromptReco-v1/AOD crab submit
 ```
 Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/ by default. Please modify the crabConfig.py if you want to set different destination.
 
-When jobs are finished, simply add all output root files with hadd command. 
-The root file contains the hit occupancy informations in ThnSparseD, n-dimensional histogram format. You can play with this to project on 1D histograms
-or use the macros to obtain usual efficiency plots.
+When jobs are finished, simply add all output root files with hadd command. (Change file names and paths)
+```
+hadd SingleMuon_Run2017.root /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/SingleMuon/*/*/*/*.root
+```
 
-... Below are to be updated ...
+The root file contains the hit occupancy informations in ThnSparseD, n-dimensional histogram format. You can play with this to project on 1D histograms
+or use the projection.py macros.
+
+```
+./projection.py SingleMuon_Run2017.root
+```
+
+will produce hists/SingleMuon\_Run2017.root with usual TH1/TH2 histograms.
 
 The x-y and z-phi view of efficiency plots can be obtained by running the drawMuographySummary.py.
 Please modify this pyROOT script if necessary.
 
 ```
-python -i drawMuongraphySummary.py
+python -i drawMuongraphySummary.py hists/SingleMuon_Run2017.root
 ```
 
 The roll efficiency distributions can be obtained using the drawEfficiency.py,
 
 ```
-python -i drawEfficiency.py
+python -i drawEfficiency.py hists/SingleMuon\_Run2017.root
 ```
