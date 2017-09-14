@@ -63,7 +63,7 @@ private:
     ISMATCHED, ISFIDUCIAL,
     LX, LY, RESX, RESY, PULLX, PULLY,
     GX, GY, GZ, GPHI,
-    MASS, PT, ETA, PHI,
+    MASS, PT, ETA, PHI, TIME,
     NVARS
   };
 
@@ -77,7 +77,7 @@ MuonSegmentFromRPCMuonAnalyzer::MuonSegmentFromRPCMuonAnalyzer(const edm::Parame
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta"))
 {
-  hInfo_ = 0;
+  hInfo_ = nullptr;
 }
 
 void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
@@ -94,7 +94,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "isMatched", "isFiducial",
     "lX", "lY", "resX", "resY", "pullX", "pullY",
     "gX", "gY", "gZ", "gPhi",
-    "mass", "pt", "eta", "phi",
+    "mass", "pt", "eta", "phi", "time",
   };
   const char* varTitles[NVARS] = {
     "run",
@@ -103,7 +103,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "isMatched", "isFiducial",
     "Expected local x(cm)", "Expected local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
     "Expected global x(cm)", "Expected global y(cm)", "Expected global z(cm)", "Expected global phi",
-    "mass (GeV)", "pt (GeV)", "#eta", "#phi",
+    "mass (GeV)", "pt (GeV)", "#eta", "#phi", "time (ns)",
   };
   int nbins[NVARS] = {
     1000000,
@@ -112,7 +112,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     2, 2,
     400, 400, 100, 100, 100, 100,
     1600, 1600, 2400, 360*3,
-    120, 20, 10, 24,
+    120, 20, 10, 24, 250,
   };
   double xmins[NVARS] = {
     0,
@@ -121,7 +121,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     0, 0,
     -200, -200, -50, -50, -5, -5,
     -800, -800, -1200, -3.14159265,
-    60, 0, -2.5, -3.14159265,
+    60, 0, -2.5, -3.14159265, 25*-5,
   };
   double xmaxs[NVARS] = {
     1000000,
@@ -130,7 +130,7 @@ void MuonSegmentFromRPCMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     2, 2,
     200, 200, 50, 50, 5, 5,
     800, 800, 1200, 3.14159265,
-    120, 100, 2.5, 3.14159265,
+    120, 100, 2.5, 3.14159265, 25*5,
   };
   hInfo_ = fs->make<THnSparseF>("hInfo", "hInfo", NVARS, nbins, xmins, xmaxs);
   for ( int i=0; i<NVARS; ++i ) {
@@ -181,6 +181,7 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
     vars[PT] = pt;
     vars[ETA] = mu.eta();
     vars[PHI] = mu.phi();
+    vars[TIME] = mu.time().timeAtIpInOut;
 
     for ( auto match : mu.matches() ) {
       if ( match.detector() == 3 ) continue;

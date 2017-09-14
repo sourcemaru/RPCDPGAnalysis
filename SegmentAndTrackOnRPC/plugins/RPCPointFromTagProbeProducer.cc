@@ -1,6 +1,5 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDProducer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h"
@@ -216,6 +215,7 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
 
       pointVector.clear();
       pointVector.push_back(RPCRecHit(match.id, 0, lPos, lErr));
+      pointVector.back().setTimeAndError(probeRef->time().timeAtIpInOut, probeRef->time().timeAtIpInOutErr);
       out_points->put(match.id, pointVector.begin(), pointVector.end());
     }
 

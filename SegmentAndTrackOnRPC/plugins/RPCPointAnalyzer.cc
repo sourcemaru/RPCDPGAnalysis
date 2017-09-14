@@ -54,7 +54,7 @@ private:
     LX, LY, RESX, RESY, PULLX, PULLY,
     GX, GY, GZ, GPHI,
     CLS, BX,
-    MASS, PT, ETA, PHI,
+    MASS, PT, ETA, PHI, TIME,
     NVARS
   };
 };
@@ -86,7 +86,7 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
     "lX", "lY", "resX", "resY", "pullX", "pullY",
     "gX", "gY", "gZ", "gPhi",
     "cls", "bx",
-    "mass", "pt", "eta", "phi",
+    "mass", "pt", "eta", "phi", "time",
   };
   const char* varTitles[NVARS] = {
     "run",
@@ -96,7 +96,7 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
     "Expected local x(cm)", "Expected local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
     "Expected global x(cm)", "Expected global y(cm)", "Expected global z(cm)", "Expected global phi",
     "Cluster size", "Bunch crossing",
-    "mass (GeV)", "pt (GeV)", "#eta", "#phi",
+    "mass (GeV)", "pt (GeV)", "#eta", "#phi", "time (ns)",
   };
   int nbins[NVARS] = {
     1000000,
@@ -106,7 +106,7 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
     400, 400, 100, 100, 100, 100,
     1600, 1600, 2400, 360*3,
     10, 13,
-    120, 20, 10, 24,
+    120, 20, 10, 24, 250,
   };
   double xmins[NVARS] = {
     0,
@@ -116,7 +116,7 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
     -200, -200, -50, -50, -5, -5,
     -800, -800, -1200, -3.14159265,
     0, -6.5,
-    60, 0, -2.5, -3.14159265,
+    60, 0, -2.5, -3.14159265, 25*-5,
   };
   double xmaxs[NVARS] = {
     1000000,
@@ -126,7 +126,7 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
     200, 200, 50, 50, 5, 5,
     800, 800, 1200, 3.14159265,
     10, 6.5,
-    120, 100, 2.5, 3.14159265,
+    120, 100, 2.5, 3.14159265, 25*5,
   };
   hInfo_ = fs->make<THnSparseF>("hInfo", "hInfo", NVARS, nbins, xmins, xmaxs);
   for ( int i=0; i<NVARS; ++i ) {
@@ -184,6 +184,7 @@ void RPCPointAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& e
       vars[ISMATCHED] = vars[ISFIDUCIAL] = 0;
       vars[RESX] = vars[RESY] = vars[PULLX] = vars[PULLY] = 0;
       vars[CLS] = vars[BX] = 0;
+      vars[TIME] = refItr->time();
 
       vars[LX] = lPos.x();
       vars[LY] = lPos.y();

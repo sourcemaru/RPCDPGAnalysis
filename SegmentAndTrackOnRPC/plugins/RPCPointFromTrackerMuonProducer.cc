@@ -90,6 +90,7 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
       auto pointItr = pointMap.find(match.id);
       if ( pointItr == pointMap.end() ) pointItr = pointMap.insert(std::make_pair(match.id, edm::OwnVector<RPCRecHit>())).first;
       pointItr->second.push_back(RPCRecHit(match.id, 0, lPos, lErr));
+      pointItr->second.back().setTimeAndError(mu.time().timeAtIpInOut, mu.time().timeAtIpInOutErr);
     }
   }
 
