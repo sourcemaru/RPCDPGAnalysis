@@ -12,7 +12,7 @@ f = TFile(sys.argv[1])
 hInfo = f.Get("rpcExt/hInfo")
 hSel = THnSparseSelector(hInfo)
 
-f = TFile("hists/residuals_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
+f = TFile("hists/properties_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
 plots = {
     'mass':[['mass'], {}],

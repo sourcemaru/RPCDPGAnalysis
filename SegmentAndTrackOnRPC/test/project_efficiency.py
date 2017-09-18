@@ -12,7 +12,7 @@ hInfo = f.Get("rpcExt/hInfo")
 hSel = THnSparseSelector(hInfo)
 
 if not os.path.exists("hists"): os.mkdir("hists")
-f = TFile("hists/%s" % (os.path.basename(sys.argv[1])), "RECREATE")
+f = TFile("hists/efficiency_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
 ## Overall efficiency distribution
 plots = {
