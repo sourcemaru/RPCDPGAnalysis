@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 
-run = 0
-padW = 500
-
 from ROOT import *
-from array import array
-import os, sys
-from math import floor
 gStyle.SetOptStat(0)
 
 class THnSparseSelector:
@@ -103,63 +97,4 @@ class THnSparseSelector:
                 targetAxis.SetBinLabel(b, label)
 
         return h
-
-f = TFile(sys.argv[1])
-hInfo = f.Get("rpcExt/hInfo")
-hSel = THnSparseSelector(hInfo)
-
-plots = {
-    'Barrel_ZPhi':[['gZ', 'gPhi'], {'region':(0,0), 'gZ':(-700, 700), 'isFiducial':(1,1)}],
-    'EndcapP_XY':[['gX', 'gY'], {'region':(1,1), 'isFiducial':(1,1)}],
-    'EndcapN_XY':[['gX', 'gY'], {'region':(-1,-1), 'isFiducial':(1,1)}],
-#    'lX_lY':['lX', 'lY', {'isFiducial':(1,1)}],
-    'Barrel_detId':[['rollName'], {'region':(0,0), 'isFiducial':(1,1)}],
-    'EndcapP_detId':[['rollName'], {'region':(1,1), 'isFiducial':(1,1)}],
-    'EndcapN_detId':[['rollName'], {'region':(-1,-1), 'isFiducial':(1,1)}],
-}
-
-if not os.path.exists("hists"): os.mkdir("hists")
-f = TFile("hists/%s" % (os.path.basename(sys.argv[1])), "RECREATE")
-for name, (variables, ranges) in plots.iteritems():
-    subranges = ranges.copy()
-    xVar = variables[0]
-    hDen = hSel.Project1D(xVar, subranges, suffix=name+"_Den", copyAxisLabel=True)
-    subranges.update({'isMatched':(1,1)})
-    hNum = hSel.Project1D(xVar, subranges, suffix=name+"_Num", copyAxislabel=True)
-    hDen.Write()
-    hNum.Write()
-
-for name, (variables, ranges) in plots.iteritems():
-    subranges = ranges.copy()
-    subsels = []
-    if name.startswith("Barrel"):
-        for station in range(1,5):
-            nLayer = 2
-            if station > 2: nLayer = 1
-            for layer in range(1,nLayer+1):
-                subsels.append({'station':(station,station), 'layer':(layer,layer)})
-    elif name.startswith("Endcap"):
-        for station in range(1,5):
-            subsels.append({'station':(station,station)})
-
-    for subsel in subsels:
-        subranges = ranges.copy()
-        subname = name + '_' + ('_'.join("%s%d" % (n, r[0]) for n, r in subsel.iteritems()))
-
-        subranges.update(subsel)
-        if len(variables) == 1:
-            xVar = variables[0]
-            hDen = hSel.Project1D(xVar, subranges, suffix=subname+"_Den")
-
-            subranges.update({'isMatched':(1,1)})
-            hNum = hSel.Project1D(xVar, subranges, suffix=subname+"_Num")
-        elif len(variables) == 2:
-            xVar, yVar = variables
-            hDen = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Den")
-
-            subranges.update({'isMatched':(1,1)})
-            hNum = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Num")
-
-        hDen.Write()
-        hNum.Write()
 
