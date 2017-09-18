@@ -79,7 +79,7 @@ The root file contains the hit occupancy informations in ThnSparseD, n-dimension
 or use the projection.py macros.
 
 ```
-./projection.py SingleMuon_Run2017.root
+./projection_efficiency.py SingleMuon_Run2017.root
 ```
 
 will produce hists/SingleMuon\_Run2017.root with usual TH1/TH2 histograms.
@@ -88,11 +88,19 @@ The x-y and z-phi view of efficiency plots can be obtained by running the drawMu
 Please modify this pyROOT script if necessary.
 
 ```
-python -i drawMuongraphySummary.py hists/SingleMuon_Run2017.root
+python -i drawMuongraphySummary.py hists/efficiency_SingleMuon_Run2017.root
 ```
 
 The roll efficiency distributions can be obtained using the drawEfficiency.py,
 
 ```
-python -i drawEfficiency.py hists/SingleMuon\_Run2017.root
+python -i drawEfficiency.py hists/efficiency_SingleMuon\_Run2017.root
 ```
+
+You can obtain other useful projections for the chamber performance as well;
+
+```
+./projection_properties.py SingleMuon_Run2017.root
+```
+
+then hists/properties\_SignleMuon\_Run2017.root will be created
