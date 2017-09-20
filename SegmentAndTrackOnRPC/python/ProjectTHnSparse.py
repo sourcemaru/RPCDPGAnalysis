@@ -45,10 +45,10 @@ class THnSparseSelector:
             index = self.axisInfo[axisName]['index']
             sourceAxis = self.hist.GetAxis(index)
             targetAxis = h.GetXaxis()
-            for b in range(1, targetAxis.GetNbins()+1):
+            for b in range(0, targetAxis.GetNbins()+2):
                 label = sourceAxis.GetBinLabel(b)
                 if label == '': continue
-                targetAxis.SetBinLabel(b, label)
+                targetAxis.SetBinLabel(b+1, label)
 
         return h
 
@@ -83,18 +83,18 @@ class THnSparseSelector:
             index = self.axisInfo[axisName1]['index']
             sourceAxis = self.hist.GetAxis(index)
             targetAxis = h.GetXaxis()
-            for b in range(1, targetAxis.GetNbins()+1):
+            for b in range(0, targetAxis.GetNbins()+2):
                 label = sourceAxis.GetBinLabel(b)
                 if label == '': continue
-                targetAxis.SetBinLabel(b, label)
+                targetAxis.SetBinLabel(b+1, label)
         if 'copyYAxisLabel' in kwargs and kwargs['copyYAxisLabel'] == True:
             index = self.axisInfo[axisName2]['index']
             sourceAxis = self.hist.GetAxis(index)
             targetAxis = h.GetYaxis()
-            for b in range(1, targetAxis.GetNbins()+1):
+            for b in range(0, targetAxis.GetNbins()+2):
                 label = sourceAxis.GetBinLabel(b)
                 if label == '': continue
-                targetAxis.SetBinLabel(b, label)
+                targetAxis.SetBinLabel(b+1, label)
 
         return h
 
