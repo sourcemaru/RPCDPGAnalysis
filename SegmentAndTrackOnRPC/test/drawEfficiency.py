@@ -52,9 +52,9 @@ hEndcapP_Den = f.Get("h_rollName_EndcapP_detId_Den")
 hEndcapP_Num = f.Get("h_rollName_EndcapP_detId_Num")
 hEndcapN_Den = f.Get("h_rollName_EndcapN_detId_Den")
 hEndcapN_Num = f.Get("h_rollName_EndcapN_detId_Num")
-for b in range(1, hBarrel_Den.GetNbinsX()+1):
-    name = hBarrel_Den.GetXaxis().GetBinLabel(b+1)
-    if name == '': break
+for b in range(0, hBarrel_Den.GetNbinsX()+2):
+    name = hBarrel_Den.GetXaxis().GetBinLabel(b)
+    if name == '': continue
 
     if name.startswith('W'):
         nExps[0].append(hBarrel_Den.GetBinContent(b))
