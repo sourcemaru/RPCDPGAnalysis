@@ -20,7 +20,9 @@ class THnSparseSelector:
         if axisName not in self.axisInfo: return None
 
         for name, (lo, hi) in axisRanges.iteritems():
-            if name not in self.axisInfo: continue
+            if name not in self.axisInfo:
+                print "Cannot find axis '%s'" % name
+                continue
 
             index = self.axisInfo[name]['index']
             axis = self.hist.GetAxis(index)
@@ -35,7 +37,9 @@ class THnSparseSelector:
         h.SetName("h_%s%s" % (axisName, suffix))
 
         for name, (lo, hi) in axisRanges.iteritems():
-            if name not in self.axisInfo: continue
+            if name not in self.axisInfo:
+                print "Cannot find axis '%s'" % name
+                continue
 
             index = self.axisInfo[name]['index']
             axis = self.hist.GetAxis(index)
@@ -57,11 +61,14 @@ class THnSparseSelector:
         if axisName2 not in self.axisInfo: return None
 
         for name, (lo, hi) in axisRanges.iteritems():
-            if name not in self.axisInfo: continue
+            if name not in self.axisInfo:
+                print "Cannot find axis '%s'" % name
+                continue
 
             index = self.axisInfo[name]['index']
             axis = self.hist.GetAxis(index)
             binLo, binHi = axis.FindBin(lo), axis.FindBin(hi)
+            if binLo > binHi: binHi, binLo = binLo, binHi
             self.hist.GetAxis(index).SetRange(binLo, binHi)
 
         suffix = ''
@@ -73,7 +80,9 @@ class THnSparseSelector:
         h.SetName("h_%s_%s%s" % (axisName1, axisName2, suffix))
 
         for name, (lo, hi) in axisRanges.iteritems():
-            if name not in self.axisInfo: continue
+            if name not in self.axisInfo:
+                print "Cannot find axis '%s'" % name
+                continue
 
             index = self.axisInfo[name]['index']
             axis = self.hist.GetAxis(index)
