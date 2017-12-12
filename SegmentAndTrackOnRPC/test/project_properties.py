@@ -39,23 +39,28 @@ plots = {
     'timeAtBx3':[['time'], {'bx':( 3, 3)}],
 
     'rollNames':[['rollName'], {}],
-    'rollNamesAtPosBx':[['rollName'], {'bx':(-2,-1)}],
-    'rollNamesAtNegBx':[['rollName'], {'bx':(1,3)}],
+
+    'cls_rollNames':[['rollName', 'cls'], {}],
+    'pt_rollNames':[['rollName', 'pt'], {}],
+    'bx_rollNames':[['rollName', 'bx'], {}],
+    'time_rollNames':[['rollName', 'time'], {}],
 }
 
 if not os.path.exists("hists"): os.mkdir("hists")
 for name, (variables, ranges) in plots.iteritems():
     subranges = {'isMatched':(1,1), 'mass':(84,97)}
     subranges.update(ranges)
+    h = None
     if len(variables) == 1:
         xVar = variables[0]
-        if xVar == 'rollNames':
+        if name == 'rollNames':
             h = hSel.Project1D(xVar, subranges, copyAxisLabel=True)
         else:
             h = hSel.Project1D(xVar, subranges)
     elif len(variables) == 2:
         xVar, yVar = variables
         h = hSel.Project2D(xVar, yVar, subranges)
+    if h == None: continue
     h.SetName(name)
     h.Write()
 
@@ -75,12 +80,14 @@ for name, (variables, ranges) in plots.iteritems():
                 subranges = {'isMatched':(1,1), 'mass':(84,97), 'station':(station,station)}
                 subranges.update(ranges)
                 subranges['region'] = regionCut
+                h = None
                 if len(variables) == 1:
                     xVar = variables[0]
                     h = hSel.Project1D(xVar, subranges)
                 elif len(variables) == 2:
                     xVar, yVar = variables
                     h = hSel.Project2D(xVar, yVar, subranges)
+                if h == None: continue
                 h.SetName("%s_%s_Station%d" % (name, regionName, station))
                 h.Write()
         else:
@@ -88,12 +95,14 @@ for name, (variables, ranges) in plots.iteritems():
                 subranges = {'isMatched':(1,1), 'mass':(84,97), 'disk':(disk,disk)}
                 subranges.update(ranges)
                 subranges['region'] = regionCut
+                h = None
                 if len(variables) == 1:
                     xVar = variables[0]
                     h = hSel.Project1D(xVar, subranges)
                 elif len(variables) == 2:
                     xVar, yVar = variables
                     h = hSel.Project2D(xVar, yVar, subranges)
+                if h == None: continue
                 h.SetName("%s_%s_Disk%d" % (name, regionName, disk))
                 h.Write()
 
