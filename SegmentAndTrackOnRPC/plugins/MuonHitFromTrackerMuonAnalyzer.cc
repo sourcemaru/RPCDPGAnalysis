@@ -53,7 +53,7 @@ private:
   THnSparseF* hInfo_;
   enum {
     RUN=0, REGION,
-    WHEEL, STATION, LAYER, SECTOR, ROLL, DISK, RING,
+    WHEEL, STATION, LAYER, SSECTOR, ROLL, DISK, RING,
     ROLLNAME,
     ISMATCHED, ISFIDUCIAL,
     LX, LY, RESX, RESY, PULLX, PULLY,
@@ -84,7 +84,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
 
   const char* varNames[NVARS] = {
     "run",
-    "region", "wheel", "station", "layer", "sector", "roll", "disk", "ring",
+    "region", "wheel", "station", "layer", "ssector", "roll", "disk", "ring",
     "rollName",
     "isMatched", "isFiducial",
     "lX", "lY", "resX", "resY", "pullX", "pullY",
@@ -94,7 +94,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   const char* varTitles[NVARS] = {
     "run",
-    "region", "wheel", "station", "layer", "sector", "roll", "disk", "ring",
+    "region", "wheel", "station", "layer", "ssector", "roll", "disk", "ring",
     "",
     "isMatched", "isFiducial",
     "Expected local x(cm)", "Expected local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
@@ -104,7 +104,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   int nbins[NVARS] = {
     1000000,
-    3, 5, 5, 4, 12, 6, 5, 5,
+    3, 5, 5, 4, 48, 6, 5, 5,
     5000,
     2, 2,
     400, 400, 100, 100, 100, 100,
@@ -114,7 +114,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   double xmins[NVARS] = {
     0,
-    -1, -2.5, 0, 0, 1, 0, 0, 0,
+    -1, -2.5, 0, 1, 1, 0, 0, 0,
     0,
     0, 0,
     -200, -200, -50, -50, -5, -5,
@@ -124,7 +124,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   double xmaxs[NVARS] = {
     1000000,
-    2, 2.5, 5, 3, 13, 6, 5, 5,
+    2, 2.5, 5, 3, 49, 6, 5, 5,
     5000,
     2, 2,
     200, 200, 50, 50, 5, 5,
@@ -217,7 +217,6 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       vars[GY] = gp.y();
       vars[GZ] = gp.z();
       vars[GPHI] = gp.phi();
-      vars[SECTOR] = detId.sector();
       vars[LAYER] = detId.layer();
       vars[ROLL] = detId.roll();
       vars[ROLLNAME] = axis->FindBin(rollName.c_str());
@@ -226,6 +225,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[REGION] = 0;
         vars[WHEEL] = detId.ring();
         vars[STATION] = detId.station();
+        vars[SSECTOR] = (detId.sector()-1)*4 + detId.subsector();
 
         const bool isInFiducial = (std::abs(lPos.y()) <= bound.length()/2-8 and
                                    std::abs(lPos.x()) <= bound.width()/2-8 );
@@ -260,6 +260,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[REGION] = detId.region();
         vars[DISK] = detId.station();
         vars[RING] = detId.ring();
+        vars[SSECTOR] = (detId.sector()-1)*6 + detId.subsector();
 
         const double wT = bound.width(), w0 = bound.widthAtHalfLength();
         const double slope = (wT-w0)/bound.length();
