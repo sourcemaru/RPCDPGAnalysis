@@ -9,6 +9,7 @@ from array import array
 import os, sys
 from math import floor
 gStyle.SetOptStat(0)
+gStyle.SetOptTitle(0)
 
 f = TFile(sys.argv[1])
 fName = os.path.basename(sys.argv[1])
@@ -59,6 +60,8 @@ hBarrel = zip(hBarrelDen, hBarrelNum)
 hEndcapP = zip(hEndcapPDen, hEndcapPNum)
 hEndcapN = zip(hEndcapNDen, hEndcapNNum)
 
+labels = []
+
 cBDen = TCanvas("cBDen", "Barrel statistics", 3*padW, 2*padW)
 cBDen.Divide(3,2)
 cBEff = TCanvas("cBEff", "Barrel efficiency", 3*padW, 2*padW)
@@ -70,8 +73,17 @@ for i, (hDen, hNum) in enumerate(hBarrel):
     hEff.SetTitle(hEff.GetTitle().replace("Expected Points matched to RPC in", "Efficiency of"))
     hEffs.append(hEff)
 
-    cBDen.cd(i+1)
+    detLabel = ""
+    if i < 4: detLabel = "RB%d%s" % (i/2+1, ["in", "out"][i%2])
+    else: detLabel = "RB%d" % (i-1)
+    l = TText()
+    l.SetNDC()
+    l.SetTextAlign(11)
+
+    pad = cBDen.cd(i+1)
     hDen.Draw("COLZ")
+    l.SetText(pad.GetLeftMargin(), 1-pad.GetTopMargin()+0.01, detLabel)
+    l.Draw()
 
     sumZ = 0
     nBins = (hDen.GetNbinsX()+2)*(hDen.GetNbinsY()+2)
@@ -79,8 +91,12 @@ for i, (hDen, hNum) in enumerate(hBarrel):
     maxMeanZ = max(hDen.GetEntries()/nBins, maxMeanZ)
     #hEff.Divide(hNum, hDen)
 
-    cBEff.cd(i+1)
+    pad = cBEff.cd(i+1)
     hEff.Draw("COLZ")
+    l.SetText(pad.GetLeftMargin(), 1-pad.GetTopMargin()+0.01, detLabel)
+    l.Draw()
+
+    labels.append(l)
 
 cEPDen = TCanvas("cEPDen", "Endcap+ statistics", 2*padW, 2*padW)
 cEPDen.Divide(2,2)
@@ -93,10 +109,16 @@ for i, (hDen, hNum) in enumerate(hEndcapP):
     hEff.SetTitle(hEff.GetTitle().replace("Expected points matched to RPC in", "Efficiency of"))
     hEffs.append(hEff)
 
+    l = TText()
+    l.SetNDC()
+    l.SetText(.5, .5, "RE+%d" % (i+1))
+    l.SetTextAlign(22)
+
     cEPDen.cd(i+1)
     hDen.Draw("COLZ")
     hDen.GetXaxis().SetRangeUser(-800, 800)
     hDen.GetYaxis().SetRangeUser(-800, 800)
+    l.Draw()
 
     sumZ = 0
     nBins = (hDen.GetNbinsX()+2)*(hDen.GetNbinsY()+2)
@@ -108,6 +130,9 @@ for i, (hDen, hNum) in enumerate(hEndcapP):
     hEff.Draw("COLZ")
     hEff.GetXaxis().SetRangeUser(-800, 800)
     hEff.GetYaxis().SetRangeUser(-800, 800)
+    l.Draw()
+
+    labels.append(l)
 
 cENDen = TCanvas("cENDen", "Endcap- statistics", 2*padW, 2*padW)
 cENDen.Divide(2,2)
@@ -120,10 +145,16 @@ for i, (hDen, hNum) in enumerate(hEndcapN):
     hEff.SetTitle(hEff.GetTitle().replace("Expected points matched to RPC in", "Efficiency of"))
     hEffs.append(hEff)
 
+    l = TText()
+    l.SetNDC()
+    l.SetText(.5, .5, "RE-%d" % (i+1))
+    l.SetTextAlign(22)
+
     cENDen.cd(i+1)
     hDen.Draw("COLZ")
     hDen.GetXaxis().SetRangeUser(-800, 800)
     hDen.GetYaxis().SetRangeUser(-800, 800)
+    l.Draw()
 
     sumZ = 0
     nBins = (hDen.GetNbinsX()+2)*(hDen.GetNbinsY()+2)
@@ -135,6 +166,10 @@ for i, (hDen, hNum) in enumerate(hEndcapN):
     hEff.Draw("COLZ")
     hEff.GetXaxis().SetRangeUser(-800, 800)
     hEff.GetYaxis().SetRangeUser(-800, 800)
+    l.Draw()
+
+    labels.append(l)
+
 maxMeanZ = max(1, maxMeanZ)
 
 gStyle.SetPalette(kBird)
