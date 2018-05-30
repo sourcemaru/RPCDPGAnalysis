@@ -14,6 +14,13 @@ hSel = THnSparseSelector(hInfo)
 if not os.path.exists("hists"): os.mkdir("hists")
 f = TFile("hists/efficiency_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
+commonSel = {
+    #'run':(315257,315420),
+    #'run':(315420,315420),
+    #'run':(315488,315488),
+    'run':(315488,315974),
+}
+
 ## Overall efficiency distribution
 plots = {
     'Barrel_detId':[['rollName'], {'region':(0,0), 'isFiducial':(1,1)}],
@@ -23,6 +30,8 @@ plots = {
 
 for name, (variables, ranges) in plots.iteritems():
     subranges = ranges.copy()
+    subranges.update(commonSel)
+    print subranges
     xVar = variables[0]
     hDen = hSel.Project1D(xVar, subranges, suffix=name+"_Den", copyAxisLabel=True)
     subranges.update({'isMatched':(1,1)})
@@ -38,7 +47,6 @@ plots = {
 #    'lX_lY':['lX', 'lY', {'isFiducial':(1,1)}],
 }
 for name, (variables, ranges) in plots.iteritems():
-    subranges = ranges.copy()
     subsels = []
     if name.startswith("Barrel"):
         for station in range(1,5):
@@ -54,6 +62,7 @@ for name, (variables, ranges) in plots.iteritems():
 
     for subsel in subsels:
         subranges = ranges.copy()
+        subranges.update(commonSel)
         subname = name + '_' + ('_'.join("%s%d" % (n, r[0]) for n, r in subsel.iteritems()))
 
         subranges.update(subsel)
@@ -70,6 +79,8 @@ for name, (variables, ranges) in plots.iteritems():
             subranges.update({'isMatched':(1,1)})
             hNum = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Num")
 
+        hDen.SetTitle(subname)
+        hNum.SetTitle(subname)
         hDen.Write()
         hNum.Write()
 
