@@ -40,7 +40,7 @@ process.probeTrackerMuons = cms.EDProducer("RPCTrackerMuonProbeProducer",
     triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
     triggerResults = cms.InputTag("TriggerResults::HLT"),
     #triggerPaths = cms.vstring("HLT_IsoMu24", "HLT_IsoMu24_eta2p1", "HLT_IsoTkMu24", "HLT_IsoTkMu24_eta2p1", "HLT_Mu50", "HLT_Mu55", "HLT_TkMu50"), ## Paths in Run2016
-    triggerPaths = cms.vstring("HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", "HLT_Mu50", "HLT_Mu55", ), ## Paths in Run2017 (except emergency)
+    triggerPaths = cms.vstring("HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", "HLT_Mu50", "HLT_Mu55", ), ## Paths in Run2017 and Run2018 (except emergency)
     probeIdType = cms.string("Tracker"),
 )
 
