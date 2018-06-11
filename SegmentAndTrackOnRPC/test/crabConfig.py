@@ -29,12 +29,16 @@ if 'DATASET' in os.environ:
 
 pd, sd = config.Data.inputDataset.split('/')[1:3]
 
+config.Data.unitsPerJob = 100
 if pd == 'RPCMonitor':
     config.Data.unitsPerJob = 10
     config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
-else:
-    config.Data.unitsPerJob = 50
-    config.JobType.psetName    = 'analyzeRPCwithTnP_cfg.py'
+elif pd == "SingleMuon":
+    config.JobType.psetName    = 'analyzeRPCwithTnP_Z_cfg.py'
+elif pd == "Charmonium":
+    config.JobType.psetName    = 'analyzeRPCwithTnP_Jpsi_cfg.py'
+elif pd == "MuOnia":
+    config.JobType.psetName    = 'analyzeRPCwithTnP_Upsilon_cfg.py'
 
 username = os.environ['USER']
 
@@ -44,7 +48,7 @@ config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Coll
 #config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_MuonPhys.txt'
 
 #submitdate = dt.now().strftime('%Y%m%d')+'_1'
-submitdate = '20180611_1'
+submitdate = '20180612_1'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
 
