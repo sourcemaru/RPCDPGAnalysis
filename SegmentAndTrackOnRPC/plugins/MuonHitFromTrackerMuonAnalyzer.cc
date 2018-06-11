@@ -49,6 +49,7 @@ private:
   const edm::EDGetTokenT<double> tpMassToken_;
 
   const double minMuonPt_, maxMuonAbsEta_;
+  enum class ResonanceType { Z0, Jpsi, Upsilon } resonanceType_;
 
   THnSparseF* hInfo_;
   enum {
@@ -72,6 +73,12 @@ MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::Parame
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta"))
 {
+  std::string s = pset.getParameter<string>("resonanceType");
+  std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+  if ( s == "Z" or s == "Z0" ) resonanceType_ = ResonanceType::Z0;
+  else if ( s == "JPSI" ) resonanceType_ = ResonanceType::Jpsi;
+  else if ( s == "UPSILON" ) resonanceType_ = ResonanceType::Upsilon;
+
   hInfo_ = nullptr;
 }
 
@@ -132,6 +139,18 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     10, 6.5,
     120, 100, 2.5, 3.14159265, 25*5
   };
+  // Modify binning for the Onia's
+  if ( resonanceType_ == ResonanceType::Jpsi ) {
+    nbins[MASS] = 100;
+    xmins[MASS] = 2.95;
+    xmaxs[MASS] = 3.25;
+  }
+  else if ( resonanceType_ == ResonanceType::Upsilon ) {
+    nbins[MASS] = 120;
+    xmins[MASS] = 8.5;
+    xmaxs[MASS] = 11.5;
+  }
+
   hInfo_ = fs->make<THnSparseF>("hInfo", "hInfo", NVARS, nbins, xmins, xmaxs);
   for ( int i=0; i<NVARS; ++i ) {
     hInfo_->GetAxis(i)->SetName(varNames[i]);

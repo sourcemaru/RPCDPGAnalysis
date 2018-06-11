@@ -56,7 +56,7 @@ private:
   const bool doCheckSign_;
   const double minMass_, maxMass_;
   const double minDR_;
-  const std::vector<std::string> triggerPaths_;
+  const std::vector<std::string> triggerPaths_, triggerModules_;
 
   enum class IDType { RPC, Tracker } idType_;
 
@@ -77,7 +77,8 @@ RPCTrackerMuonProbeProducer::RPCTrackerMuonProbeProducer(const edm::ParameterSet
   minMass_(pset.getParameter<double>("minMass")),
   maxMass_(pset.getParameter<double>("maxMass")),
   minDR_(pset.getParameter<double>("minDR")),
-  triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths"))
+  triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths")),
+  triggerModules_(pset.getParameter<std::vector<std::string>>("triggerModules"))
 {
   const std::string idTypeName = pset.getParameter<std::string>("probeIdType");
   if ( idTypeName == "RPC" ) idType_ = IDType::RPC;
@@ -125,20 +126,28 @@ void RPCTrackerMuonProbeProducer::produce(edm::Event& event, const edm::EventSet
     std::set<std::string> modules;
     for ( int i=0, n=triggerNames.size(); i<n; ++i ) {
       if ( !triggerResultsHandle->accept(i) ) continue;
-      for ( const auto path : triggerPaths_ ) {
+      const auto& stmodules = hltConfig_.saveTagsModules(i);
+
+      for ( size_t j=0, m=triggerPaths_.size(); j<m; ++j ) {
+        const auto path = triggerPaths_[j];
+        const auto module = (j < triggerModules_.size()) ? triggerModules_[j] : "";
+
         if ( hltConfig_.removeVersion(triggerNames[i]) != path ) continue;
 
-        const auto& stmodules = hltConfig_.saveTagsModules(i);
-        modules.insert(stmodules.begin(), stmodules.end());
+        // Keep module names 
+        if ( module.empty() ) modules.insert(stmodules.begin(), stmodules.end()); // all modules if not specified
+        else if ( std::find(stmodules.begin(), stmodules.end(), module) != stmodules.end() ) modules.insert(module);
       }
     }
 
     std::vector<math::XYZTLorentzVector> triggerObjectP4s;
+    
     const auto& triggerObjects = triggerEventHandle->getObjects();
     for ( size_t keyIdx = 0; keyIdx < triggerEventHandle->sizeFilters(); ++keyIdx ) {
       if ( modules.count(triggerEventHandle->filterLabel(keyIdx)) == 0 ) continue;
 
       for ( auto objIdx : triggerEventHandle->filterKeys(keyIdx) ) {
+        //if ( std::abs(triggerObjects[objIdx].id()) != 13 ) continue;
         triggerObjectP4s.push_back(triggerObjects[objIdx].particle().p4());
       }
     }
