@@ -16,7 +16,8 @@ config.Data.allowNonValidInputDataset = True
 
 config.section_("Site")
 # Where the output files will be transmitted to
-config.Site.storageSite = 'T2_CH_CERN'
+#config.Site.storageSite = 'T2_CH_CERN'
+config.Site.storageSite = 'T3_KR_KISTI'
 
 config.Data.splitting = 'LumiBased'
 
@@ -32,17 +33,18 @@ if pd == 'RPCMonitor':
     config.Data.unitsPerJob = 10
     config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
 else:
-    config.Data.unitsPerJob = 100
+    config.Data.unitsPerJob = 50
     config.JobType.psetName    = 'analyzeRPCwithTnP_cfg.py'
 
 username = os.environ['USER']
 
-config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/PromptReco/Cert_294927-302343_13TeV_PromptReco_Collisions17_JSON_MuonPhys.txt'
+config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions18/13TeV/PromptReco/Cert_314472-317080_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt'
+#config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/PromptReco/Cert_294927-302343_13TeV_PromptReco_Collisions17_JSON_MuonPhys.txt'
 #config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
 #config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_MuonPhys.txt'
 
 #submitdate = dt.now().strftime('%Y%m%d')+'_1'
-submitdate = '20170910_1'
+submitdate = '20180611_1'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
 

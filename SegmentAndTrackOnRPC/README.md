@@ -31,11 +31,11 @@ to get correct per-chamber muography plots. The RPCPointProducer in the CMSSW is
 outdated, this should be updated as well (under development yet, but this is not crucial).
 
 ```
-cmsrel CMSSW_9_2_11
-cd CMSSW_9_2_11/src
+cmsrel CMSSW_10_1_6
+cd CMSSW_10_1_6/src
 cmsenv
 git-cms-init
-git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG92X
+#git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG92X
 git clone https://:@gitlab.cern.ch:8443/jhgoh/RPCDPGAnalysis.git
 scram b -j8
 ```
@@ -50,57 +50,48 @@ cmsRun analyzeRPCwithTnP_cfg.py
 
 Please modify the cfg file to change the input root file and JSON file.
 
-The crab configuration files are done to run on 2017 datasets, modify the crabConfig.py file to process interested datasets.
+The crab configuration files are done to run on 2018 datasets, modify the crabConfig.py file to process interested datasets.
 You have to change the output directory, lumiMask.
 
 ```
-DATASET=/SingleMuon/Run2017D-PromptReco-v3/AOD crab submit
+DATASET=/SingleMuon/Run2018A-PromptReco-v1/AOD crab submit
+DATASET=/SingleMuon/Run2018A-PromptReco-v2/AOD crab submit
+DATASET=/SingleMuon/Run2018A-PromptReco-v3/AOD crab submit
 ```
 
-To submit all dataset, you can do something like
-```
-DATASET=/SingleMuon/Run2017A-PromptReco-v2/AOD crab submit
-DATASET=/SingleMuon/Run2017A-PromptReco-v3/AOD crab submit
-DATASET=/SingleMuon/Run2017B-PromptReco-v1/AOD crab submit
-DATASET=/SingleMuon/Run2017B-PromptReco-v2/AOD crab submit
-DATASET=/SingleMuon/Run2017C-PromptReco-v1/AOD crab submit
-DATASET=/SingleMuon/Run2017C-PromptReco-v2/AOD crab submit
-DATASET=/SingleMuon/Run2017C-PromptReco-v3/AOD crab submit
-DATASET=/SingleMuon/Run2017D-PromptReco-v1/AOD crab submit
-```
 Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/ by default. Please modify the crabConfig.py if you want to set different destination.
 
 When jobs are finished, simply add all output root files with hadd command. (Change file names and paths)
 ```
-hadd SingleMuon_Run2017.root /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/SingleMuon/*/*/*/*.root
+hadd SingleMuon_Run2018.root /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/SingleMuon/*/*/*/*.root
 ```
 
 The root file contains the hit occupancy informations in ThnSparseD, n-dimensional histogram format. You can play with this to project on 1D histograms
 or use the projection.py macros.
 
 ```
-./projection_efficiency.py SingleMuon_Run2017.root
+./projection_efficiency.py SingleMuon_Run2018.root
 ```
 
-will produce hists/SingleMuon\_Run2017.root with usual TH1/TH2 histograms.
+will produce hists/SingleMuon\_Run2018.root with usual TH1/TH2 histograms.
 
 The x-y and z-phi view of efficiency plots can be obtained by running the drawMuographySummary.py.
 Please modify this pyROOT script if necessary.
 
 ```
-python -i drawMuongraphySummary.py hists/efficiency_SingleMuon_Run2017.root
+python -i drawMuongraphySummary.py hists/efficiency_SingleMuon_Run2018.root
 ```
 
 The roll efficiency distributions can be obtained using the drawEfficiency.py,
 
 ```
-python -i drawEfficiency.py hists/efficiency_SingleMuon\_Run2017.root
+python -i drawEfficiency.py hists/efficiency_SingleMuon\_Run2018.root
 ```
 
 You can obtain other useful projections for the chamber performance as well;
 
 ```
-./projection_properties.py SingleMuon_Run2017.root
+./projection_properties.py SingleMuon_Run2018.root
 ```
 
-then hists/properties\_SignleMuon\_Run2017.root will be created
+then hists/properties\_SignleMuon\_Run2018.root will be created

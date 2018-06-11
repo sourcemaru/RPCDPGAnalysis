@@ -53,7 +53,7 @@ private:
   THnSparseF* hInfo_;
   enum {
     RUN=0, REGION,
-    WHEEL, STATION, LAYER, SSECTOR, ROLL, DISK, RING,
+    WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING,
     ROLLNAME,
     ISMATCHED, ISFIDUCIAL,
     LX, LY, RESX, RESY, PULLX, PULLY,
@@ -84,7 +84,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
 
   const char* varNames[NVARS] = {
     "run",
-    "region", "wheel", "station", "layer", "ssector", "roll", "disk", "ring",
+    "region", "wheel", "station", "layer", "segment", "roll", "disk", "ring",
     "rollName",
     "isMatched", "isFiducial",
     "lX", "lY", "resX", "resY", "pullX", "pullY",
@@ -94,7 +94,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   };
   const char* varTitles[NVARS] = {
     "run",
-    "region", "wheel", "station", "layer", "ssector", "roll", "disk", "ring",
+    "region", "wheel", "station", "layer", "segment", "roll", "disk", "ring",
     "",
     "isMatched", "isFiducial",
     "Expected local x(cm)", "Expected local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
@@ -225,7 +225,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[REGION] = 0;
         vars[WHEEL] = detId.ring();
         vars[STATION] = detId.station();
-        vars[SSECTOR] = (detId.sector()-1)*4 + detId.subsector();
+        vars[SEGMENT] = (detId.sector()-1)*4 + detId.subsector();
 
         const bool isInFiducial = (std::abs(lPos.y()) <= bound.length()/2-8 and
                                    std::abs(lPos.x()) <= bound.width()/2-8 );
@@ -260,7 +260,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         vars[REGION] = detId.region();
         vars[DISK] = detId.station();
         vars[RING] = detId.ring();
-        vars[SSECTOR] = (detId.sector()-1)*6 + detId.subsector();
+        vars[SEGMENT] = (detId.sector()-1)*6 + detId.subsector();
 
         const double wT = bound.width(), w0 = bound.widthAtHalfLength();
         const double slope = (wT-w0)/bound.length();
