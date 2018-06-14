@@ -13,6 +13,10 @@ gStyle.SetOptTitle(0)
 
 f = TFile(sys.argv[1])
 fName = os.path.basename(sys.argv[1])
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
+era = "Run2017"
+if len(sys.argv) > 2: era = sys.argv[2]
+
 hBarrelDen, hEndcapPDen, hEndcapNDen = [], [], []
 hBarrelNum, hEndcapPNum, hEndcapNNum = [], [], []
 for hName in [key.GetName() for key in f.GetListOfKeys()]:
@@ -80,10 +84,13 @@ for i, (hDen, hNum) in enumerate(hBarrel):
     l.SetNDC()
     l.SetTextAlign(11)
 
+    lls = buildLabel(era)
+
     pad = cBDen.cd(i+1)
     hDen.Draw("COLZ")
     l.SetText(pad.GetLeftMargin(), 1-pad.GetTopMargin()+0.01, detLabel)
     l.Draw()
+    for ll in lls: ll.Draw()
 
     sumZ = 0
     nBins = (hDen.GetNbinsX()+2)*(hDen.GetNbinsY()+2)
@@ -95,8 +102,10 @@ for i, (hDen, hNum) in enumerate(hBarrel):
     hEff.Draw("COLZ")
     l.SetText(pad.GetLeftMargin(), 1-pad.GetTopMargin()+0.01, detLabel)
     l.Draw()
+    for ll in lls: ll.Draw()
 
     labels.append(l)
+    labels.extend([lls])
 
 cEPDen = TCanvas("cEPDen", "Endcap+ statistics", 2*padW, 2*padW)
 cEPDen.Divide(2,2)
@@ -114,11 +123,14 @@ for i, (hDen, hNum) in enumerate(hEndcapP):
     l.SetText(.5, .5, "RE+%d" % (i+1))
     l.SetTextAlign(22)
 
+    lls = buildLabel(era)
+
     cEPDen.cd(i+1)
     hDen.Draw("COLZ")
     hDen.GetXaxis().SetRangeUser(-800, 800)
     hDen.GetYaxis().SetRangeUser(-800, 800)
     l.Draw()
+    for ll in lls: ll.Draw()
 
     sumZ = 0
     nBins = (hDen.GetNbinsX()+2)*(hDen.GetNbinsY()+2)
@@ -131,8 +143,10 @@ for i, (hDen, hNum) in enumerate(hEndcapP):
     hEff.GetXaxis().SetRangeUser(-800, 800)
     hEff.GetYaxis().SetRangeUser(-800, 800)
     l.Draw()
+    for ll in lls: ll.Draw()
 
     labels.append(l)
+    labels.extend([lls])
 
 cENDen = TCanvas("cENDen", "Endcap- statistics", 2*padW, 2*padW)
 cENDen.Divide(2,2)
@@ -150,11 +164,14 @@ for i, (hDen, hNum) in enumerate(hEndcapN):
     l.SetText(.5, .5, "RE-%d" % (i+1))
     l.SetTextAlign(22)
 
+    lls = buildLabel(era)
+
     cENDen.cd(i+1)
     hDen.Draw("COLZ")
     hDen.GetXaxis().SetRangeUser(-800, 800)
     hDen.GetYaxis().SetRangeUser(-800, 800)
     l.Draw()
+    for ll in lls: ll.Draw()
 
     sumZ = 0
     nBins = (hDen.GetNbinsX()+2)*(hDen.GetNbinsY()+2)
@@ -167,8 +184,10 @@ for i, (hDen, hNum) in enumerate(hEndcapN):
     hEff.GetXaxis().SetRangeUser(-800, 800)
     hEff.GetYaxis().SetRangeUser(-800, 800)
     l.Draw()
+    for ll in lls: ll.Draw()
 
     labels.append(l)
+    labels.extend([lls])
 
 maxMeanZ = max(1, maxMeanZ)
 

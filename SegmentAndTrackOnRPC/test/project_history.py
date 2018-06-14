@@ -6,8 +6,10 @@ from array import array
 gStyle.SetOptStat(0)
 gStyle.SetOptTitle(0)
 
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
 sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
 from ProjectTHnSparse import *
+era = "Run2018A"
 
 runs = []
 categories = {
@@ -125,6 +127,8 @@ for catName, grp in grpEffs.iteritems():
     legEff.AddEntry(grp, catName, "lp")
     #grp.Write()
 legEff.Draw()
+llsEffs = buildLabel(era)
+for ll in llsEffs: ll.Draw()
 
 cCls = TCanvas("cHistoryCls", "cCls", 1600, 400)
 cCls.SetLeftMargin(0.05)
@@ -134,7 +138,7 @@ legCls.SetFillStyle(0)
 legCls.SetLineWidth(0)
 hClsFrame = hEffFrame.Clone()
 hClsFrame.SetName("hClsFrame")
-hClsFrame.SetMinimum(1.5)
+hClsFrame.SetMinimum(1.0)
 hClsFrame.SetMaximum(3.0)
 hClsFrame.Draw()
 for catName, grp in grpClss.iteritems():
@@ -142,6 +146,8 @@ for catName, grp in grpClss.iteritems():
     legCls.AddEntry(grp, catName, "lp")
     #grp.Write()
 legCls.Draw()
+llsCls = buildLabel(era)
+for ll in llsCls: ll.Draw()
 
 for c in [cEff, cCls]:
     c.Print("%s.C" % c.GetName())

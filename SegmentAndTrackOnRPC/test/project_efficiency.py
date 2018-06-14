@@ -15,10 +15,8 @@ if not os.path.exists("hists"): os.mkdir("hists")
 f = TFile("hists/efficiency_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
 commonSel = {
-    #'run':(315257,315420),
-    #'run':(315420,315420),
-    #'run':(315488,315488),
-    'run':(315488,315974),
+    'run':(315257,315420), ## Run2018A, before CCU error fix
+    #'run':(315488,999999),
 }
 
 ## Overall efficiency distribution

@@ -14,19 +14,10 @@ from array import array
 import os, sys
 from math import sqrt
 fName = sys.argv[1]
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
+
 era = "Run2017"
 if len(sys.argv) > 2: era = sys.argv[2]
-eraToLumi = {
-    "Run2017":42599.789/1000, ## Run2017 luminosity without normtag
-    "Run2016":36235.493/1000, ## Run2016 luminosity with latest normtag
-    "Run2017B":4930.853/1000,
-    "Run2017C":9961.856/1000,
-    "Run2017D":4352.364/1000,
-    "Run2017E":9536.896/1000,
-    "Run2017F":13817.819/1000,
-}
-lumiVal = 0
-if era in eraToLumi: lumiVal = eraToLumi[era]
 
 gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
 setTDRStyle()
@@ -109,22 +100,6 @@ for i in range(2):
     header.SetTextAlign(11)
     header.SetTextFont(42)
 
-    coverText1 = TLatex(0.17,0.82,"CMS")
-    coverText2 = TLatex(0.17,0.80,"Preliminary")
-    coverText3 = TLatex(0.17,0.75,"Data %s" % era)
-    coverText1.SetNDC()
-    coverText2.SetNDC()
-    coverText3.SetNDC()
-    coverText1.SetTextFont(62)
-    coverText2.SetTextFont(52)
-    coverText3.SetTextFont(52)
-    coverText1.SetTextAlign(11)
-    coverText2.SetTextAlign(13)
-    coverText3.SetTextAlign(13)
-    coverText1.SetTextSize(0.06)
-    coverText2.SetTextSize(0.0456)
-    coverText3.SetTextSize(0.0456)
-
     stats = ["Entries", "Mean", "RMS", "Underflow"], []
     stats[1].append("%d" % hEffs[i].GetEntries())
     stats[1].append("%.2f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
@@ -153,26 +128,16 @@ for i in range(2):
 
     canvs[i].cd()
     hEffs[i].Draw()
-    coverText1.Draw()
-    coverText2.Draw()
-    coverText3.Draw()
     statPanel1.Draw()
     statPanel2.Draw()
     header.Draw()
-
-    if lumiVal > 0:
-        lumi = TLatex().DrawLatexNDC(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                                     "%.1f fb^{-1} (13 TeV)" % lumiVal)
-    else:
-        lumi = TLatex().DrawLatexNDC(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                                     "(13 TeV)")
-    lumi.SetTextAlign(31)
-    lumi.SetTextFont(42)
+    lls = buildLabel(era)
+    for ll in lls: ll.Draw()
 
     fixOverlay()
 
-    objs.extend([header, lumi, statPanel1, statPanel2])
-    objs.extend([coverText1, coverText2, coverText3])
+    objs.extend([statPanel1, statPanel2])
+    objs.extend(lls)
 
     for l in effs:
         print>>fout, l[0], l[1]
