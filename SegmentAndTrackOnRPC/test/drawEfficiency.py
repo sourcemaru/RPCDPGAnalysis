@@ -79,13 +79,14 @@ canvs = [
 ]
 hEffs[0].SetFillColor(30)
 hEffs[1].SetFillColor(38)
+hEffs[0].SetLineColor(TColor.GetColor("#007700"))
+hEffs[1].SetLineColor(TColor.GetColor("#000099"))
 
 for i in range(2):
     effs = []
     effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 100 and name not in blacklist]
     effs.sort(reverse=True, key=lambda x : x[1])
 
-    hEffs[i].SetLineColor(TColor.GetColor("#000099"))
     hEffs[i].GetYaxis().SetNdivisions(505)
     hEffs[i].GetYaxis().SetTitleOffset(1.0)
 

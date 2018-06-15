@@ -15,8 +15,9 @@ if not os.path.exists("hists"): os.mkdir("hists")
 f = TFile("hists/efficiency_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
 commonSel = {
-    'run':(315257,315420), ## Run2018A, before CCU error fix
+    #'run':(315257,315420), ## Run2018A, before CCU error fix
     #'run':(315488,999999),
+    #'mass':(84,97),
 }
 
 ## Overall efficiency distribution
@@ -29,7 +30,6 @@ plots = {
 for name, (variables, ranges) in plots.iteritems():
     subranges = ranges.copy()
     subranges.update(commonSel)
-    print subranges
     xVar = variables[0]
     hDen = hSel.Project1D(xVar, subranges, suffix=name+"_Den", copyAxisLabel=True)
     subranges.update({'isMatched':(1,1)})

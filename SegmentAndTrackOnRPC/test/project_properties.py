@@ -12,7 +12,14 @@ f = TFile(sys.argv[1])
 hInfo = f.Get("rpcExt/hInfo")
 hSel = THnSparseSelector(hInfo)
 
+if not os.path.exists("hists"): os.mkdir("hists")
 f = TFile("hists/properties_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
+
+commonSel = {
+    #'run':(315257,315420), ## Run2018A, before CCU error fix
+    #'run':(315488,999999),
+    #'mass':(84,97),
+}
 
 plots = {
     'mass':[['mass'], {}],
@@ -46,10 +53,10 @@ plots = {
     'time_rollNames':[['rollName', 'time'], {}],
 }
 
-if not os.path.exists("hists"): os.mkdir("hists")
 for name, (variables, ranges) in plots.iteritems():
-    subranges = {'isMatched':(1,1), 'mass':(84,97)}
+    subranges = {'isMatched':(1,1),}
     subranges.update(ranges)
+    subranges.update(commonSel)
     h = None
     if len(variables) == 1:
         xVar = variables[0]
@@ -77,8 +84,9 @@ for name, (variables, ranges) in plots.iteritems():
     for regionName, regionCut in regionCuts.iteritems():
         if regionName == 'Barrel':
             for station in range(1, 5):
-                subranges = {'isMatched':(1,1), 'mass':(84,97), 'station':(station,station)}
+                subranges = {'isMatched':(1,1), 'station':(station,station)}
                 subranges.update(ranges)
+                subranges.update(commonSel)
                 subranges['region'] = regionCut
                 h = None
                 if len(variables) == 1:
@@ -92,8 +100,9 @@ for name, (variables, ranges) in plots.iteritems():
                 h.Write()
         else:
             for disk in range(1,5):
-                subranges = {'isMatched':(1,1), 'mass':(84,97), 'disk':(disk,disk)}
+                subranges = {'isMatched':(1,1), 'disk':(disk,disk)}
                 subranges.update(ranges)
+                subranges.update(commonSel)
                 subranges['region'] = regionCut
                 h = None
                 if len(variables) == 1:

@@ -53,6 +53,7 @@ process.rpcExt = cms.EDAnalyzer("MuonHitFromTrackerMuonAnalyzer",
     minMuonPt = cms.double(10),
     maxMuonAbsEta = cms.double(2.1),
     tpMass = cms.InputTag("probeTrackerMuons", "mass"),
+    resonanceType = cms.string("Z"),
 )
 
 process.TFileService = cms.Service("TFileService",

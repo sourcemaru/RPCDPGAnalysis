@@ -16,9 +16,11 @@ def buildLabel(era):
     lumiVal = 0
     if era in eraToLumi: lumiVal = eraToLumi[era]
 
-    coverText1 = TLatex(0.17,0.82,"CMS")
-    coverText2 = TLatex(0.17,0.80,"Preliminary")
-    coverText3 = TLatex(0.17,0.75,"Data %s" % era)
+    #left, top = 0.17, 0.82
+    left, top = gStyle.GetPadLeftMargin()+0.03, 1-gStyle.GetPadTopMargin()-0.07
+    coverText1 = TLatex(left,top-0.00,"CMS")
+    coverText2 = TLatex(left,top-0.02,"Preliminary")
+    coverText3 = TLatex(left,top-0.07,"Data %s" % era)
     coverText1.SetNDC()
     coverText2.SetNDC()
     coverText3.SetNDC()
