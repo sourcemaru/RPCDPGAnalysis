@@ -63,14 +63,14 @@ Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SU
 
 When jobs are finished, simply add all output root files with hadd command. (Change file names and paths)
 ```
-hadd SingleMuon_Run2018.root /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/SingleMuon/*/*/*/*.root
+hadd SingleMuon_Run2018.root /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE_1/SingleMuon/*/*/*/*.root
 ```
 
 The root file contains the hit occupancy informations in ThnSparseD, n-dimensional histogram format. You can play with this to project on 1D histograms
-or use the projection.py macros.
+or use the project\_*.py macros.
 
 ```
-./projection_efficiency.py SingleMuon_Run2018.root
+./project_efficiency.py SingleMuon_Run2018.root
 ```
 
 will produce hists/SingleMuon\_Run2018.root with usual TH1/TH2 histograms.
@@ -91,7 +91,7 @@ python -i drawEfficiency.py hists/efficiency_SingleMuon\_Run2018.root
 You can obtain other useful projections for the chamber performance as well;
 
 ```
-./projection_properties.py SingleMuon_Run2018.root
+./project_properties.py SingleMuon_Run2018.root
 ```
 
 then hists/properties\_SignleMuon\_Run2018.root will be created

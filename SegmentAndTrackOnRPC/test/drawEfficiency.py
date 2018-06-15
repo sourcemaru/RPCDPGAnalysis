@@ -136,7 +136,7 @@ for i in range(2):
 
     fixOverlay()
 
-    objs.extend([statPanel1, statPanel2])
+    objs.extend([statPanel1, statPanel2, header])
     objs.extend(lls)
 
     for l in effs:
