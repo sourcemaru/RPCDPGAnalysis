@@ -42,6 +42,7 @@ process.probeTrackerMuons = cms.EDProducer("RPCTrackerMuonProbeProducer",
     triggerPaths = cms.vstring("HLT_Mu7p5_Track3p5_Upsilon"),
     triggerModules = cms.vstring("hltL3fLMu7p5TrackL3Filtered7p5"), ## Make it to be a pair with the trigger path if given
     probeIdType = cms.string("Tracker"),
+    tagIdType = cms.string("Soft"),
 )
 
 process.rpcExt = cms.EDAnalyzer("MuonHitFromTrackerMuonAnalyzer",
@@ -64,8 +65,8 @@ process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcE
 process.source.fileNames = [
     '/store/data/Run2018A/MuOnia/AOD/PromptReco-v3/000/316/615/00000/B2A93043-B964-E811-B741-FA163E3240B9.root',
 ]
-import FWCore.PythonUtilities.LumiList as LumiList
-process.source.lumisToProcess = LumiList.LumiList(
-    #filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Final/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt').getVLuminosityBlockRange()
-    #filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/PromptReco/Cert_294927-301567_13TeV_PromptReco_Collisions17_JSON.txt').getVLuminosityBlockRange()
-    filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions18/13TeV/PromptReco/Cert_314472-317080_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt').getVLuminosityBlockRange()
+#import FWCore.PythonUtilities.LumiList as LumiList
+#process.source.lumisToProcess = LumiList.LumiList(
+#    #filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Final/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON_MuonPhys.txt').getVLuminosityBlockRange()
+#    #filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/PromptReco/Cert_294927-301567_13TeV_PromptReco_Collisions17_JSON.txt').getVLuminosityBlockRange()
+#    filename = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions18/13TeV/PromptReco/Cert_314472-317080_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt').getVLuminosityBlockRange()

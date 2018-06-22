@@ -58,7 +58,7 @@ private:
   const double minDR_;
   const std::vector<std::string> triggerPaths_, triggerModules_;
 
-  enum class IDType { RPC, Tracker } idType_;
+  enum class IDType { RPC, Tracker, Tight, Soft } idType_, tagIdType_;
 
   HLTConfigProvider hltConfig_;
 };
@@ -81,8 +81,16 @@ RPCTrackerMuonProbeProducer::RPCTrackerMuonProbeProducer(const edm::ParameterSet
   triggerModules_(pset.getParameter<std::vector<std::string>>("triggerModules"))
 {
   const std::string idTypeName = pset.getParameter<std::string>("probeIdType");
-  if ( idTypeName == "RPC" ) idType_ = IDType::RPC;
-  else idType_ = IDType::Tracker;
+  if      ( idTypeName == "RPC"     ) idType_ = IDType::RPC;
+  else if ( idTypeName == "Tracker" ) idType_ = IDType::Tracker;
+  else if ( idTypeName == "Tight"   ) idType_ = IDType::Tight;
+  else if ( idTypeName == "Soft"    ) idType_ = IDType::Soft;
+
+  const std::string tagIdTypeName = pset.getParameter<std::string>("tagIdType");
+  if      ( tagIdTypeName == "RPC"     ) tagIdType_ = IDType::RPC;
+  else if ( tagIdTypeName == "Tracker" ) tagIdType_ = IDType::Tracker;
+  else if ( tagIdTypeName == "Tight"   ) tagIdType_ = IDType::Tight;
+  else if ( tagIdTypeName == "Soft"    ) tagIdType_ = IDType::Soft;
 
   produces<reco::MuonCollection>();
   produces<reco::MuonCollection>("tag");
@@ -163,7 +171,10 @@ void RPCTrackerMuonProbeProducer::produce(edm::Event& event, const edm::EventSet
 
       // Tight muon ID
       if ( mu.track().isNull() ) continue;
-      if ( !muon::isTightMuon(mu, pv) ) continue;
+      if      ( tagIdType_ == IDType::Tight   and !muon::isTightMuon(mu, pv) ) continue;
+      else if ( tagIdType_ == IDType::Soft    and !muon::isSoftMuon(mu, pv) ) continue;
+      else if ( tagIdType_ == IDType::Tracker and !(mu.isTrackerMuon() and muon::isGoodMuon(mu, muon::TMOneStationLoose)) ) continue;
+      else if ( tagIdType_ == IDType::RPC     and !(mu.isRPCMuon() and muon::isGoodMuon(mu, muon::RPCMuLoose)) ) continue;
 
       // Tight muon isolation
       const double chIso = mu.pfIsolationR03().sumChargedHadronPt;
@@ -194,6 +205,12 @@ void RPCTrackerMuonProbeProducer::produce(edm::Event& event, const edm::EventSet
       else if ( idType_ == IDType::RPC ) {
         if ( !mu.isRPCMuon() ) continue;
         if ( !muon::isGoodMuon(mu, muon::RPCMuLoose) ) continue;
+      }
+      else if ( idType_ == IDType::Tight ) {
+        if ( !muon::isTightMuon(mu, pv) ) continue;
+      }
+      else if ( idType_ == IDType::Soft ) {
+        if ( !muon::isSoftMuon(mu, pv) ) continue;
       }
       if ( mu.track()->originalAlgo() == reco::TrackBase::muonSeededStepOutIn ) continue;
 
