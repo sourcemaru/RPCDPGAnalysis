@@ -58,7 +58,8 @@ private:
     ROLLNAME,
     ISMATCHED, ISFIDUCIAL,
     LX, LY, RESX, RESY, PULLX, PULLY,
-    GX, GY, GZ, GPHI,
+    DXDZ, DYDZ,
+    GRHO, GPHI, GZ,
     CLS, BX,
     MASS, PT, ETA, PHI, TIME,
     NVARS
@@ -95,7 +96,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "rollName",
     "isMatched", "isFiducial",
     "lX", "lY", "resX", "resY", "pullX", "pullY",
-    "gX", "gY", "gZ", "gPhi", 
+    "dxdz", "dydz",
+    "gRho", "gPhi", "gZ",
     "cls", "bx",
     "mass", "pt", "eta", "phi", "time",
   };
@@ -104,8 +106,9 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "region", "wheel", "station", "layer", "segment", "roll", "disk", "ring",
     "",
     "isMatched", "isFiducial",
-    "Expected local x(cm)", "Expected local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
-    "Expected global x(cm)", "Expected global y(cm)", "Expected global z(cm)", "Expected global phi",
+    "Local x(cm)", "Local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
+    "Incidence in local x sin(#delta#phi)", "Incidence in local y sin(#delta#theta)",
+    "#rho(cm)", "#phi", "z(cm)",
     "Cluster size", "Bunch crossing",
     "mass (GeV)", "pt (GeV)", "#eta", "#phi", "time (ns)",
   };
@@ -115,7 +118,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     5000,
     2, 2,
     400, 400, 100, 100, 100, 100,
-    1600, 1600, 2400, 360*3,
+    800, 360*3, 2400,
+    100, 100,
     10, 13,
     120, 50, 20, 24, 250
   };
@@ -125,7 +129,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     0,
     0, 0,
     -200, -200, -50, -50, -5, -5,
-    -800, -800, -1200, -3.14159265,
+    -3, -3,
+    0, -3.14159265, -1200,
     0, -6.5,
     60, 0, -2.5, -3.14159265, 25*-5
   };
@@ -135,7 +140,8 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     5000,
     2, 2,
     200, 200, 50, 50, 5, 5,
-    800, 800, 1200, 3.14159265,
+    3, 3,
+    800, 3.14159265, 1200,
     10, 6.5,
     120, 100, 2.5, 3.14159265, 25*5
   };
@@ -232,13 +238,14 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
       vars[LX] = lPos.x();
       vars[LY] = lPos.y();
-      vars[GX] = gp.x();
-      vars[GY] = gp.y();
-      vars[GZ] = gp.z();
+      vars[GRHO] = std::hypot(gp.x(), gp.y());
       vars[GPHI] = gp.phi();
+      vars[GZ] = gp.z();
       vars[LAYER] = detId.layer();
       vars[ROLL] = detId.roll();
       vars[ROLLNAME] = axis->FindBin(rollName.c_str());
+      vars[DXDZ] = match.dXdZ;
+      vars[DYDZ] = match.dYdZ;
 
       if ( detId.region() == 0 ) {
         vars[REGION] = 0;
@@ -256,7 +263,6 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           auto matchedHit = rpcHitRange.first;
           double minDX = 1e9;
           for ( auto rpcHit = rpcHitRange.first; rpcHit != rpcHitRange.second; ++rpcHit ) {
-            //const double dr = std::hypot(segment->localPosition().x(), segment->localPosition().y());
             const double dx = std::abs(rpcHit->localPosition().x()-match.x);
             if ( dx < minDX ) {
               matchedHit = rpcHit;
