@@ -80,15 +80,15 @@ for i, (hDen, hNum) in enumerate(hBarrel):
     detLabel = ""
     if i < 4: detLabel = "RB%d%s" % (i/2+1, ["in", "out"][i%2])
     else: detLabel = "RB%d" % (i-1)
-    l = TText()
-    l.SetNDC()
-    l.SetTextAlign(11)
-
-    lls = buildLabel(era)
+    lls = buildLabel(era, "outset")
 
     pad = cBDen.cd(i+1)
     hDen.Draw("COLZ")
-    l.SetText(pad.GetLeftMargin(), 1-pad.GetTopMargin()+0.01, detLabel)
+
+    l = TText()
+    l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.03, detLabel)
+    l.SetNDC()
+    l.SetTextAlign(33)
     l.Draw()
     for ll in lls: ll.Draw()
 
@@ -100,7 +100,7 @@ for i, (hDen, hNum) in enumerate(hBarrel):
 
     pad = cBEff.cd(i+1)
     hEff.Draw("COLZ")
-    l.SetText(pad.GetLeftMargin(), 1-pad.GetTopMargin()+0.01, detLabel)
+    l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.03, detLabel)
     l.Draw()
     for ll in lls: ll.Draw()
 
@@ -123,7 +123,7 @@ for i, (hDen, hNum) in enumerate(hEndcapP):
     l.SetText(.5, .5, "RE+%d" % (i+1))
     l.SetTextAlign(22)
 
-    lls = buildLabel(era)
+    lls = buildLabel(era, "outset")
 
     cEPDen.cd(i+1)
     hDen.Draw("COLZ")
@@ -164,7 +164,7 @@ for i, (hDen, hNum) in enumerate(hEndcapN):
     l.SetText(.5, .5, "RE-%d" % (i+1))
     l.SetTextAlign(22)
 
-    lls = buildLabel(era)
+    lls = buildLabel(era, "outset")
 
     cENDen.cd(i+1)
     hDen.Draw("COLZ")

@@ -94,6 +94,8 @@ for i in range(2):
 
     peak = hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin())
     effsNoZero = [x[1] for x in effs if x[1] != 0.0]
+    effsOver70 = [x[1] for x in effs if x[1] > 70]
+    effOver70 = sum(effsOver70)/len(effsOver70)
 
     header = TLatex(gStyle.GetPadLeftMargin(), 1-gStyle.GetPadTopMargin()+0.01,
                     "RPC Overall Efficiency - %s" % hEffs[i].GetTitle())
@@ -127,17 +129,23 @@ for i in range(2):
     statPanel2.SetBorderSize(0)
     statPanel2.SetTextFont(62)
 
+    statPanelOver70 = TText(0.18, 0.5, "Mean (>70%%) = %.2f%%" % effOver70)
+    statPanelOver70.SetTextSize(0.05)
+    statPanelOver70.SetTextFont(62)
+    statPanelOver70.SetNDC()
+
     canvs[i].cd()
     hEffs[i].Draw()
     statPanel1.Draw()
     statPanel2.Draw()
+    statPanelOver70.Draw()
     header.Draw()
-    lls = buildLabel(era)
+    lls = buildLabel(era, "inset")
     for ll in lls: ll.Draw()
 
     fixOverlay()
 
-    objs.extend([statPanel1, statPanel2, header])
+    objs.extend([statPanel1, statPanel2, statPanelOver70, header])
     objs.extend(lls)
 
     for l in effs:

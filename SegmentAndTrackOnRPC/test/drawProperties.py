@@ -48,6 +48,9 @@ for name, hists in plots.iteritems():
     else:
         h.SetFillStyle(0)
         h.SetLineColor(1)
+    h.Reset()
+    for hh in hists:
+        h.Add(f.Get(hh))
 
     c = TCanvas("c_%s" % name, name, 500, 500)
 
@@ -65,7 +68,7 @@ for name, hists in plots.iteritems():
         h.SetMaximum(h.GetMaximum()*1.5)
 
     h.Draw("hist")
-    lls = buildLabel(era)
+    lls = buildLabel(era, "inset")
     for ll in lls: ll.Draw()
 
     fixOverlay()
@@ -76,3 +79,5 @@ for name, hists in plots.iteritems():
     c.Print("%s.png" % c.GetName())
     c.Print("%s.pdf" % c.GetName())
     c.Print("%s.C" % c.GetName())
+
+    print name, h.GetMean(), h.GetRMS(), h.GetEntries()
