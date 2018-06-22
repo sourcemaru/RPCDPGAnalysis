@@ -107,7 +107,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "",
     "isMatched", "isFiducial",
     "Local x(cm)", "Local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
-    "Incidence in local x sin(#delta#phi)", "Incidence in local y sin(#delta#theta)",
+    "Incidence in local x tan(#delta#phi)", "Incidence in local y tan(#delta#theta)",
     "#rho(cm)", "#phi", "z(cm)",
     "Cluster size", "Bunch crossing",
     "mass (GeV)", "pt (GeV)", "#eta", "#phi", "time (ns)",
@@ -226,6 +226,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       const auto& bound = roll->surface().bounds();
       if ( !bound.inside(lPos) ) continue;
 
+      const double match_x0 = roll->centreOfStrip(roll->strip(lPos)).x();
+
       const auto gp = roll->toGlobal(lPos);
       const RPCDetId detId(match.id);
       const string rollName = RPCGeomServ(detId).name();
@@ -263,7 +265,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           auto matchedHit = rpcHitRange.first;
           double minDX = 1e9;
           for ( auto rpcHit = rpcHitRange.first; rpcHit != rpcHitRange.second; ++rpcHit ) {
-            const double dx = std::abs(rpcHit->localPosition().x()-match.x);
+            const double dx = std::abs(rpcHit->localPosition().x()-match_x0);
             if ( dx < minDX ) {
               matchedHit = rpcHit;
               minDX = dx;
@@ -301,7 +303,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           double minDX = 1e9;
           for ( auto hit = rpcHitRange.first; hit != rpcHitRange.second; ++hit ) {
             //const double dr = std::hypot(hit->localPosition().x(), hit->localPosition().y());
-            const double dx = std::abs(hit->localPosition().x()-match.x);
+            const double dx = std::abs(hit->localPosition().x()-match_x0);
             if ( dx < minDX ) {
               matchedHit = hit;
               minDX = dx;
