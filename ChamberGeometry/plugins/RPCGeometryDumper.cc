@@ -14,27 +14,7 @@
 #include "Geometry/RPCGeometry/interface/RPCGeomServ.h"
 #include "DataFormats/GeometrySurface/interface/TrapezoidalPlaneBounds.h"
 #include "TrackingTools/GeomPropagators/interface/StraightLinePlaneCrossing.h"
-/*
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-#include "DataFormats/MuonReco/interface/Muon.h"
-#include "DataFormats/MuonReco/interface/MuonFwd.h"
-#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 
-#include "DataFormats/RPCRecHit/interface/RPCRecHit.h"
-#include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
-
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
-
-#include "Geometry/DTGeometry/interface/DTGeometry.h"
-#include "Geometry/CSCGeometry/interface/CSCGeometry.h"
-
-#include "DataFormats/Math/interface/deltaPhi.h"
-
-#include <cmath>
-#include <vector>
-*/
 #include <iostream>
 #include <fstream>
 
