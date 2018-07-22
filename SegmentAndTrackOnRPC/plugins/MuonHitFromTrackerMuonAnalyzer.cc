@@ -57,13 +57,13 @@ private:
 
   THnSparseF* hInfo_;
   enum {
-    RUN=0, REGION,
-    WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING,
+    RUN=0,
+    REGION, WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING,
     ROLLNAME,
     ISMATCHED, ISFIDUCIAL, HASNEARBYSGMT,
     LX, LY, RESX, RESY, PULLX, PULLY,
     DXDZ, DYDZ,
-    GRHO, GPHI, GZ,
+    GX, GY, GZ, GPHI,
     CLS, BX,
     MASS, PT, ETA, PHI, TIME,
     NVARS
@@ -101,7 +101,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "isMatched", "isFiducial", "hasNearbySgmt",
     "lX", "lY", "resX", "resY", "pullX", "pullY",
     "dxdz", "dydz",
-    "gRho", "gPhi", "gZ",
+    "gX", "gY", "gZ", "gPhi",
     "cls", "bx",
     "mass", "pt", "eta", "phi", "time",
   };
@@ -110,44 +110,45 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     "region", "wheel", "station", "layer", "segment", "roll", "disk", "ring",
     "",
     "isMatched", "isFiducial", "hasNearbySgmt",
-    "Local x(cm)", "Local y(cm)", "Residual x(cm)", "Residual y(cm)", "Pull x(cm)", "Pull y(cm)",
-    "Incidence in local x tan(#delta#phi)", "Incidence in local y tan(#delta#theta)",
-    "#rho(cm)", "#phi", "z(cm)",
+    "Local x (cm)", "Local y (cm)", "Residual x (cm)", "Residual y (cm)", "Pull x", "Pull y",
+    "Incidence angle dx/dz", "Incidence angle dy/dz",
+    "x (cm)", "y (cm)", "z (cm)", "#phi (radian)",
     "Cluster size", "Bunch crossing",
-    "mass (GeV)", "pt (GeV)", "#eta", "#phi", "time (ns)",
+    "Mass (GeV)", "p_{T} (GeV)", "#eta", "#phi (radian)", "time (ns)",
   };
   int nbins[NVARS] = {
-    1000000,
-    3, 5, 5, 4, 48, 6, 5, 5,
-    5000,
-    2, 2, 2,
-    400, 400, 120, 120, 100, 100,
-    800, 360*3, 2400,
-    100, 100,
-    10, 13,
-    120, 50, 20, 24, 250
+    1000000, //RUN
+    3, 5, 5, 3, 49, 6, 5, 5, //REGION, WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING
+    5000, //ROLLNAME
+    2, 2, 2, //ISMATCHED, ISFIDUCIAL, HASNEARBYSGMT
+    400, 400, 120, 120, 100, 100, //LX, LY, RESX, RESY, PULLX, PULLY
+    100, 100, //DXDZ, DYDZ
+    3200, 3200, 4800, 100, // GX, GY, GZ, GPHI
+    10, 13, //CLS, BX
+    120, 50, 20, 24, 250 //MASS, PT, ETA, PHI, TIME
   };
   double xmins[NVARS] = {
-    0,
-    -1, -2.5, 0, 1, 1, 0, 0, 0,
-    0,
-    0, 0, 0,
-    -200, -200, -20, -20, -5, -5,
-    -3, -3,
-    0, -3.14159265, -1200,
-    0, -6.5,
-    60, 0, -2.5, -3.14159265, 25*-5
+    0, //RUN
+    -1, -2.5, 0, 0, 0, 0, 0, 0, //REGION, WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING
+    0, //ROLLNAME
+    0, 0, 0, //ISMATCHED, ISFIDUCIAL, HASNEARBYSGMT
+    -200, -200, -20, -20, -5, -5, //LX, LY, RESX, RESY, PULLX, PULLY
+    -1.5, -1.5, //DXDZ, DYDZ
+    -800, -800, -1200, -3.14159265, //GX, GY, GZ, GPHI
+    0, -3.14159265, -1200, //GRHO, GPHI, GZ
+    0, -6.5, //CLS, BX
+    60, 0, -2.5, -3.14159265, 25*-5 //MASS, PT, ETA, PHI, TIME
   };
   double xmaxs[NVARS] = {
-    1000000,
-    2, 2.5, 5, 3, 49, 6, 5, 5,
-    5000,
-    2, 2, 2,
-    200, 200, 20, 20, 5, 5,
-    3, 3,
-    800, 3.14159265, 1200,
-    10, 6.5,
-    120, 100, 2.5, 3.14159265, 25*5
+    1000000, //RUN
+    2, 2.5, 5, 3, 49, 6, 5, 5, //REGION, WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING
+    5000, //ROLLNAME
+    2, 2, 2, //ISMATCHED, ISFIDUCIAL, HASNEARBYSGMT
+    200, 200, 20, 20, 5, 5, //LX, LY, RESX, RESY, PULLX, PULLY
+    1.5, 1.5, //DXDZ, DYDZ
+    800, 800, 1200, 3.14159265, //GX, GY, GZ, GPHI
+    10, 6.5, //CLS, BX
+    120, 100, 2.5, 3.14159265, 25*5 //MASS, PT, ETA, PHI, TIME
   };
   // Modify binning for the Onia's
   if ( resonanceType_ == ResonanceType::Jpsi ) {
