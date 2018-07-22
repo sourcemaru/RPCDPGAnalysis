@@ -135,7 +135,6 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     -200, -200, -20, -20, -5, -5, //LX, LY, RESX, RESY, PULLX, PULLY
     -1.5, -1.5, //DXDZ, DYDZ
     -800, -800, -1200, -3.14159265, //GX, GY, GZ, GPHI
-    0, -3.14159265, -1200, //GRHO, GPHI, GZ
     0, -6.5, //CLS, BX
     60, 0, -2.5, -3.14159265, 25*-5 //MASS, PT, ETA, PHI, TIME
   };
@@ -274,7 +273,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           const double dphi = std::abs(deltaPhi(gPos0.phi(), gRefPos0));
           auto posDir = std::make_pair(dtChamber->toGlobal(LocalPoint(segMatch.x, segMatch.y, 0)),
                                        dtChamber->toGlobal(LocalVector(segMatch.dXdZ, segMatch.dYdZ, 1)));
-          if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
+          //if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
+          segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
         }
         else if ( detId.subdetId() == 2 ) {
           const CSCDetId cscId(detId);
@@ -284,7 +284,8 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           const double dphi = std::abs(deltaPhi(gPos0.phi(), gRefPos0));
           auto posDir = std::make_pair(cscChamber->toGlobal(LocalPoint(segMatch.x, segMatch.y, 0)),
                                        cscChamber->toGlobal(LocalVector(segMatch.dXdZ, segMatch.dYdZ, 1)));
-          if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
+          //if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
+          segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
         }
       }
       if ( !segMatchesNearRPC.empty() ) {
@@ -315,9 +316,10 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
       vars[LX] = lPos.x();
       vars[LY] = lPos.y();
-      vars[GRHO] = std::hypot(gp.x(), gp.y());
-      vars[GPHI] = gp.phi();
+      vars[GX] = gp.x();
+      vars[GY] = gp.y();
       vars[GZ] = gp.z();
+      vars[GPHI] = gp.phi();
       vars[LAYER] = detId.layer();
       vars[ROLL] = detId.roll();
       vars[ROLLNAME] = axis->FindBin(rollName.c_str());
