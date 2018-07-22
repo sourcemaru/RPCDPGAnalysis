@@ -1,0 +1,14 @@
+<use name="CommonTools/UtilAlgos"/>
+<!--
+<use name="DataFormats/RPCRecHit" />
+<use name="DataFormats/RPCDigi" />
+<use name="DQM/RPCMonitorDigi" />
+<use name="TrackingTools/TrackAssociator" />
+<use name="HLTrigger/HLTcore" />
+<use name="DQMServices/Core" />-->
+<use name="Geometry/RPCGeometry" />
+
+<library   name="RPCDPGAnalysisChamberGeometry_plugins" file="*.cc">
+  <flags   EDM_PLUGIN="1"/>
+</library>
+
