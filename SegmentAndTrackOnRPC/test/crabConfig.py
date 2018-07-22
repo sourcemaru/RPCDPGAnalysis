@@ -43,14 +43,14 @@ elif pd == "MuOnia":
 username = os.environ['USER']
 
 if 'Run2018' in sd:
-    config.Data.lumiMask = '../data/LumiJSON/Cert_314472-317591_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt'
+    config.Data.lumiMask = '../data/LumiJSON/Cert_314472-318876_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt'
 elif 'Run2017' in sd:
     config.Data.lumiMask = '../data/LumiJSON/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_MuonPhys.txt'
 elif 'Run2016' in sd:
     config.Data.lumiMask = '../data/LumiJSON/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
 
 #submitdate = dt.now().strftime('%Y%m%d')+'_1'
-submitdate = '20180623_1'
+submitdate = '20180722_1'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
 
