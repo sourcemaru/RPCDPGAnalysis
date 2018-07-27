@@ -16,6 +16,9 @@
 #include "DataFormats/RPCRecHit/interface/RPCRecHit.h"
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 
+#include "DataFormats/CSCRecHit/interface/CSCSegmentCollection.h"
+#include "DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h"
+
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -48,6 +51,8 @@ public:
 
 private:
   const edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
+  const edm::EDGetTokenT<DTRecSegment4DCollection> dtSegmentToken_;
+  const edm::EDGetTokenT<CSCSegmentCollection> cscSegmentToken_;
   //const edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
   const edm::EDGetTokenT<double> tpMassToken_;
@@ -72,6 +77,8 @@ private:
 
 MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::ParameterSet& pset):
   rpcHitToken_(consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"))),
+  dtSegmentToken_(consumes<DTRecSegment4DCollection>(pset.getParameter<edm::InputTag>("dtSegments"))),
+  cscSegmentToken_(consumes<CSCSegmentCollection>(pset.getParameter<edm::InputTag>("cscSegments"))),
   //vertexToken_(consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("vertex"))),
   muonToken_(consumes<reco::MuonCollection>(pset.getParameter<edm::InputTag>("muons"))),
   tpMassToken_(consumes<double>(pset.getParameter<edm::InputTag>("tpMass"))),
@@ -200,6 +207,12 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
   edm::ESHandle<CSCGeometry> cscGeom;
   eventSetup.get<MuonGeometryRecord>().get(cscGeom);
 
+  edm::Handle<DTRecSegment4DCollection> dtSegmentHandle;
+  event.getByToken(dtSegmentToken_, dtSegmentHandle);
+
+  edm::Handle<CSCSegmentCollection> cscSegmentHandle;
+  event.getByToken(cscSegmentToken_, cscSegmentHandle);
+
   //edm::Handle<reco::VertexCollection> vertexHandle;
   //event.getByToken(vertexToken_, vertexHandle);
   //b_nPV = vertexHandle->size();
@@ -228,26 +241,44 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
     vars[PHI] = mu.phi();
     vars[TIME] = mu.time().timeAtIpInOut;
 
-    std::map<DetId, reco::MuonSegmentMatch> segMatches;
+    std::map<DetId, std::pair<LocalPoint, LocalVector>> segMatches;
     for ( auto match : mu.matches() ) {
       // select one nearest to the track extrapolation...
-      if ( match.detector() > 2 ) continue;
-      if ( match.segmentMatches.empty() ) continue;
-      auto bestSegment = match.segmentMatches.begin();
-      double bestDR = hypot(match.x-bestSegment->x, match.y-bestSegment->y);
-      for ( auto segment = std::next(match.segmentMatches.begin()); segment != match.segmentMatches.end(); ++segment ) {
-        const double dR = hypot(match.x-segment->x, match.y-segment->y);
-        if ( dR < bestDR ) {
-          bestDR = dR;
-          bestSegment = segment;
+      if ( match.detector() == MuonSubdetId::DT ) {
+        auto range = dtSegmentHandle->get(match.id);
+        auto bestSegment = range.second;
+        double bestDR = 1e9;
+        for ( auto segment = range.first; segment != range.second; ++segment ) {
+          if ( !segment->hasPhi() or !segment->hasZed() ) continue;
+          const double dR = hypot(match.x-segment->localPosition().x(), match.y-segment->localPosition().y());
+          if ( bestSegment == range.second or dR < bestDR ) {
+            bestDR = dR;
+            bestSegment = segment;
+          }
+        }
+        if ( bestSegment != range.second ) {
+          segMatches.insert(std::make_pair(match.id, std::make_pair(bestSegment->localPosition(), bestSegment->localDirection())));
         }
       }
-
-      segMatches.insert(std::make_pair(match.id, *bestSegment));
+      else if ( match.detector() == MuonSubdetId::CSC ) {
+        auto range = cscSegmentHandle->get(match.id);
+        auto bestSegment = range.second;
+        double bestDR = 1e9;
+        for ( auto segment = range.first; segment != range.second; ++segment ) {
+          const double dR = hypot(match.x-segment->localPosition().x(), match.y-segment->localPosition().y());
+          if ( bestSegment == range.second or dR < bestDR ) {
+            bestDR = dR;
+            bestSegment = segment;
+          }
+        }
+        if ( bestSegment != range.second ) {
+          segMatches.insert(std::make_pair(match.id, std::make_pair(bestSegment->localPosition(), bestSegment->localDirection())));
+        }
+      }
     }
 
     for ( auto match : mu.matches() ) {
-      if ( match.detector() != 3 ) continue;
+      if ( match.detector() != MuonSubdetId::RPC ) continue;
 
       bool hasNearbySgmt = false;
 
@@ -261,30 +292,29 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       std::map<double, std::pair<GlobalPoint, GlobalVector> > segMatchesNearRPC;
       for ( auto segMatchItr = segMatches.begin(); segMatchItr != segMatches.end(); ++segMatchItr ) {
         auto detId = segMatchItr->first;
-        auto segMatch = segMatchItr->second;
-
         if ( detId.det() != DetId::Muon ) continue; // this never happens
 
-        if ( detId.subdetId() == 1 ) {
+        auto segPos = segMatchItr->second.first;
+        auto segDir = segMatchItr->second.second;
+
+        if ( detId.subdetId() == MuonSubdetId::DT ) {
           const DTChamberId dtId(detId);
           const auto dtChamber = dtGeom->chamber(detId);
           //if ( dtId.station() != rpcId.station() or dtId.wheel() != rpcId.ring() ) continue;
           if ( dtId.station() != rpcId.station() ) continue;
           const GlobalPoint gRefPos0 = dtChamber->toGlobal(LocalPoint(0,0,0));
           const double dphi = std::abs(deltaPhi(gPos0.phi(), gRefPos0));
-          auto posDir = std::make_pair(dtChamber->toGlobal(LocalPoint(segMatch.x, segMatch.y, 0)),
-                                       dtChamber->toGlobal(LocalVector(segMatch.dXdZ, segMatch.dYdZ, 1)));
+          auto posDir = std::make_pair(dtChamber->toGlobal(segPos), dtChamber->toGlobal(segDir));
           //if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
           segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
         }
-        else if ( detId.subdetId() == 2 ) {
+        else if ( detId.subdetId() == MuonSubdetId::CSC ) {
           const CSCDetId cscId(detId);
           const auto cscChamber = cscGeom->chamber(cscId);
           if ( cscId.zendcap()*cscId.station() != rpcId.region()*rpcId.station() ) continue;
           const GlobalPoint gRefPos0 = cscChamber->toGlobal(LocalPoint(0,0,0));
           const double dphi = std::abs(deltaPhi(gPos0.phi(), gRefPos0));
-          auto posDir = std::make_pair(cscChamber->toGlobal(LocalPoint(segMatch.x, segMatch.y, 0)),
-                                       cscChamber->toGlobal(LocalVector(segMatch.dXdZ, segMatch.dYdZ, 1)));
+          auto posDir = std::make_pair(cscChamber->toGlobal(segPos), cscChamber->toGlobal(segDir));
           //if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
           segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
         }
@@ -353,10 +383,11 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           const auto hitLErr = matchedHit->localPositionError();
 
           vars[ISMATCHED] = 1;
-          vars[RESX] = hitLPos.x()-match.x;
-          vars[RESY] = hitLPos.y()-match.y;
-          vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
-          vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
+          const auto dp = hitLPos - lPos;
+          vars[RESX] = dp.x();
+          vars[RESY] = dp.y();
+          vars[PULLX] = dp.x()/std::sqrt(hitLErr.xx());
+          vars[PULLY] = dp.y()/std::sqrt(hitLErr.yy());
           vars[CLS] = matchedHit->clusterSize();
           vars[BX] = matchedHit->BunchX();
         }
@@ -391,10 +422,11 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           const auto hitLErr = matchedHit->localPositionError();
 
           vars[ISMATCHED] = 1;
-          vars[RESX] = hitLPos.x()-match.x;
-          vars[RESY] = hitLPos.y()-match.y;
-          vars[PULLX] = (hitLPos.x()-match.x)/std::sqrt(hitLErr.xx()+match.xErr*match.xErr);
-          vars[PULLY] = (hitLPos.y()-match.y)/std::sqrt(hitLErr.yy()+match.yErr*match.yErr);
+          const auto dp = hitLPos - lPos;
+          vars[RESX] = dp.x();
+          vars[RESY] = dp.y();
+          vars[PULLX] = dp.x()/std::sqrt(hitLErr.xx());
+          vars[PULLY] = dp.y()/std::sqrt(hitLErr.yy());
           vars[CLS] = matchedHit->clusterSize();
           vars[BX] = matchedHit->BunchX();
         }
