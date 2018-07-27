@@ -26,7 +26,7 @@ process.goodVertices = cms.EDFilter("VertexSelector",
 )
 
 process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.rpcTrackerMuonProbeProducer_cfi")
-process.probeTrackerMuons.minDR = 0.1
+process.probeTrackerMuons.minDR = -1
 process.probeTrackerMuons.minMuonPt = 8
 process.probeTrackerMuons.minTrackPt = 4
 process.probeTrackerMuons.minMass = 8.5
