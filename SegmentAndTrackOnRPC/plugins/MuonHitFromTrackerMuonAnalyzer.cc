@@ -50,6 +50,7 @@ public:
   void endRun(const edm::Run& run, const edm::EventSetup&) override {};
 
 private:
+  const bool doHybrid_;
   const edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
   const edm::EDGetTokenT<DTRecSegment4DCollection> dtSegmentToken_;
   const edm::EDGetTokenT<CSCSegmentCollection> cscSegmentToken_;
@@ -76,6 +77,7 @@ private:
 };
 
 MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::ParameterSet& pset):
+  doHybrid_(pset.getUntrackedParameter<bool>("doHybrid")),
   rpcHitToken_(consumes<RPCRecHitCollection>(pset.getParameter<edm::InputTag>("rpcRecHits"))),
   dtSegmentToken_(consumes<DTRecSegment4DCollection>(pset.getParameter<edm::InputTag>("dtSegments"))),
   cscSegmentToken_(consumes<CSCSegmentCollection>(pset.getParameter<edm::InputTag>("cscSegments"))),
@@ -242,37 +244,39 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
     vars[TIME] = mu.time().timeAtIpInOut;
 
     std::map<DetId, std::pair<LocalPoint, LocalVector>> segMatches;
-    for ( auto match : mu.matches() ) {
-      // select one nearest to the track extrapolation...
-      if ( match.detector() == MuonSubdetId::DT ) {
-        auto range = dtSegmentHandle->get(match.id);
-        auto bestSegment = range.second;
-        double bestDR = 1e9;
-        for ( auto segment = range.first; segment != range.second; ++segment ) {
-          if ( !segment->hasPhi() or !segment->hasZed() ) continue;
-          const double dR = hypot(match.x-segment->localPosition().x(), match.y-segment->localPosition().y());
-          if ( bestSegment == range.second or dR < bestDR ) {
-            bestDR = dR;
-            bestSegment = segment;
+    if ( doHybrid_ ) {
+      for ( auto match : mu.matches() ) {
+        // select one nearest to the track extrapolation...
+        if ( match.detector() == MuonSubdetId::DT ) {
+          auto range = dtSegmentHandle->get(match.id);
+          auto bestSegment = range.second;
+          double bestDR = 1e9;
+          for ( auto segment = range.first; segment != range.second; ++segment ) {
+            if ( !segment->hasPhi() or !segment->hasZed() ) continue;
+            const double dR = hypot(match.x-segment->localPosition().x(), match.y-segment->localPosition().y());
+            if ( bestSegment == range.second or dR < bestDR ) {
+              bestDR = dR;
+              bestSegment = segment;
+            }
+          }
+          if ( bestSegment != range.second ) {
+            segMatches.insert(std::make_pair(match.id, std::make_pair(bestSegment->localPosition(), bestSegment->localDirection())));
           }
         }
-        if ( bestSegment != range.second ) {
-          segMatches.insert(std::make_pair(match.id, std::make_pair(bestSegment->localPosition(), bestSegment->localDirection())));
-        }
-      }
-      else if ( match.detector() == MuonSubdetId::CSC ) {
-        auto range = cscSegmentHandle->get(match.id);
-        auto bestSegment = range.second;
-        double bestDR = 1e9;
-        for ( auto segment = range.first; segment != range.second; ++segment ) {
-          const double dR = hypot(match.x-segment->localPosition().x(), match.y-segment->localPosition().y());
-          if ( bestSegment == range.second or dR < bestDR ) {
-            bestDR = dR;
-            bestSegment = segment;
+        else if ( match.detector() == MuonSubdetId::CSC ) {
+          auto range = cscSegmentHandle->get(match.id);
+          auto bestSegment = range.second;
+          double bestDR = 1e9;
+          for ( auto segment = range.first; segment != range.second; ++segment ) {
+            const double dR = hypot(match.x-segment->localPosition().x(), match.y-segment->localPosition().y());
+            if ( bestSegment == range.second or dR < bestDR ) {
+              bestDR = dR;
+              bestSegment = segment;
+            }
           }
-        }
-        if ( bestSegment != range.second ) {
-          segMatches.insert(std::make_pair(match.id, std::make_pair(bestSegment->localPosition(), bestSegment->localDirection())));
+          if ( bestSegment != range.second ) {
+            segMatches.insert(std::make_pair(match.id, std::make_pair(bestSegment->localPosition(), bestSegment->localDirection())));
+          }
         }
       }
     }

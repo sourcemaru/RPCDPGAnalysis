@@ -25,39 +25,16 @@ process.goodVertices = cms.EDFilter("VertexSelector",
     filter = cms.bool(True),
 )
 
-process.probeTrackerMuons = cms.EDProducer("RPCTrackerMuonProbeProducer",
-    vertex = cms.InputTag("goodVertices"),
-    muons = cms.InputTag("muons"),
-    minMuonPt = cms.double(25),
-    maxMuonAbsEta = cms.double(2.4),
-    maxMuonRelIso = cms.double(0.25), # Loose isolation ~98% eff. (tight=0.15)
-    minTrackPt = cms.double(10),
-    maxTrackAbsEta = cms.double(2.1),
-    doCheckSign = cms.bool(True),
-    minDR = cms.double(0.1),
-    minMass = cms.double(70),
-    maxMass = cms.double(110),
-    triggerObjects = cms.InputTag("hltTriggerSummaryAOD"),
-    triggerResults = cms.InputTag("TriggerResults::HLT"),
-    #triggerPaths = cms.vstring("HLT_IsoMu24", "HLT_IsoMu24_eta2p1", "HLT_IsoTkMu24", "HLT_IsoTkMu24_eta2p1", "HLT_Mu50", "HLT_Mu55", "HLT_TkMu50"), ## Paths in Run2016
-    triggerPaths = cms.vstring("HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", "HLT_Mu50", "HLT_Mu55", ), ## Paths in Run2017 and Run2018 (except emergency)
-    triggerModules = cms.vstring(), ## Make it to be a pair with the trigger path if given
-    probeIdType = cms.string("Tracker"),
-    tagIdType = cms.string("Tight"),
-)
+process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.rpcTrackerMuonProbeProducer_cfi")
+#process.probeTrackerMuons.triggerPaths = [
+#    "HLT_IsoMu24", "HLT_IsoMu24_eta2p1", "HLT_IsoTkMu24", "HLT_IsoTkMu24_eta2p1",
+#    "HLT_Mu50", "HLT_Mu55", "HLT_TkMu50"] ## Paths in Run2016
+process.probeTrackerMuons.triggerPaths = [
+    "HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", 
+    "HLT_Mu50", "HLT_Mu55"] ## Paths in Run2017 and Run2018 (except emergency)
+process.probeTrackerMuons.triggerModules = [] ## Make it to be a pair with the trigger path if given
 
-process.rpcExt = cms.EDAnalyzer("MuonHitFromTrackerMuonAnalyzer",
-    doHistByRun = cms.untracked.bool(True),
-    vertex = cms.InputTag("goodVertices"),
-    rpcRecHits = cms.InputTag("rpcRecHits"),
-    dtSegments = cms.InputTag("dt4DSegments"),
-    cscSegments = cms.InputTag("cscSegments"),
-    muons = cms.InputTag("probeTrackerMuons"),
-    minMuonPt = cms.double(10),
-    maxMuonAbsEta = cms.double(2.1),
-    tpMass = cms.InputTag("probeTrackerMuons", "mass"),
-    resonanceType = cms.string("Z"),
-)
+process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.muonHitFromTrackerMuonAnalyzer_cfi")
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
