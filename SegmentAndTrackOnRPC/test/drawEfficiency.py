@@ -13,11 +13,10 @@ from ROOT import *
 from array import array
 import os, sys
 from math import sqrt
-fName = sys.argv[1]
 from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
 
 era = "Run2017"
-if len(sys.argv) > 2: era = sys.argv[2]
+if len(sys.argv) > 2: era = sys.argv[1]
 
 gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
 setTDRStyle()
@@ -41,32 +40,36 @@ blacklist = []
 #blacklist.extend(["RE+2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
 #blacklist.extend(["RE-2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
 
-f = TFile(fName)
-fout = open(fName.replace(".root",".txt"), "w")
+## Collect per-roll counts
+counts = {}
+for fName in sys.argv[2:]:
+    for line in open(fName).readlines():
+        line = line.strip()
+        if len(line) == 0 or line.startswith('#'): continue
+        name, den, num = line.split()
+        den, num = float(den), float(num)
 
-rollNames = [[], []]
-nExps = [[], []]
-nRecs = [[], []]
+        if name not in counts: counts[name] = [den, num]
+        else: counts[name] = [counts[name][0]+den, counts[name][1]+num]
 
-hBarrel_Den  = f.Get("h_rollName_Barrel_detId_Den")
-hBarrel_Num  = f.Get("h_rollName_Barrel_detId_Num")
-hEndcapP_Den = f.Get("h_rollName_EndcapP_detId_Den")
-hEndcapP_Num = f.Get("h_rollName_EndcapP_detId_Num")
-hEndcapN_Den = f.Get("h_rollName_EndcapN_detId_Den")
-hEndcapN_Num = f.Get("h_rollName_EndcapN_detId_Num")
-for b in range(0, hBarrel_Den.GetNbinsX()+2):
-    name = hBarrel_Den.GetXaxis().GetBinLabel(b)
-    if name == '': continue
+effMap = {}
+with open("efficiency.txt", "w") as fout:
+    print>>fout, "#RollName efficiency errLo errHi"
+    for name in sorted(counts.keys()):
+        den, num = counts[name]
+        if den == 0:
+            print name, -1, 0, 0
+            continue
 
-    if name.startswith('W'):
-        nExps[0].append(hBarrel_Den.GetBinContent(b))
-        nRecs[0].append(hBarrel_Num.GetBinContent(b))
-        rollNames[0].append(name)
-    else:
-        nExps[1].append(hEndcapP_Den.GetBinContent(b)+hEndcapN_Den.GetBinContent(b))
-        nRecs[1].append(hEndcapP_Num.GetBinContent(b)+hEndcapN_Num.GetBinContent(b))
-        rollNames[1].append(name)
+        eff = num/den
+        errLo = abs(eff - TEfficiency.ClopperPearson(den, num, 0.683, False))
+        errHi = abs(TEfficiency.ClopperPearson(den, num, 0.683, True) - eff) 
 
+        print>>fout, name, eff, errLo, errHi, den
+        effMap[name] = [eff, errLo, errHi, den]
+
+#######################################
+## Draw plots
 nbin = int((xmax-xmin)/binW)
 objs = []
 hEffs = [
@@ -82,19 +85,18 @@ hEffs[1].SetFillColor(38)
 hEffs[0].SetLineColor(TColor.GetColor("#007700"))
 hEffs[1].SetLineColor(TColor.GetColor("#000099"))
 
-for i in range(2):
-    effs = []
-    effs = [(name, 100*nRec/nExp) for name, nExp, nRec in zip(rollNames[i], nExps[i], nRecs[i]) if nExp > 100 and name not in blacklist]
-    effs.sort(reverse=True, key=lambda x : x[1])
+effs = [
+    [100*effMap[name][0] for name in effMap.keys() if name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
+    [100*effMap[name][0] for name in effMap.keys() if not name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
+]
 
+for i in range(2):
     hEffs[i].GetYaxis().SetNdivisions(505)
     hEffs[i].GetYaxis().SetTitleOffset(1.0)
 
-    for eff in effs: hEffs[i].Fill(eff[1])
-
-    peak = hEffs[i].GetBinCenter(hEffs[i].GetMaximumBin())
-    effsNoZero = [x[1] for x in effs if x[1] != 0.0]
-    effsOver70 = [x[1] for x in effs if x[1] > 70]
+    for eff in effs[i]: hEffs[i].Fill(eff)
+    effsNoZero = [eff for eff in effs[i] if eff != 0.0]
+    effsOver70 = [eff for eff in effs[i] if eff > 70]
     effOver70 = sum(effsOver70)/len(effsOver70)
 
     header = TLatex(gStyle.GetPadLeftMargin(), 1-gStyle.GetPadTopMargin()+0.01,
@@ -107,7 +109,7 @@ for i in range(2):
     stats[1].append("%d" % hEffs[i].GetEntries())
     stats[1].append("%.2f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
     stats[1].append("%.2f" % sqrt(sum([x**2 for x in effsNoZero])/len(effsNoZero) - (sum([x for x in effsNoZero])/len(effsNoZero))**2))
-    stats[1].append("%d" % len([x[1] for x in effs if x[1] < xmin]))
+    stats[1].append("%d" % len([x for x in effs[i] if x < xmin]))
 
     statPanel1 = TPaveText(0.53,0.68,0.76,0.85,"brNDC")
     statPanel2 = TPaveText(0.53,0.68,0.76,0.85,"brNDC")
@@ -148,9 +150,6 @@ for i in range(2):
     objs.extend([statPanel1, statPanel2, statPanelOver70, header])
     objs.extend(lls)
 
-    for l in effs:
-        print>>fout, l[0], l[1]
-
 for c in canvs:
     c.cd()
 
@@ -169,6 +168,6 @@ for c in canvs:
     c.Modified()
     c.Update()
 
-    c.Print("%s_%s.png" % (fName[:-5], c.GetName()))
-    c.Print("%s_%s.pdf" % (fName[:-5], c.GetName()))
-    c.Print("%s_%s.C" % (fName[:-5], c.GetName()))
+    c.Print("%s_%s.png" % (era, c.GetName()))
+    c.Print("%s_%s.pdf" % (era, c.GetName()))
+    c.Print("%s_%s.C" % (era, c.GetName()))
