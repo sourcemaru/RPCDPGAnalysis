@@ -7,78 +7,54 @@ gStyle.SetOptStat(0)
 sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
 from ProjectTHnSparse import *
 
+print "@@ Opening root file..."
 f = TFile(sys.argv[1])
+print "@@ Loading RPC TnP histogram..."
 hInfo = f.Get("rpcExt/hInfo")
+print "@@ Initializing THnSparseSelector..."
 hSel = THnSparseSelector(hInfo)
 
 if not os.path.exists("hists"): os.mkdir("hists")
-f = TFile("hists/efficiency_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
 commonSel = {
-    #'run':(315257,315420), ## Run2018A, before CCU error fix
-    #'run':(315488,999999),
+    'isFiducial':(1,1),
     #'mass':(84,97),
 }
 
-## Overall efficiency distribution
-plots = {
-    'Barrel_detId':[['rollName'], {'region':(0,0), 'isFiducial':(1,1)}],
-    'EndcapP_detId':[['rollName'], {'region':(1,1), 'isFiducial':(1,1)}],
-    'EndcapN_detId':[['rollName'], {'region':(-1,-1), 'isFiducial':(1,1)}],
-}
+print "@@ Extracting runs..."
+hRuns = hSel.Project1D("run", commonSel)
+#runs = [i+2 for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+2) != 0]
+runs = [hRuns.GetXaxis().GetBinLowEdge(i+1) for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+1) != 0]
+print "@@ Extracting roll names..."
+hRolls = hSel.Project1D("rollName", {}, copyAxisLabel=True)
+axisRolls = hRolls.GetXaxis()
+rollNames = [axisRolls.GetBinLabel(i) for i in range(hRolls.GetNbinsX()+2) if axisRolls.GetBinLabel(i) != ""]
 
-for name, (variables, ranges) in plots.iteritems():
-    subranges = ranges.copy()
-    subranges.update(commonSel)
-    xVar = variables[0]
-    hDen = hSel.Project1D(xVar, subranges, suffix=name+"_Den", copyAxisLabel=True)
-    subranges.update({'isMatched':(1,1)})
-    hNum = hSel.Project1D(xVar, subranges, suffix=name+"_Num", copyAxislabel=True)
-    hDen.Write()
-    hNum.Write()
+nRun = len(runs)
+for iRun, run in enumerate(runs):
+    print "@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun),
+    fName = "hists/run%d.txt" % run
+    if os.path.exists(fName):
+        print " already exists. skip."
+        continue
 
-## Effciency map on global coordinates
-plots = {
-    'Barrel_ZPhi':[['gZ', 'gPhi'], {'region':(0,0), 'gZ':(-700, 700), 'isFiducial':(1,1)}],
-    'EndcapP_XY':[['gX', 'gY'], {'region':(1,1), 'isFiducial':(1,1)}],
-    'EndcapN_XY':[['gX', 'gY'], {'region':(-1,-1), 'isFiducial':(1,1)}],
-#    'lX_lY':['lX', 'lY', {'isFiducial':(1,1)}],
-}
-for name, (variables, ranges) in plots.iteritems():
-    subsels = []
-    if name.startswith("Barrel"):
-        for station in range(1,5):
-            nLayer = 2
-            if station > 2: nLayer = 1
-            for layer in range(1,nLayer+1):
-                subsels.append({'station':(station,station), 'layer':(layer,layer)})
-    elif name.startswith("Endcap"):
-        for disk in range(1,5):
-            subsels.append({'disk':(disk,disk)})
-    else:
-        subsels = [{'region':(-1,1)}] ## just put a dummy selection
+    with open(fName, "w") as fout:
+        print>>fout, "#RollName Denominator Numerator"
 
-    for subsel in subsels:
-        subranges = ranges.copy()
-        subranges.update(commonSel)
-        subname = name + '_' + ('_'.join("%s%d" % (n, r[0]) for n, r in subsel.iteritems()))
+        subranges = commonSel.copy()
+        hDen = hSel.Project1D("rollName", subranges, suffix="_Den")
+        subranges.update({'isMatched':(1,1)})
+        hNum = hSel.Project1D("rollName", subranges, suffix="_Num")
 
-        subranges.update(subsel)
-        if len(variables) == 1:
-            xVar = variables[0]
-            hDen = hSel.Project1D(xVar, subranges, suffix=subname+"_Den")
+        for i, name in enumerate(rollNames):
+            #### NOTE: There is a shift in the bin labels. Take rollNames with 1 bin shift
+            den = hDen.GetBinContent(i+2)
+            num = hNum.GetBinContent(i+2)
+            print>>fout, name, den, num
 
-            subranges.update({'isMatched':(1,1)})
-            hNum = hSel.Project1D(xVar, subranges, suffix=subname+"_Num")
-        elif len(variables) == 2:
-            xVar, yVar = variables
-            hDen = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Den")
+    hDen.Delete()
+    hNum.Delete()
 
-            subranges.update({'isMatched':(1,1)})
-            hNum = hSel.Project2D(xVar, yVar, subranges, suffix=subname+"_Num")
+    print ""
 
-        hDen.SetTitle(subname)
-        hNum.SetTitle(subname)
-        hDen.Write()
-        hNum.Write()
-
+print "@@ Done."

@@ -19,7 +19,7 @@ config.section_("Site")
 #config.Site.storageSite = 'T2_CH_CERN'
 config.Site.storageSite = 'T3_KR_KISTI'
 
-config.Data.splitting = 'Automatic'
+config.Data.splitting = 'LumiBased'
 
 ## Something that can be changed frequently
 import os
@@ -50,7 +50,7 @@ elif 'Run2016' in sd:
     config.Data.lumiMask = '../data/LumiJSON/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
 
 #submitdate = dt.now().strftime('%Y%m%d')+'_1'
-submitdate = '20180722_1'
+submitdate = '20180728_1'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
 
