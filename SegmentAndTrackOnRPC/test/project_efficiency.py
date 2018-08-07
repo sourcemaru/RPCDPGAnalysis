@@ -52,8 +52,8 @@ for iRun, run in enumerate(runs):
             num = hNum.GetBinContent(i+2)
             print>>fout, name, den, num
 
-    hDen.Delete()
-    hNum.Delete()
+        hDen.Delete()
+        hNum.Delete()
 
     print ""
 
