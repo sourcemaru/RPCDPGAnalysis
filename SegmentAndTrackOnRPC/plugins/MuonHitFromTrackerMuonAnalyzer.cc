@@ -139,7 +139,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   double xmins[NVARS] = {
     0, //RUN
     -1, -2.5, 0, 0, 0, 0, 0, 0, //REGION, WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING
-    0, //ROLLNAME
+    1, //ROLLNAME
     0, 0, 0, //ISMATCHED, ISFIDUCIAL, HASNEARBYSGMT
     -200, -200, -20, -20, -5, -5, //LX, LY, RESX, RESY, PULLX, PULLY
     -1.5, -1.5, //DXDZ, DYDZ
@@ -150,7 +150,7 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   double xmaxs[NVARS] = {
     1000000, //RUN
     2, 2.5, 5, 3, 49, 6, 5, 5, //REGION, WHEEL, STATION, LAYER, SEGMENT, ROLL, DISK, RING
-    5000, //ROLLNAME
+    5001, //ROLLNAME
     2, 2, 2, //ISMATCHED, ISFIDUCIAL, HASNEARBYSGMT
     200, 200, 20, 20, 5, 5, //LX, LY, RESX, RESY, PULLX, PULLY
     1.5, 1.5, //DXDZ, DYDZ
