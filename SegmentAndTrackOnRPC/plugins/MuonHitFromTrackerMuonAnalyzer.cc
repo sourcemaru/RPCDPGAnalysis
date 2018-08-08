@@ -307,7 +307,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           //if ( dtId.station() != rpcId.station() or dtId.wheel() != rpcId.ring() ) continue;
           if ( dtId.station() != rpcId.station() ) continue;
           const GlobalPoint gRefPos0 = dtChamber->toGlobal(LocalPoint(0,0,0));
-          const double dphi = std::abs(deltaPhi(gPos0.phi(), gRefPos0.phi()));
+          const double dphi = std::abs(deltaPhi(gPos0.barePhi(), gRefPos0.barePhi()));
           auto posDir = std::make_pair(dtChamber->toGlobal(segPos), dtChamber->toGlobal(segDir));
           //if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
           segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
@@ -317,7 +317,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
           const auto cscChamber = cscGeom->chamber(cscId);
           if ( cscId.zendcap()*cscId.station() != rpcId.region()*rpcId.station() ) continue;
           const GlobalPoint gRefPos0 = cscChamber->toGlobal(LocalPoint(0,0,0));
-          const double dphi = std::abs(deltaPhi(gPos0.phi(), gRefPos0.phi()));
+          const double dphi = std::abs(deltaPhi(gPos0.barePhi(), gRefPos0.barePhi()));
           auto posDir = std::make_pair(cscChamber->toGlobal(segPos), cscChamber->toGlobal(segDir));
           //if ( dphi < 3.14/8 ) segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
           segMatchesNearRPC.insert(std::make_pair(dphi, posDir));
