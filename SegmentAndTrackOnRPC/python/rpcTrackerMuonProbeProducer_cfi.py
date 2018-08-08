@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 probeTrackerMuons = cms.EDProducer("RPCTrackerMuonProbeProducer",
     vertex = cms.InputTag("goodVertices"),
     muons = cms.InputTag("muons"),
-    minMuonPt = cms.double(25),
+    minMuonPt = cms.double(30),
     maxMuonAbsEta = cms.double(2.4),
     maxMuonRelIso = cms.double(0.25), # Loose isolation ~98% eff. (tight=0.15)
     minTrackPt = cms.double(10),
