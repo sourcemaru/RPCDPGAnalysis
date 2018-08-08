@@ -31,8 +31,8 @@ to get correct per-chamber muography plots. The RPCPointProducer in the CMSSW is
 outdated, this should be updated as well (under development yet, but this is not crucial).
 
 ```
-cmsrel CMSSW_10_1_6
-cd CMSSW_10_1_6/src
+cmsrel CMSSW_10_1_9
+cd CMSSW_10_1_9/src
 cmsenv
 git-cms-init
 #git-cms-merge-topic jhgoh:PortingRPCPointProducerFromRPCDPG92X
@@ -57,6 +57,11 @@ You have to change the output directory, lumiMask.
 DATASET=/SingleMuon/Run2018A-PromptReco-v1/AOD crab submit
 DATASET=/SingleMuon/Run2018A-PromptReco-v2/AOD crab submit
 DATASET=/SingleMuon/Run2018A-PromptReco-v3/AOD crab submit
+DATASET=/SingleMuon/Run2018B-PromptReco-v1/AOD crab submit
+DATASET=/SingleMuon/Run2018B-PromptReco-v2/AOD crab submit
+DATASET=/SingleMuon/Run2018C-PromptReco-v1/AOD crab submit
+DATASET=/SingleMuon/Run2018C-PromptReco-v2/AOD crab submit
+DATASET=/SingleMuon/Run2018C-PromptReco-v3/AOD crab submit
 ```
 
 Files will be stored in /eos/cms/store/user/YOURUSERNAME/RPCChamberEfficiency/SUBMITDATE\_1/ by default. Please modify the crabConfig.py if you want to set different destination.
