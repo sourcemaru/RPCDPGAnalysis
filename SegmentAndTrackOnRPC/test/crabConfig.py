@@ -20,6 +20,7 @@ config.section_("Site")
 config.Site.storageSite = 'T3_KR_KISTI'
 
 config.Data.splitting = 'LumiBased'
+#config.Data.splitting = 'Automatic'
 
 ## Something that can be changed frequently
 import os

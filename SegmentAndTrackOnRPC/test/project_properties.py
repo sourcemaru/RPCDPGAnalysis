@@ -1,57 +1,59 @@
 #!/usr/bin/env python
 
-#from ROOT import *
+from ROOT import *
 import os, sys
+gStyle.SetOptStat(0)
 
 sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
 from ProjectTHnSparse import *
-from ROOT import *
-gStyle.SetOptStat(0)
 
+print "@@ Opening root file..."
 f = TFile(sys.argv[1])
+print "@@ Loading RPC TnP histogram..."
 hInfo = f.Get("rpcExt/hInfo")
+print "@@ Initializing THnSparseSelector..."
 hSel = THnSparseSelector(hInfo)
 
 if not os.path.exists("hists"): os.mkdir("hists")
-f = TFile("hists/properties_%s" % (os.path.basename(sys.argv[1])), "RECREATE")
 
 commonSel = {
-    #'run':(315257,315420), ## Run2018A, before CCU error fix
-    #'run':(315488,999999),
+    'isFiducial':(1,1),
     #'mass':(84,97),
 }
 
-plots = {
-    'mass':[['mass'], {}],
+variables = ['resX', 'bx', 'cls']
 
-    'residual':[['resX'], {}],
-    'residual_Barrel' :[['resX'], {'region':( 0, 0)}],
-    'residual_EndcapP':[['resX'], {'region':( 1, 1)}],
-    'residual_EndcapN':[['resX'], {'region':(-1,-1)}],
+print "@@ Extracting runs..."
+hRuns = hSel.Project1D("run", commonSel)
+#runs = [i+2 for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+2) != 0]
+runs = [hRuns.GetXaxis().GetBinLowEdge(i+1) for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+1) != 0]
+print "@@ Extracting roll names..."
+hRolls = hSel.Project1D("rollName", {}, copyAxisLabel=True)
+axisRolls = hRolls.GetXaxis()
+rollNames = [axisRolls.GetBinLabel(i) for i in range(hRolls.GetNbinsX()+2) if axisRolls.GetBinLabel(i) != ""]
 
-    'bx':[['bx'], {}],
-    'bxVsTime':[['bx', 'time'], {}],
-    'time':[['time'], {}],
+nRun = len(runs)
+for iRun, run in enumerate(runs):
+    print "@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun),
+    fName = "hists/run%d.txt" % run
+    if os.path.exists(fName):
+        print " already exists. skip."
+        continue
 
-    'cls':[['cls'], {}],
-    'cls_Barrel' :[['cls'], {'region':( 0, 0)}],
-    'cls_EndcapP':[['cls'], {'region':( 1, 1)}],
-    'cls_EndcapN':[['cls'], {'region':(-1,-1)}],
+    with open(fName, "w") as fout:
+        print>>fout, "#RollName Denominator Numerator"
 
-    'timeAtBx-2':[['time'], {'bx':(-2,-2)}],
-    'timeAtBx-1':[['time'], {'bx':(-1,-1)}],
-    'timeAtBx0':[['time'], {'bx':( 0, 0)}],
-    'timeAtBx1':[['time'], {'bx':( 1, 1)}],
-    'timeAtBx2':[['time'], {'bx':( 2, 2)}],
-    'timeAtBx3':[['time'], {'bx':( 3, 3)}],
+        h = hSel.Project1D("rollName", commonSel)
+        for i, name in enumerate(rollNames):
+            #### NOTE: There is a shift in the bin labels. Take rollNames with 1 bin shift
+            den = hDen.GetBinContent(i+2)
+            num = hNum.GetBinContent(i+2)
+            print>>fout, name, den, num
 
-    'rollNames':[['rollName'], {}],
+        h.Delete()
 
-    'cls_rollNames':[['rollName', 'cls'], {}],
-    'pt_rollNames':[['rollName', 'pt'], {}],
-    'bx_rollNames':[['rollName', 'bx'], {}],
-    'time_rollNames':[['rollName', 'time'], {}],
-}
+    print ""
+
 
 for name, (variables, ranges) in plots.iteritems():
     subranges = {'isMatched':(1,1),}

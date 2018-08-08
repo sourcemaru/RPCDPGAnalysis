@@ -26,9 +26,6 @@ process.goodVertices = cms.EDFilter("VertexSelector",
 )
 
 process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.rpcTrackerMuonProbeProducer_cfi")
-#process.probeTrackerMuons.triggerPaths = [
-#    "HLT_IsoMu24", "HLT_IsoMu24_eta2p1", "HLT_IsoTkMu24", "HLT_IsoTkMu24_eta2p1",
-#    "HLT_Mu50", "HLT_Mu55", "HLT_TkMu50"] ## Paths in Run2016
 process.probeTrackerMuons.triggerPaths = [
     "HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", 
     "HLT_Mu50", "HLT_Mu55"] ## Paths in Run2017 and Run2018 (except emergency)
@@ -43,10 +40,7 @@ process.TFileService = cms.Service("TFileService",
 process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcExt)
 
 process.source.fileNames = [
-    #'/store/data/Run2016H/SingleMuon/AOD/07Aug17-v1/50001/16496FB9-9080-E711-BAB1-001E675799D0.root',
-    #'/store/data/Run2017C/SingleMuon/AOD/PromptReco-v2/000/300/122/00000/005F1A9F-4077-E711-BEA4-02163E0135A0.root',
     'root://cms-xrd-global.cern.ch//store/data/Run2018A/SingleMuon/AOD/PromptReco-v2/000/316/505/00000/9C8A29DC-3C5C-E811-841C-FA163E626FD1.root',
-
 ]
 #import FWCore.PythonUtilities.LumiList as LumiList
 #process.source.lumisToProcess = LumiList.LumiList(
