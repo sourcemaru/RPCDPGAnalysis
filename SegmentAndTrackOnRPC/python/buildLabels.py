@@ -1,4 +1,3 @@
-import FWCore.ParameterSet.Config as cms
 from ROOT import *
 
 def buildLabel(era, preset):

@@ -13,7 +13,7 @@ from ROOT import *
 from array import array
 import os, sys
 from math import sqrt
-from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 
 era = "Run2017"
 if len(sys.argv) > 2: era = sys.argv[1]

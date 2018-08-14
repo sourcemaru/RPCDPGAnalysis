@@ -6,7 +6,7 @@ from array import array
 gStyle.SetOptStat(0)
 gStyle.SetOptTitle(0)
 
-from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
 from ProjectTHnSparse import *
 era = "Run2018A"

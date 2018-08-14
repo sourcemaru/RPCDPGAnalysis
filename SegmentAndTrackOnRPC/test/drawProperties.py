@@ -3,7 +3,7 @@
 from ROOT import *
 import sys, os
 fName = sys.argv[1]
-from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels_cff import *
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 
 era = "Run2017"
 if len(sys.argv) > 2: era = sys.argv[2]
