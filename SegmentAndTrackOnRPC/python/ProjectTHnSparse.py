@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ROOT import *
+from ROOT import gStyle
 gStyle.SetOptStat(0)
 
 class THnSparseSelector:

@@ -3,11 +3,11 @@
 import os, sys
 if "CMSSW_BASE" in os.environ:
     sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
+from ROOT import gStyle, TFile
+from ProjectTHnSparse import THnSparseSelector
 
 def project(fName, commonSel):
-    from ROOT import gStyle, TFile
     gStyle.SetOptStat(0)
-    from ProjectTHnSparse import THnSparseSelector
 
     print "@@ Opening root file..."
     f = TFile(fName)
@@ -37,14 +37,14 @@ def project(fName, commonSel):
             print>>fout, "#RollName Denominator Numerator"
 
             subranges = commonSel.copy()
+            subranges.update({'run':[run, run]})
             hDen = hSel.Project1D("rollName", subranges, suffix="_Den")
             subranges.update({'isMatched':(1,1)})
             hNum = hSel.Project1D("rollName", subranges, suffix="_Num")
 
             for i, name in enumerate(rollNames):
-                #### NOTE: There is a shift in the bin labels. Take rollNames with 1 bin shift
-                den = hDen.GetBinContent(i+2)
-                num = hNum.GetBinContent(i+2)
+                den = hDen.GetBinContent(i+1)
+                num = hNum.GetBinContent(i+1)
                 print>>fout, name, den, num
 
             hDen.Delete()
