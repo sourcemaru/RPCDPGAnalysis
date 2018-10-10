@@ -90,6 +90,28 @@ effs = [
     [100*effMap[name][0] for name in effMap.keys() if not name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
 ]
 
+levels     = array('d', [-1    ] + [10.*i+1e-9 for i in range(8)]
+                       +[100*x+1e-9 for x in [0.75, 0.80, 0.85, 0.90, 0.95, 1.0, 1.1]])
+rpcPalette = array('i', [kBlack] + [kRed]*6
+                       +[kOrange+7, kOrange-3, kOrange, kYellow, kSpring+8, kSpring+7, kSpring, kBlue])
+gStyle.SetPalette(len(rpcPalette), rpcPalette);
+
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.RPCGeom import *
+rpcShapes = RPCShapes("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/data/rpcGeom.txt" % os.environ["CMSSW_BASE"])
+shapeCanvases, shapePads = rpcShapes.buildCanvas()
+for b in rpcShapes.idToBin.itervalues():
+    rpcShapes.h2ByWheelDisk[b[0]].SetBinContent(b[1], -1)
+for name, data in effMap.iteritems():
+    detId = RPCDetId(name)
+    b = rpcShapes.idToBin[detId]
+    effVal, errLo, errHi, den = data
+    if den <= 100: continue
+    rpcShapes.h2ByWheelDisk[b[0]].SetBinContent(b[1], 100*effVal)
+for h in rpcShapes.h2ByWheelDisk.itervalues():
+    h.SetMinimum(0-1e-9)
+    h.SetMaximum(110)
+    h.SetContour(len(levels)-1, levels)
+
 for i in range(2):
     hEffs[i].GetYaxis().SetNdivisions(505)
     hEffs[i].GetYaxis().SetTitleOffset(1.0)
@@ -171,3 +193,27 @@ for c in canvs:
     c.Print("%s_%s.png" % (era, c.GetName()))
     c.Print("%s_%s.pdf" % (era, c.GetName()))
     c.Print("%s_%s.C" % (era, c.GetName()))
+
+for pads in shapePads.itervalues():
+    for p in pads:
+        p.cd()
+
+        p.SetFillColor(0)
+        p.SetBorderMode(0)
+        p.SetBorderSize(2)
+        p.SetLeftMargin(0.12)
+        p.SetRightMargin(0.04)
+        p.SetTopMargin(0.08)
+        p.SetBottomMargin(0.12)
+        p.SetFrameFillStyle(0)
+        p.SetFrameBorderMode(0)
+        p.SetFrameFillStyle(0)
+        p.SetFrameBorderMode(0)
+
+        p.Modified()
+        p.Update()
+for c in shapeCanvases:
+    c.Print("%s_%s.png" % (era, c.GetName()))
+    c.Print("%s_%s.pdf" % (era, c.GetName()))
+    #c.Print("%s_%s.C" % (era, c.GetName()))
+
