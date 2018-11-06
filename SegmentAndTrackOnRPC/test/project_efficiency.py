@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys
+import gzip
 if "CMSSW_BASE" in os.environ:
     sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
 from ROOT import gStyle, TFile
@@ -29,10 +30,10 @@ def project(fName0, commonSel):
     nRun = len(runs)
     for iRun, run in enumerate(runs):
         print "@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun),
-        fName = "data/efficiency/run%d.txt" % run
+        fName = "data/efficiency/run%d.txt.gz" % run
         effTable = OrderedDict()
         if os.path.exists(fName):
-            for line in open(fName).readlines():
+            for line in gzip.open(fName).readlines():
                 line = line.strip()
                 if len(line) == 0 or line[0] == '#': continue
 
@@ -57,7 +58,7 @@ def project(fName0, commonSel):
         hDen.Delete()
         hNum.Delete()
 
-        with open(fName, "w") as fout:
+        with gzip.open(fName, "wb") as fout:
             print>>fout, "#RollName Denominator Numerator"
 
             for name, [den, num] in effTable.iteritems():
