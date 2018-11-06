@@ -75,7 +75,7 @@ if __name__ == '__main__':
         #'mass':(84,97),
     }
 
-    for varName in ["resX", "bx", "cls"]:
+    for varName in ["cls", "resX", "bx",]:
         for fName in sys.argv[1:]:
             if not os.path.exists("data/%s" % varName): os.makedirs("data/%s" % varName)
             project(fName, varName, commonSel)
