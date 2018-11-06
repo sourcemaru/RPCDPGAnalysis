@@ -74,4 +74,5 @@ if __name__ == '__main__':
     }
 
     if not os.path.exists("data/efficiency"): os.makedirs("data/efficiency")
-    project(sys.argv[1], commonSel)
+    for fName in sys.argv[1:]:
+        project(fName, commonSel)
