@@ -41,9 +41,9 @@ def project(fName0, varName, commonSel):
                 line = line.strip()
                 if len(line) == 0 or line[0] == '#': continue
 
-                name, nEvent, sumW, sumErr2 = line.split()
-                nEvent, sumW, sumErr2 = float(nEvent), float(sumW), float(sumErr2)
-                statTable[name] = [nEvent, sumW, sumErr2]
+                name, nEvent, mean, err2 = line.split()
+                nEvent, mean, err2 = float(nEvent), float(mean), float(err2)
+                statTable[name] = [nEvent, mean, err2]
 
         subranges = commonSel.copy()
         subranges.update({'run':[run, run]})
@@ -52,19 +52,26 @@ def project(fName0, varName, commonSel):
         prf = h.ProfileX()
 
         for i, name in enumerate(rollNames):
-            nEntries = prf.GetBinEffectiveEntries(i+1)
-            sumW = nEntries*prf.GetBinContent(i+1)
-            sumErr2 = nEntries*prf.GetBinError(i+1)
+            nA = prf.GetBinEffectiveEntries(i+1)
+            mA = prf.GetBinContent(i+1)
+            e2A = prf.GetBinError(i+1)
             if name not in statTable:
-                statTable[name] = [nEntries, sumW, sumErr2]
+                statTable[name] = [nA, mA, e2A]
             else:
-                statTable[name] = [nEntries+statTable[name][0], sumW+statTable[name][1], sumErr2+statTable[name][2]]
+                nB, mB, e2B = statTable[name]
+                n = nA+nB
+                if n == 0: ## Just a default values
+                    statTable[name] = [0, mA*mB, e2A+e2B]
+                else: ## Weighted average and RMS by their division
+                    m = (nA*mA+nB*mB)/n
+                    e2 = nA/n*e2A + nB/n*e2B + nA*nB*( ((mA-mB)/n)**2 ) ## <= you can derive this yourself
+                    statTable[name] = [n, m, e2]
 
         prf.Delete()
         h.Delete()
 
         with open(fName, "w") as fout:
-            print>>fout, "#RollName nEntries sumW sumErr2"
+            print>>fout, "#RollName nEntries mean err2"
 
             for name, [nEntries, sumW, sumErr2] in statTable.iteritems():
                 print>>fout, name, nEntries, sumW, sumErr2 
