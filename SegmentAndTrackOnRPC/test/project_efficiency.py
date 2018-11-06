@@ -30,10 +30,15 @@ def project(fName0, commonSel):
     nRun = len(runs)
     for iRun, run in enumerate(runs):
         print "@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun),
-        fName = "data/efficiency/run%d.txt.gz" % run
+        fName = "data/efficiency/run%d.txt" % run
+        if not os.path.exists(fName) and os.path.exists(fName+".gz"):
+            with open(fName, 'w') as fout:
+                fName.write(gzip.open('.gz', 'rb').read())
+            os.remove(fName+".gz")
+
         effTable = OrderedDict()
         if os.path.exists(fName):
-            for line in gzip.open(fName).readlines():
+            for line in open(fName).readlines():
                 line = line.strip()
                 if len(line) == 0 or line[0] == '#': continue
 
@@ -58,7 +63,7 @@ def project(fName0, commonSel):
         hDen.Delete()
         hNum.Delete()
 
-        with gzip.open(fName, "wb") as fout:
+        with open(fName, "w") as fout:
             print>>fout, "#RollName Denominator Numerator"
 
             for name, [den, num] in effTable.iteritems():

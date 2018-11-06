@@ -29,10 +29,15 @@ def project(fName0, varName, commonSel):
     nRun = len(runs)
     for iRun, run in enumerate(runs):
         print "@@ Analyzing variable %s in run %d (%d/%d)..." % (varName, run, iRun+1, nRun),
-        fName = "data/%s/run%d.txt.gz" % (varName, run)
+        fName = "data/%s/run%d.txt" % (varName, run)
+        if not os.path.exists(fName) and os.path.exists(fName+".gz"):
+            with open(fName, 'w') as fout:
+                fName.write(gzip.open('.gz', 'rb').read())
+            os.remove(fName+".gz")
+
         statTable = OrderedDict()
         if os.path.exists(fName):
-            for line in gzip.open(fName).readlines():
+            for line in open(fName).readlines():
                 line = line.strip()
                 if len(line) == 0 or line[0] == '#': continue
 
@@ -58,7 +63,7 @@ def project(fName0, varName, commonSel):
         prf.Delete()
         h.Delete()
 
-        with gzip.open(fName, "wb") as fout:
+        with open(fName, "w") as fout:
             print>>fout, "#RollName nEntries sumW sumErr2"
 
             for name, [nEntries, sumW, sumErr2] in statTable.iteritems():
