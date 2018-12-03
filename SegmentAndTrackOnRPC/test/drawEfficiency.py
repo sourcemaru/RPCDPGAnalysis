@@ -212,8 +212,12 @@ for pads in shapePads.itervalues():
 
         p.Modified()
         p.Update()
+
+outDir = "results/efficiency_overall"
+if not os.path.exists(outDir): os.makedirs(outDir)
+
 for c in shapeCanvases:
-    c.Print("%s_%s.png" % (era, c.GetName()))
-    c.Print("%s_%s.pdf" % (era, c.GetName()))
-    #c.Print("%s_%s.C" % (era, c.GetName()))
+    c.Print("%s/%s_%s.png" % (outDir, era, c.GetName()))
+    c.Print("%s/%s_%s.pdf" % (outDir, era, c.GetName()))
+    #c.Print("%s/%s_%s.C" % (outDir, era, c.GetName()))
 
