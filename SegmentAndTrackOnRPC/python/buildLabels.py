@@ -2,13 +2,17 @@ from ROOT import *
 
 def buildLabel(era, preset):
     eraToLumi = {
-        "Run2017":42599.789/1000, ## Run2017 luminosity without normtag
-        "Run2016":36235.493/1000, ## Run2016 luminosity with latest normtag
+        "Run2018":59.965, ## Run2018 luminosity without normtag
+        "Run2017":42.131, ## Run2017 luminosity with latest normtag
+        "Run2016":36.295, ## Run2016 luminosity with latest normtag
+        "Run2015":2.834 , ## Run2015 luminosity with latest normtag
+
         "Run2017B":4930.853/1000,
         "Run2017C":9961.856/1000,
         "Run2017D":4352.364/1000,
         "Run2017E":9536.896/1000,
         "Run2017F":13817.819/1000,
+
         "Run2018A_CCUError":1087.642/1000, ## Run2018A_MuonPhys with CCU error, without normtag yet
         "Run2018A":12096.396/1000, ## Run2018A_MuonPhys without normtag yet
     }

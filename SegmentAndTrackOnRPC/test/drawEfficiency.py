@@ -53,7 +53,7 @@ for fName in sys.argv[2:]:
         else: counts[name] = [counts[name][0]+den, counts[name][1]+num]
 
 effMap = {}
-with open("efficiency.txt", "w") as fout:
+with open("efficiency_%s.txt" % era, "w") as fout:
     print>>fout, "#RollName efficiency errLo errHi"
     for name in sorted(counts.keys()):
         den, num = counts[name]
