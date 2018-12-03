@@ -25,6 +25,11 @@ eras = [
     ("Run2015", 1, 1, 0),
 ]
 
+resultDir = "results/efficiency_overall"
+if not os.path.exists(resultDir):
+    print "Please make a directory %s and put efficiency_*.txt under this directory." % resultDir
+    os.exit(1)
+
 objs = {}
 for region in ["Barrel", "Endcap"]:
     c = TCanvas("cEffOverlay%s" % region, "c%s" % region, 485, 176, 800, 600)
@@ -79,7 +84,7 @@ for era, colorB, colorE, pattern in eras:
     hE.GetYaxis().SetTitleOffset(1.0)
 
     effOver70B, effOver70E = [], []
-    with open("efficiency_%s.txt" % era) as f:
+    with open("%s/efficiency_%s.txt" % (resultDir, era)) as f:
         for l in f.readlines():
             l = l.strip()
             if len(l) == 0 or l[0] == '#': continue
@@ -109,9 +114,6 @@ for era, colorB, colorE, pattern in eras:
     tE.SetTextSize(0.035)
     tE.SetTextFont(41)
 
-outDir = "results/efficiency_overall"
-if not os.path.exists(outDir): os.makedirs(outDir)
-
 for c, hs, leg, labels, hists in objs.itervalues():
     c.cd()
     hs.Draw("nostack")
@@ -122,6 +124,6 @@ for c, hs, leg, labels, hists in objs.itervalues():
     c.Modified()
     c.Update()
 
-    c.Print("%s/%s.png" % (outDir, c.GetName()))
-    c.Print("%s/%s.pdf" % (outDir, c.GetName()))
-    c.Print("%s/%s.C" % (outDir, c.GetName()))
+    c.Print("%s/%s.png" % (resultDir, c.GetName()))
+    c.Print("%s/%s.pdf" % (resultDir, c.GetName()))
+    c.Print("%s/%s.C" % (resultDir, c.GetName()))

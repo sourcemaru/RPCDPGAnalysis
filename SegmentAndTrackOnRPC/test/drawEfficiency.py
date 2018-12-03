@@ -18,6 +18,9 @@ from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 era = "Run2017"
 if len(sys.argv) > 2: era = sys.argv[1]
 
+resultDir = "results/efficiency_overall"
+if not os.path.exists(resultDir): os.makedirs(resultDir)
+
 gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
 setTDRStyle()
 gStyle.SetOptStat(0)
@@ -43,6 +46,7 @@ blacklist = []
 ## Collect per-roll counts
 counts = {}
 for fName in sys.argv[2:]:
+    if not os.path.exists(fName):continue
     for line in open(fName).readlines():
         line = line.strip()
         if len(line) == 0 or line.startswith('#'): continue
@@ -53,7 +57,7 @@ for fName in sys.argv[2:]:
         else: counts[name] = [counts[name][0]+den, counts[name][1]+num]
 
 effMap = {}
-with open("efficiency_%s.txt" % era, "w") as fout:
+with open("%s/efficiency_%s.txt" % (resultDir, era), "w") as fout:
     print>>fout, "#RollName efficiency errLo errHi"
     for name in sorted(counts.keys()):
         den, num = counts[name]
@@ -190,9 +194,9 @@ for c in canvs:
     c.Modified()
     c.Update()
 
-    c.Print("%s_%s.png" % (era, c.GetName()))
-    c.Print("%s_%s.pdf" % (era, c.GetName()))
-    c.Print("%s_%s.C" % (era, c.GetName()))
+    c.Print("%s/%s_%s.png" % (resultDir, era, c.GetName()))
+    c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
+    c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
 
 for pads in shapePads.itervalues():
     for p in pads:
@@ -213,11 +217,8 @@ for pads in shapePads.itervalues():
         p.Modified()
         p.Update()
 
-outDir = "results/efficiency_overall"
-if not os.path.exists(outDir): os.makedirs(outDir)
-
 for c in shapeCanvases:
-    c.Print("%s/%s_%s.png" % (outDir, era, c.GetName()))
-    c.Print("%s/%s_%s.pdf" % (outDir, era, c.GetName()))
-    #c.Print("%s/%s_%s.C" % (outDir, era, c.GetName()))
+    c.Print("%s/%s_%s.png" % (resultDir, era, c.GetName()))
+    c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
+    #c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
 
