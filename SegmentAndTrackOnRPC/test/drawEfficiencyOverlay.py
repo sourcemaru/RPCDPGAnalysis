@@ -127,3 +127,6 @@ for c, hs, leg, labels, hists in objs.itervalues():
     c.Print("%s/%s.png" % (resultDir, c.GetName()))
     c.Print("%s/%s.pdf" % (resultDir, c.GetName()))
     c.Print("%s/%s.C" % (resultDir, c.GetName()))
+    c.Modified()
+    c.Update()
+
