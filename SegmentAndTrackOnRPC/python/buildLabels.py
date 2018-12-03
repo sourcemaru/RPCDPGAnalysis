@@ -1,6 +1,6 @@
 from ROOT import *
 
-def buildLabel(era, preset):
+def eraToLumi(era):
     eraToLumi = {
         "Run2018":59.965, ## Run2018 luminosity without normtag
         "Run2017":42.131, ## Run2017 luminosity with latest normtag
@@ -16,8 +16,11 @@ def buildLabel(era, preset):
         "Run2018A_CCUError":1087.642/1000, ## Run2018A_MuonPhys with CCU error, without normtag yet
         "Run2018A":12096.396/1000, ## Run2018A_MuonPhys without normtag yet
     }
-    lumiVal = 0
-    if era in eraToLumi: lumiVal = eraToLumi[era]
+    if era in eraToLumi: return eraToLumi[era]
+    return 0
+
+def buildLabel(era, preset):
+    lumiVal = eraToLumi(era)
     era0 = era
     if not era0[-1].isdigit(): era0 = era0[:-1]
     if era0.startswith("Run"): era0 = era0[3:] + " data"
