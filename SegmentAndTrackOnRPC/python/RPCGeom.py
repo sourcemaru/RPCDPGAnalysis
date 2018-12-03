@@ -80,17 +80,17 @@ class RPCShapes:
                 ptss = [zip(xs, ys)]
                 ptss[0].append([xs[0], ys[0]])
             elif rpcId.isBarrel():
-                phis = [math.atan2(y, x) for (y, x) in zip(ys, xs)]
-                if phis[0]*phis[2] < 0 and abs(phis[0])+abs(phis[1]) > 3.14:
-                    sgn = 1
-                    if phis[0] < 0: sgn = -1
+                phis = []
+                for y, x in zip(ys, xs):
+                    phi = math.atan2(y,x)
+                    if phi < 0: phi += 2*pi
+                    phis.append(phi)
+                if abs(phis[0]-phis[2]) > pi: ## Regularize the shape in phi
+                    for i, phi in enumerate(phis):
+                        if phi > pi: phis[i] -= 2*pi
 
-                    phis1 = [phis[0], sgn*pi, sgn*pi, phis[3], phis[0]]
-                    phis2 = [-sgn*pi, phis[1], phis[2], -sgn*pi, -sgn*pi]
-                    ptss = [zip(zs+[zs[0]], phis1), zip(zs+[zs[0]], phis2)]
-                else:
-                    ptss = [zip(zs, phis)]
-                    ptss[0].append([zs[0], phis[0]])
+                ptss = [zip(zs, phis)]
+                ptss[0].append([zs[0], phis[0]])
             else: continue
             
             shape = ROOT.TMultiGraph(name, name)
@@ -139,15 +139,15 @@ class RPCShapes:
         barrelLayers = ["RB1in", "RB1out", "RB2in", "RB2out", "RB3", "RB4"]
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RB")], key=lambda x: barrelLayers.index(x))):
             pad = cB.cd(i+1)
-            pad.DrawFrame(-800, -pi, 800, pi)
-            self.h2ByWheelDisk[key].Draw(drawOpt)
+            pad.DrawFrame(-800, -0.5, 800, 7)
+            self.h2ByWheelDisk[key].Draw(drawOpt+"same")
             pads["RB"].append(pad)
             for b in range(self.h2ByWheelDisk[key].GetNumberOfBins()):
                 self.shapes[self.binToId[(key, b+1)]].Draw()
             if barrelLayers[i] not in self.padLabels:
                 l = ROOT.TText()
                 l.SetNDC()
-                l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.03, barrelLayers[i])
+                l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.04, barrelLayers[i])
                 l.SetTextAlign(33)
                 self.padLabels[barrelLayers[i]] = l
             self.padLabels[barrelLayers[i]].Draw()
@@ -155,8 +155,8 @@ class RPCShapes:
         cEP.Divide(2,2)
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RE+")])):
             pad = cEP.cd(i+1)
-            pad.DrawFrame(-800, -pi, 800, pi)
-            self.h2ByWheelDisk[key].Draw(drawOpt)
+            pad.DrawFrame(-800, -800, 800, 800)
+            self.h2ByWheelDisk[key].Draw(drawOpt+"same")
             pads["RE+"].append(pad)
             for b in range(self.h2ByWheelDisk[key].GetNumberOfBins()):
                 self.shapes[self.binToId[(key, b+1)]].Draw()
@@ -171,8 +171,8 @@ class RPCShapes:
         cEN.Divide(2,2)
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RE-")])):
             pad = cEN.cd(i+1)
-            pad.DrawFrame(-800, -pi, 800, pi)
-            self.h2ByWheelDisk[key].Draw(drawOpt)
+            pad.DrawFrame(-800, -800, 800, 800)
+            self.h2ByWheelDisk[key].Draw(drawOpt+"same")
             pads["RE-"].append(pad)
             for b in range(self.h2ByWheelDisk[key].GetNumberOfBins()):
                 self.shapes[self.binToId[(key, b+1)]].Draw()
