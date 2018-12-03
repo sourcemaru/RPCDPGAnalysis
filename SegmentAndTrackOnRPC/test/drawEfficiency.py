@@ -200,24 +200,12 @@ for c in canvs:
 
 for pads in shapePads.itervalues():
     for p in pads:
-        p.cd()
-
-        p.SetFillColor(0)
-        p.SetBorderMode(0)
-        p.SetBorderSize(2)
-        p.SetLeftMargin(0.12)
-        p.SetRightMargin(0.04)
-        p.SetTopMargin(0.08)
-        p.SetBottomMargin(0.12)
-        p.SetFrameFillStyle(0)
-        p.SetFrameBorderMode(0)
-        p.SetFrameFillStyle(0)
-        p.SetFrameBorderMode(0)
-
         p.Modified()
         p.Update()
 
 for c in shapeCanvases:
+    c.Modified()
+    c.Update()
     c.Print("%s/%s_%s.png" % (resultDir, era, c.GetName()))
     c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
     #c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
