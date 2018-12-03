@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-binW, xmin, xmax = 0.5, 70.5, 100
+binW, xmin, xmax = 0.5, 70.5, 100.5
 nbin = int((xmax-xmin)/binW)
 
 from ROOT import *
@@ -63,6 +63,19 @@ for region in ["Barrel", "Endcap"]:
 
     objs[region] = [c, hs, leg, labels, []]
 
+hVioB = TH2F("hVioB", "hVioB;;Efficiency [%]", len(eras), 1, len(eras)+1, nbin, xmin, xmax)
+hVioE = TH2F("hVioE", "hVioE;;Efficiency [%]", len(eras), 1, len(eras)+1, nbin, xmin, xmax)
+#hVioB.SetLineColor(TColor.GetColor("#007700"))
+#hVioE.SetLineColor(TColor.GetColor("#000099"))
+hVioB.SetLineWidth(0)
+hVioB.SetFillColor(30)
+hVioE.SetFillColor(38)
+hVioB.GetYaxis().SetTitleOffset(1.0)
+hVioE.GetYaxis().SetTitleOffset(1.0)
+for i, (era, colorB, colorE, pattern) in enumerate(sorted(eras, key=lambda x: x[0])):
+    hVioB.GetXaxis().SetBinLabel(i+1, era)
+    hVioE.GetXaxis().SetBinLabel(i+1, era)
+
 for era, colorB, colorE, pattern in eras:
     lumi = eraToLumi(era)
 
@@ -93,10 +106,13 @@ for era, colorB, colorE, pattern in eras:
             eff, errLo, errHi, den = 100*float(eff), 100*float(errLo), 100*float(errHi), float(den)
             if name.startswith('W'):
                 hB.Fill(eff)
+                hVioB.Fill(hVioB.GetXaxis().FindBin(era), eff)
                 if eff > 70: effOver70B.append(eff)
             elif name.startswith("RE"):
                 hE.Fill(eff)
+                hVioE.Fill(hVioE.GetXaxis().FindBin(era), eff)
                 if eff > 70: effOver70E.append(eff)
+
   
     objs["Barrel"][-1].append(hB)
     objs["Endcap"][-1].append(hE)
@@ -130,3 +146,14 @@ for c, hs, leg, labels, hists in objs.itervalues():
     c.Modified()
     c.Update()
 
+cVioB = TCanvas("cVioB", "cVioB", 700, 600)
+hVioB.Draw("violin")
+llVioB = buildLabel("RunRun-2", "outset")
+for l in llVioB: l.Draw()
+cVioB.Print("%s/%s.png" % (resultDir, cVioB.GetName()))
+
+cVioE = TCanvas("cVioE", "cVioE", 700, 600)
+hVioE.Draw("violin")
+llVioE = buildLabel("RunRun-2", "outset")
+for l in llVioE: l.Draw()
+cVioE.Print("%s/%s.png" % (resultDir, cVioE.GetName()))
