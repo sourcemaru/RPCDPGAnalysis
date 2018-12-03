@@ -113,7 +113,7 @@ class RPCShapes:
             else: continue
 
             if key not in self.h2ByWheelDisk:
-                if rpcId.isBarrel(): self.h2ByWheelDisk[key] = ROOT.TH2Poly("h"+self.prefix+key, key, -800, 800, -pi, pi)
+                if rpcId.isBarrel(): self.h2ByWheelDisk[key] = ROOT.TH2Poly("h"+self.prefix+key, key, -800, 800, -0.5, 7)
                 else:                self.h2ByWheelDisk[key] = ROOT.TH2Poly("h"+self.prefix+key, key, -800, 800, -800, 800)
             h = self.h2ByWheelDisk[key]
             h.SetMinimum(1e-7)
@@ -139,7 +139,9 @@ class RPCShapes:
         barrelLayers = ["RB1in", "RB1out", "RB2in", "RB2out", "RB3", "RB4"]
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RB")], key=lambda x: barrelLayers.index(x))):
             pad = cB.cd(i+1)
-            pad.DrawFrame(-800, -0.5, 800, 7)
+            frame = pad.DrawFrame(-800, -0.5, 800, 7)
+            frame.GetXaxis().SetTitle("x [cm]")
+            frame.GetYaxis().SetTitle("#phi [radian]")
             self.h2ByWheelDisk[key].Draw(drawOpt+"same")
             pads["RB"].append(pad)
             for b in range(self.h2ByWheelDisk[key].GetNumberOfBins()):
@@ -155,7 +157,9 @@ class RPCShapes:
         cEP.Divide(2,2)
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RE+")])):
             pad = cEP.cd(i+1)
-            pad.DrawFrame(-800, -800, 800, 800)
+            frame = pad.DrawFrame(-800, -800, 800, 800)
+            frame.GetXaxis().SetTitle("x [cm]")
+            frame.GetYaxis().SetTitle("y [cm]")
             self.h2ByWheelDisk[key].Draw(drawOpt+"same")
             pads["RE+"].append(pad)
             for b in range(self.h2ByWheelDisk[key].GetNumberOfBins()):
@@ -171,7 +175,9 @@ class RPCShapes:
         cEN.Divide(2,2)
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RE-")])):
             pad = cEN.cd(i+1)
-            pad.DrawFrame(-800, -800, 800, 800)
+            frame = pad.DrawFrame(-800, -800, 800, 800)
+            frame.GetXaxis().SetTitle("x [cm]")
+            frame.GetYaxis().SetTitle("y [cm]")
             self.h2ByWheelDisk[key].Draw(drawOpt+"same")
             pads["RE-"].append(pad)
             for b in range(self.h2ByWheelDisk[key].GetNumberOfBins()):
