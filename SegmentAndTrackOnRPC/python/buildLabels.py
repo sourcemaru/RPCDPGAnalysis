@@ -6,6 +6,7 @@ def eraToLumi(era):
         "Run2017":42.131, ## Run2017 luminosity with latest normtag
         "Run2016":36.295, ## Run2016 luminosity with latest normtag
         "Run2015":2.834 , ## Run2015 luminosity with latest normtag
+        "RunRun2":141.23, ## Sum of all Run2 data
 
         "Run2017B":4930.853/1000,
         "Run2017C":9961.856/1000,
