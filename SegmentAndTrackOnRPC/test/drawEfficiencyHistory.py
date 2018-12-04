@@ -40,7 +40,7 @@ for fName in glob("data/efficiency/Run*/run*.txt"):
             name, den, num = l.split()
             den, num = float(den), float(num)
             eff = -1
-            if den != 0: eff = num/den*100
+            if den > 0: eff = num/den*100
 
             #if eff > 70 and den > 10:
             if eff > 0:
@@ -54,11 +54,11 @@ for fName in glob("data/efficiency/Run*/run*.txt"):
                     effsE.append(eff)
                     denE += den
 
-        if denB == 0: avgEffsB.append(-1)
+        if denB < 1: avgEffsB.append(-1)
         else: avgEffsB.append(sum(effsB)/len(effsB))
-        if denE  == 0: avgEffsE.append(-1)
+        if denE < 1: avgEffsE.append(-1)
         else: avgEffsE.append(sum(effsE)/len(effsE))
-        if denRE4 == 0: avgEffsRE4.append(-1)
+        if denRE4 < 1: avgEffsRE4.append(-1)
         else: avgEffsRE4.append(sum(effsRE4)/len(effsRE4))
     elif method == "avgPerCount":
         numB, numE, numRE4 = 0., 0., 0.
@@ -69,6 +69,7 @@ for fName in glob("data/efficiency/Run*/run*.txt"):
 
             name, den, num = l.split()
             den, num = float(den), float(num)
+            if num == 0: continue
 
             if name.startswith("W"):
                 numB += num
