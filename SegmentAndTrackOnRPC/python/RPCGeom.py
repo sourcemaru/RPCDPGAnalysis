@@ -63,6 +63,7 @@ class RPCShapes:
         self.binToId = {}
         self.idToBin = {}
         self.padLabels = {}
+        self.padLabels2 = {}
         self.prefix = prefix
         pi = math.pi
 
@@ -152,7 +153,7 @@ class RPCShapes:
             pad.SetBottomMargin(0.12)
 
             frame = pad.DrawFrame(-800, -0.5, 800, 7)
-            frame.GetXaxis().SetTitle("x [cm]")
+            frame.GetXaxis().SetTitle("z [cm]")
             frame.GetYaxis().SetTitle("#phi [radian]")
             frame.GetYaxis().SetTitleOffset(0.9)
             self.h2ByWheelDisk[key].Draw(drawOpt+"same")
@@ -162,10 +163,17 @@ class RPCShapes:
             if barrelLayers[i] not in self.padLabels:
                 l = ROOT.TText()
                 l.SetNDC()
-                l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.04, barrelLayers[i])
-                l.SetTextAlign(33)
+                l.SetText(pad.GetLeftMargin()+0.07, 1-pad.GetTopMargin()-0.04, barrelLayers[i])
+                l.SetTextAlign(13)
+                ll = ROOT.TLatex(pad.GetLeftMargin()+0.01,1-pad.GetTopMargin()+0.01,"CMS #bf{#it{Preliminary}}")
+                ll.SetNDC()
+                ll.SetTextFont(62)
+                ll.SetTextAlign(11)
+                ll.SetTextSize(0.05)
                 self.padLabels[barrelLayers[i]] = l
+                self.padLabels2[barrelLayers[i]] = ll
             self.padLabels[barrelLayers[i]].Draw()
+            self.padLabels2[barrelLayers[i]].Draw()
 
         cEP.Divide(2,2)
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RE+")])):
@@ -188,10 +196,17 @@ class RPCShapes:
             if "RE+%d" % (i+1) not in self.padLabels:
                 l = ROOT.TText()
                 l.SetNDC()
-                l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.03, "RE+%d" % (i+1))
-                l.SetTextAlign(33)
+                l.SetText(pad.GetLeftMargin()+0.05, 1-pad.GetTopMargin()-0.05, "RE+%d" % (i+1))
+                l.SetTextAlign(13)
+		ll = ROOT.TLatex(pad.GetLeftMargin()+0.01,1-pad.GetTopMargin()+0.01,"CMS #bf{#it{Preliminary}}")
+                ll.SetNDC()
+                ll.SetTextFont(62)
+                ll.SetTextAlign(11)
+                ll.SetTextSize(0.05)
                 self.padLabels["RE+%d" % (i+1)] = l
+                self.padLabels2["RE+%d" % (i+1)] = ll
             self.padLabels["RE+%d" % (i+1)].Draw()
+            self.padLabels2["RE+%d" % (i+1)].Draw()
 
         cEN.Divide(2,2)
         for i, key in enumerate(sorted([x for x in self.h2ByWheelDisk.keys() if x.startswith("RE-")])):
@@ -214,9 +229,16 @@ class RPCShapes:
             if "RE-%d" % (i+1) not in self.padLabels:
                 l = ROOT.TText()
                 l.SetNDC()
-                l.SetText(1-pad.GetRightMargin()-0.03, 1-pad.GetTopMargin()-0.03, "RE-%d" % (i+1))
-                l.SetTextAlign(33)
+                l.SetText(pad.GetLeftMargin()+0.05, 1-pad.GetTopMargin()-0.05, "RE-%d" % (i+1))
+                l.SetTextAlign(13)
+		ll = ROOT.TLatex(pad.GetLeftMargin()+0.01,1-pad.GetTopMargin()+0.01,"CMS #bf{#it{Preliminary}}")
+                ll.SetNDC()
+                ll.SetTextFont(62)
+                ll.SetTextAlign(11)
+                ll.SetTextSize(0.05)
                 self.padLabels["RE-%d" % (i+1)] = l
+                self.padLabels2["RE-%d" % (i+1)] = ll
             self.padLabels["RE-%d" % (i+1)].Draw()
+            self.padLabels2["RE-%d" % (i+1)].Draw()
 
         return [cB, cEP, cEN], pads
