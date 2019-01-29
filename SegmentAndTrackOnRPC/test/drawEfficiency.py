@@ -208,5 +208,5 @@ for c in shapeCanvases:
     c.Update()
     c.Print("%s/%s_%s.png" % (resultDir, era, c.GetName()))
     c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
-    #c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
+    c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
 
