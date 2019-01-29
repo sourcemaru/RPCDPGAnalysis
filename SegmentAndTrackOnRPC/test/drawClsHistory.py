@@ -182,7 +182,7 @@ for t in gapTexts: t.Draw()
 leg.Draw()
 hFrame.Draw("axissame")
 
-ll = buildLabel("RunRun2", "outset")
+ll = buildLabel("", "outset")
 ll[0].SetX(c.GetLeftMargin())
 ll[0].SetY(1-c.GetTopMargin()+0.01)
 ll[1].SetX(c.GetLeftMargin()+0.06)

@@ -48,7 +48,7 @@ for region in ["Barrel", "Endcap"]:
 
     labels.append(header)
 
-    lls = buildLabel("RunRun-2", "inset")
+    lls = buildLabel("", "inset")
     labels.extend(lls)
 
     statPanelOver70 = TPaveText(0.5, 0.4, 0.75, 0.4+0.07*len(eras), "brNDC")
