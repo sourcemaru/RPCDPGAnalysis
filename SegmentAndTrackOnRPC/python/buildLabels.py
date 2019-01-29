@@ -6,7 +6,7 @@ def eraToLumi(era):
         "Run2017":42.131, ## Run2017 luminosity with latest normtag
         "Run2016":36.295, ## Run2016 luminosity with latest normtag
         "Run2015":2.834 , ## Run2015 luminosity with latest normtag
-        "RunRun2":141.23, ## Sum of all Run2 data
+        "AllRun2":141.23, ## Sum of all Run2 data
 
         "Run2017B":4930.853/1000,
         "Run2017C":9961.856/1000,
@@ -22,9 +22,11 @@ def eraToLumi(era):
 
 def buildLabel(era, preset):
     lumiVal = eraToLumi(era)
-    era0 = era
-    if not era0[-1].isdigit(): era0 = era0[:-1]
-    if era0.startswith("Run"): era0 = era0[3:] + " data"
+    if era.startswith("Run"):
+        if len(era) > 1 and not era[-1].isdigit(): era = era[:-1]
+        era = era[3:] + " data"
+    else:
+        era = ""
 
     labels = []
     #left, top = 0.17, 0.82
@@ -32,7 +34,7 @@ def buildLabel(era, preset):
         left, top = gStyle.GetPadLeftMargin()+0.05, 1-gStyle.GetPadTopMargin()-0.09
         coverText1 = TLatex(left,top-0.00,"CMS")
         coverText2 = TLatex(left,top-0.02,"Preliminary")
-        coverText3 = TLatex(left,top-0.07,era0)
+        coverText3 = TLatex(left,top-0.07,era)
         coverText1.SetNDC()
         coverText2.SetNDC()
         coverText3.SetNDC()
@@ -49,9 +51,12 @@ def buildLabel(era, preset):
         if lumiVal > 0:
             lumi = TLatex(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
                           "%.2f fb^{-1} (13 TeV)" % (lumiVal))
+        elif era == "":
+            lumi = TLatex(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
+                          "(13 TeV)")
         else:
             lumi = TLatex(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                          "(%s, 13 TeV)" % (era0))
+                          "(%s, 13 TeV)" % (era))
         lumi.SetTextSize(0.05)
 
         labels = [coverText1, coverText2, coverText3, lumi]
@@ -70,10 +75,13 @@ def buildLabel(era, preset):
 
         if lumiVal > 0:
             lumi = TLatex(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                          "%.2f fb^{-1} (%s, 13 TeV)" % (lumiVal, era0))
+                          "%.2f fb^{-1} (%s, 13 TeV)" % (lumiVal, era))
+        elif era == "":
+            lumi = TLatex(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
+                          "(13 TeV)")
         else:
             lumi = TLatex(1-gStyle.GetPadRightMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                          "(%s, 13 TeV)" % (era0))
+                          "(%s, 13 TeV)" % (era))
         lumi.SetTextSize(0.04)
 
         labels = [coverText1, coverText2, lumi]
