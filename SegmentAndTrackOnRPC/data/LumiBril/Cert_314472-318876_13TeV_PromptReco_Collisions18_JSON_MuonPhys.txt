@@ -1,0 +1,3 @@
+Running brilcalc
+brilcalc lumi -b STABLE BEAMS --normtag /cms/ldap_home/jhgoh/.lumiCalc/Normtags/normtag_PHYSICS.json -i ../LumiJSON/Cert_314472-318876_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt -u /pb -c /cvmfs/cms.cern.ch/SITECONF/local/JobConfig/site-local-config.xml
+Failed to find data table for the requested time range.
