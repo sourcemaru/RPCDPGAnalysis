@@ -59,7 +59,7 @@ private:
   const edm::EDGetTokenT<double> tpMassToken_;
 
   const double minMuonPt_, maxMuonAbsEta_;
-  enum class ResonanceType { Z0, Jpsi, Upsilon } resonanceType_;
+  enum class ResonanceType { Z0, Jpsi, Upsilon, Inclusive } resonanceType_;
 
   THnSparseF* hInfo_;
   enum {
@@ -92,6 +92,7 @@ MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::Parame
   if ( s == "Z" or s == "Z0" ) resonanceType_ = ResonanceType::Z0;
   else if ( s == "JPSI" ) resonanceType_ = ResonanceType::Jpsi;
   else if ( s == "UPSILON" ) resonanceType_ = ResonanceType::Upsilon;
+  else resonanceType_ = ResonanceType::Inclusive;
 
   hInfo_ = nullptr;
 }
@@ -168,6 +169,11 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
     nbins[MASS] = 120;
     xmins[MASS] = 8.5;
     xmaxs[MASS] = 11.5;
+  }
+  else if ( resonanceType_ == ResonanceType::Inclusive ) {
+    nbins[MASS] = 1;
+    xmins[MASS] = 0;
+    xmaxs[MASS] = 1e9;
   }
 
   hInfo_ = fs->make<THnSparseF>("hInfo", "hInfo", NVARS, nbins, xmins, xmaxs);
