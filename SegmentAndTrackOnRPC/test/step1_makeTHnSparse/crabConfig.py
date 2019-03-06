@@ -31,27 +31,35 @@ if 'DATASET' in os.environ:
 pd, sd = config.Data.inputDataset.split('/')[1:3]
 
 config.Data.unitsPerJob = 100
-if pd == 'RPCMonitor':
-    config.Data.unitsPerJob = 10
-    config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
-elif pd == "SingleMuon":
-    config.JobType.psetName    = 'analyzeRPCwithTnP_Z_cfg.py'
-elif pd == "Charmonium":
-    config.JobType.psetName    = 'analyzeRPCwithTnP_Jpsi_cfg.py'
-elif pd == "MuOnia":
-    config.JobType.psetName    = 'analyzeRPCwithTnP_Upsilon_cfg.py'
+if 'CFG' in os.environ:
+    config.JobType.psetName = os.environ['CFG']
+else:
+    if pd == 'RPCMonitor':
+        config.Data.unitsPerJob = 10
+        config.JobType.psetName    = 'analyzeRPCwithSegments_cfg.py'
+    elif pd == "SingleMuon":
+        config.JobType.psetName    = 'analyzeRPCwithTnP_Z_cfg.py'
+    elif pd == "Charmonium":
+        config.JobType.psetName    = 'analyzeRPCwithTnP_Jpsi_cfg.py'
+    elif pd == "MuOnia":
+        config.JobType.psetName    = 'analyzeRPCwithTnP_Upsilon_cfg.py'
 
 username = os.environ['USER']
 
 if 'Run2018' in sd:
-    config.Data.lumiMask = '../data/LumiJSON/Cert_314472-318876_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt'
+    config.Data.lumiMask = '../../data/LumiJSON/Cert_314472-325175_13TeV_PromptReco_Collisions18_JSON_MuonPhys.txt'
 elif 'Run2017' in sd:
-    config.Data.lumiMask = '../data/LumiJSON/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_MuonPhys.txt'
+    config.Data.lumiMask = '../../data/LumiJSON/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_MuonPhys.txt'
 elif 'Run2016' in sd:
-    config.Data.lumiMask = '../data/LumiJSON/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
+    config.Data.lumiMask = '../../data/LumiJSON/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
+elif 'Run2015' in sd:
+    if 'Run2015A' in sd or 'Run2015B' in sd or '50ns' in sd:
+        config.Data.lumiMask = '../../data/LumiJSON/Cert_13TeV_16Dec2015ReReco_Collisions15_50ns_JSON_MuonPhys.txt'
+    else:
+        config.Data.lumiMask = '../../data/LumiJSON/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_MuonPhys.txt'
 
 #submitdate = dt.now().strftime('%Y%m%d')+'_1'
-submitdate = '20180728_1'
+submitdate = '20190306_1'
 config.Data.outLFNDirBase = '/store/user/%s/RPCChamberEfficiency/%s' % (username, submitdate)
 config.General.requestName = "RPCEfficiency_%s_%s" % (pd, sd)
 
