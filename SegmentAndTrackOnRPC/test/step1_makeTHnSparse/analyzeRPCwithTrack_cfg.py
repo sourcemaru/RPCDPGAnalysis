@@ -25,13 +25,10 @@ process.goodVertices = cms.EDFilter("VertexSelector",
     filter = cms.bool(True),
 )
 
-process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.rpcTrackerMuonProbeProducer_cfi")
-process.probeTrackerMuons.triggerPaths = [
-    "HLT_IsoMu27", "HLT_IsoMu30", "HLT_IsoMu24", 
-    "HLT_Mu50", "HLT_Mu55"] ## Paths in Run2017 and Run2018 (except emergency)
-process.probeTrackerMuons.minDR = 0.1
-process.probeTrackerMuons.minMass = 0
-process.probeTrackerMuons.maxMass = 1e9
+process.probeTrackerMuons = cms.EDFilter("MuonSelector",
+    src = cms.InputTag("muons"),
+    cut = cms.string("pt > 10 && abs(eta) < 2.1 && isTrackerMuon"),
+)
 
 process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.muonHitFromTrackerMuonAnalyzer_cfi")
 process.rpcExt.resonanceType = "Inclusive"
@@ -43,5 +40,6 @@ process.TFileService = cms.Service("TFileService",
 process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcExt)
 
 process.source.fileNames = [
-    'root://cms-xrd-global.cern.ch//store/data/Run2018A/SingleMuon/AOD/PromptReco-v2/000/316/505/00000/9C8A29DC-3C5C-E811-841C-FA163E626FD1.root',
+#    'root://cms-xrd-global.cern.ch//store/data/Run2018A/SingleMuon/AOD/PromptReco-v2/000/316/505/00000/9C8A29DC-3C5C-E811-841C-FA163E626FD1.root',
+    'file:/xrootd/store/user/heewon/RPCChamberEfficiency/METGoodMuonSets.root',
 ]
