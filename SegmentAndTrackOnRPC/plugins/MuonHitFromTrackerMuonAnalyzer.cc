@@ -58,6 +58,10 @@ private:
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
   const edm::EDGetTokenT<double> tpMassToken_;
 
+  edm::ESGetToken<DTGeometry, MuonGeometryRecord> dtGeomToken_;
+  edm::ESGetToken<CSCGeometry, MuonGeometryRecord> cscGeomToken_;
+  edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeomToken_;
+
   const double minMuonPt_, maxMuonAbsEta_;
   enum class ResonanceType { Z0, Jpsi, Upsilon, Inclusive } resonanceType_;
 
@@ -93,6 +97,10 @@ MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::Parame
   else if ( s == "JPSI" ) resonanceType_ = ResonanceType::Jpsi;
   else if ( s == "UPSILON" ) resonanceType_ = ResonanceType::Upsilon;
   else resonanceType_ = ResonanceType::Inclusive;
+
+  dtGeomToken_ = esConsumes<edm::Transition::BeginRun>();
+  cscGeomToken_ = esConsumes<edm::Transition::BeginRun>();
+  rpcGeomToken_ = esConsumes<edm::Transition::BeginRun>();
 
   hInfo_ = nullptr;
 }
@@ -183,11 +191,10 @@ void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::Ev
   }
 
   // Set the roll names
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   int i=0;
-  for ( const RPCRoll* roll : rpcGeom->rolls() ) {
+  for ( const RPCRoll* roll : rpcGeom.rolls() ) {
     const auto detId = roll->id();
     const string rollName = RPCGeomServ(detId).name();
 
@@ -203,17 +210,12 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
   for ( int i=0; i<NVARS; ++i ) vars[i] = 0;
   vars[RUN] = event.id().run();
 
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& dtGeom = eventSetup.getData(dtGeomToken_);
+  const auto& cscGeom = eventSetup.getData(cscGeomToken_);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   edm::Handle<RPCRecHitCollection> rpcHitHandle;
   event.getByToken(rpcHitToken_, rpcHitHandle);
-
-  edm::ESHandle<DTGeometry> dtGeom;
-  eventSetup.get<MuonGeometryRecord>().get(dtGeom);
-
-  edm::ESHandle<CSCGeometry> cscGeom;
-  eventSetup.get<MuonGeometryRecord>().get(cscGeom);
 
   edm::Handle<DTRecSegment4DCollection> dtSegmentHandle;
   event.getByToken(dtSegmentToken_, dtSegmentHandle);
@@ -293,7 +295,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
       bool hasNearbySgmt = false;
 
       const RPCDetId rpcId(match.id);
-      const RPCRoll* roll = rpcGeom->roll(match.id);
+      const RPCRoll* roll = rpcGeom.roll(match.id);
       const auto& bound = roll->surface().bounds();
       const GlobalPoint gPos0 = roll->toGlobal(LocalPoint(0,0,0));
 
@@ -309,7 +311,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
         if ( detId.subdetId() == MuonSubdetId::DT ) {
           const DTChamberId dtId(detId);
-          const auto dtChamber = dtGeom->chamber(detId);
+          const auto dtChamber = dtGeom.chamber(detId);
           //if ( dtId.station() != rpcId.station() or dtId.wheel() != rpcId.ring() ) continue;
           if ( dtId.station() != rpcId.station() ) continue;
           const GlobalPoint gRefPos0 = dtChamber->toGlobal(LocalPoint(0,0,0));
@@ -320,7 +322,7 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
         }
         else if ( detId.subdetId() == MuonSubdetId::CSC ) {
           const CSCDetId cscId(detId);
-          const auto cscChamber = cscGeom->chamber(cscId);
+          const auto cscChamber = cscGeom.chamber(cscId);
           if ( cscId.zendcap()*cscId.station() != rpcId.region()*rpcId.station() ) continue;
           const GlobalPoint gRefPos0 = cscChamber->toGlobal(LocalPoint(0,0,0));
           const double dphi = std::abs(deltaPhi(gPos0.barePhi(), gRefPos0.barePhi()));

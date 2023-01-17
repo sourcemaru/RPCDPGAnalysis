@@ -53,6 +53,9 @@ private:
   //const edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
 
+  const edm::ESGetToken<DTGeometry, MuonGeometryRecord> dtGeomToken_;
+  const edm::ESGetToken<CSCGeometry, MuonGeometryRecord> cscGeomToken_;
+
   const double minMuonPt_, maxMuonAbsEta_;
 
   THnSparseF* hInfo_;
@@ -148,11 +151,8 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
   for ( int i=0; i<NVARS; ++i ) vars[i] = 0;
   vars[RUN] = event.id().run();
 
-  edm::ESHandle<DTGeometry> dtGeom;
-  eventSetup.get<MuonGeometryRecord>().get(dtGeom);
-
-  edm::ESHandle<CSCGeometry> cscGeom;
-  eventSetup.get<MuonGeometryRecord>().get(cscGeom);
+  const auto& dtGeom = eventSetup.getData(dtGeomToken_);
+  const auto& cscGeom = eventSetup.getData(cscGeomToken_);
 
   edm::Handle<DTRecSegment4DCollection> dtSegmentHandle;
   event.getByToken(dtSegmentToken_, dtSegmentHandle);
@@ -192,7 +192,7 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
       const LocalPoint lPos(match.x, match.y, 0);
       if ( match.detector() == 1 ) { // DT matches
-        const DTChamber* ch = dtGeom->chamber(match.id);
+        const DTChamber* ch = dtGeom.chamber(match.id);
         if ( !ch->surface().bounds().inside(lPos) ) continue;
         const auto gp = ch->toGlobal(lPos);
 
@@ -237,7 +237,7 @@ void MuonSegmentFromRPCMuonAnalyzer::analyze(const edm::Event& event, const edm:
         }
       }
       else if ( match.detector() == 2 ) { // CSC matches
-        const CSCChamber* ch = cscGeom->chamber(match.id);
+        const CSCChamber* ch = cscGeom.chamber(match.id);
         if ( !ch->surface().bounds().inside(lPos) ) continue;
         const auto gp = ch->toGlobal(lPos);
 

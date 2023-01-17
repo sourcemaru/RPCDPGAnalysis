@@ -40,12 +40,14 @@ public:
 
 private:
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
+  const edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeomToken_;
 
   const double minMuonPt_, maxMuonAbsEta_;
 };
 
 RPCPointFromTrackerMuonProducer::RPCPointFromTrackerMuonProducer(const edm::ParameterSet& pset):
   muonToken_(consumes<reco::MuonCollection>(pset.getParameter<edm::InputTag>("muons"))),
+  rpcGeomToken_(esConsumes<edm::Transition::BeginRun>()),
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta"))
 {
@@ -61,8 +63,7 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
   edm::Handle<reco::MuonCollection> muonHandle;
   event.getByToken(muonToken_, muonHandle);
 
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   std::map<RPCDetId, edm::OwnVector<RPCRecHit>> pointMap;
   for ( int i=0, n=muonHandle->size(); i<n; ++i ) {
@@ -82,9 +83,9 @@ void RPCPointFromTrackerMuonProducer::produce(edm::Event& event, const edm::Even
       const LocalError lErr(match.xErr, match.yErr, 0);
       const LocalPoint lPos(match.x, match.y, 0);
 
-      const RPCRoll* roll = rpcGeom->roll(match.id);
+      const RPCRoll* roll = rpcGeom.roll(match.id);
       if ( !roll->surface().bounds().inside(lPos) ) continue;
-      //const RPCChamber* chamber = rpcGeom->chamber(match.id);
+      //const RPCChamber* chamber = rpcGeom.chamber(match.id);
       //if ( !chamber->surface().bounds().inside(chamber->toLocal(roll->toGlobal(lPos))) ) continue;
 
       auto pointItr = pointMap.find(match.id);

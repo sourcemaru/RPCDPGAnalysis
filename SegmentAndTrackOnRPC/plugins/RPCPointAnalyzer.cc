@@ -40,6 +40,8 @@ public:
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup) override;
 
 private:
+  edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeomToken_;
+
   const edm::EDGetTokenT<RPCRecHitCollection> rpcHitToken_;
   std::vector< edm::EDGetTokenT<RPCRecHitCollection>> refHitTokens_;
 
@@ -64,6 +66,8 @@ RPCPointAnalyzer::RPCPointAnalyzer(const edm::ParameterSet& pset):
   minMuonPt_(pset.getParameter<double>("minMuonPt")),
   maxMuonAbsEta_(pset.getParameter<double>("maxMuonAbsEta"))
 {
+  rpcGeomToken_ = esConsumes<edm::Transition::BeginRun>();
+
   for ( auto x : pset.getParameter<std::vector<edm::InputTag>>("refPoints") ) {
     refHitTokens_.push_back(consumes<RPCRecHitCollection>(x));
   }
@@ -135,11 +139,10 @@ void RPCPointAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& even
   }
 
   // Set the roll names
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   int i=0;
-  for ( const RPCRoll* roll : rpcGeom->rolls() ) {
+  for ( const RPCRoll* roll : rpcGeom.rolls() ) {
     const auto detId = roll->id();
     const string rollName = RPCGeomServ(detId).name();
 
@@ -159,8 +162,7 @@ void RPCPointAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& e
   vars[MASS] = 0;
   vars[PT] = vars[ETA] = vars[PHI] = 0; // FIXME: fill them in the next version
 
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   edm::Handle<RPCRecHitCollection> rpcHitHandle;
   event.getByToken(rpcHitToken_, rpcHitHandle);
@@ -171,11 +173,11 @@ void RPCPointAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& e
     event.getByToken(refHitToken, refHitHandle);
     for ( auto refItr = refHitHandle->begin(); refItr != refHitHandle->end(); ++refItr ) {
       const auto detId = refItr->rpcId();
-      const auto roll = rpcGeom->roll(detId);
+      const auto roll = rpcGeom.roll(detId);
       const auto& bound = roll->surface().bounds();
       if ( !bound.inside(LocalPoint(refItr->localPosition().x(), refItr->localPosition().y(), 0)) ) continue;
       const auto gp = roll->toGlobal(refItr->localPosition());
-      const auto lPos = rpcGeom->chamber(detId)->toLocal(gp);
+      const auto lPos = rpcGeom.chamber(detId)->toLocal(gp);
       const auto lErr = refItr->localPositionError();
       const string rollName = RPCGeomServ(detId).name();
       const auto axis = hInfo_->GetAxis(ROLLNAME);

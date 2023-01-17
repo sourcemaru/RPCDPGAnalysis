@@ -52,6 +52,8 @@ private:
   const edm::EDGetTokenT<reco::MuonCollection> muonToken_;
   const edm::EDGetTokenT<trigger::TriggerEvent> triggerEventToken_;
 
+  edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeomToken_;
+
   const double minMuonPt_, maxMuonAbsEta_, maxMuonRelIso_;
   const double minTrackPt_, maxTrackAbsEta_;
   const bool doCheckSign_;
@@ -78,6 +80,8 @@ RPCPointFromTagProbeProducer::RPCPointFromTagProbeProducer(const edm::ParameterS
   minDR_(pset.getParameter<double>("minDR")),
   triggerPaths_(pset.getParameter<std::vector<std::string>>("triggerPaths"))
 {
+  rpcGeomToken_ = esConsumes<edm::Transition::BeginRun>();
+
   produces<RPCRecHitCollection>();
   produces<double>();
 }
@@ -107,8 +111,7 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
   edm::Handle<trigger::TriggerEvent> triggerEventHandle;
   event.getByToken(triggerEventToken_, triggerEventHandle);
 
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   do {
     if ( pvHandle->empty() ) break;
@@ -208,9 +211,9 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
       const LocalError lErr(match.xErr, match.yErr, 0);
       const LocalPoint lPos(match.x, match.y, 0);
 
-      const RPCRoll* roll = rpcGeom->roll(match.id);
+      const RPCRoll* roll = rpcGeom.roll(match.id);
       if ( !roll->surface().bounds().inside(lPos) ) continue;
-      //const RPCChamber* chamber = rpcGeom->chamber(match.id);
+      //const RPCChamber* chamber = rpcGeom.chamber(match.id);
       //if ( !chamber->surface().bounds().inside(chamber->toLocal(roll->toGlobal(lPos))) ) continue;
 
       pointVector.clear();
