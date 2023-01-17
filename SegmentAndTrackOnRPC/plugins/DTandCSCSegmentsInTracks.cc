@@ -38,6 +38,8 @@ private:
   edm::EDGetTokenT<CSCSegmentCollection> cscSegmentsToken;
   edm::EDGetTokenT<reco::TrackCollection> tracksToken;
 
+  edm::ESGetToken<GlobalTrackingGeometry, MuonGeometryRecord> trackingGeomToken_;
+
 };
 
 DTandCSCSegmentsinTracks::DTandCSCSegmentsinTracks(const edm::ParameterSet& iConfig)
@@ -46,14 +48,15 @@ DTandCSCSegmentsinTracks::DTandCSCSegmentsinTracks(const edm::ParameterSet& iCon
   cscSegmentsToken = consumes<CSCSegmentCollection>(iConfig.getUntrackedParameter<edm::InputTag>("cscSegments"));
   tracksToken = consumes<reco::TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("tracks"));
 
+  trackingGeomToken_ = esConsumes<edm::Transition::BeginRun>();
+
   produces<DTRecSegment4DCollection>("SelectedDtSegments");
   produces<CSCSegmentCollection>("SelectedCscSegments");
 }
 
 void DTandCSCSegmentsinTracks::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  edm::ESHandle<GlobalTrackingGeometry> trackingGeom;
-  iSetup.get<GlobalTrackingGeometryRecord>().get(trackingGeom);
+  const auto& trackingGeom = iSetup.getData(trackingGeomToken_);
 
   edm::Handle<DTRecSegment4DCollection> dt4DSegmentsHandle;
   iEvent.getByToken(dt4DSegmentsToken, dt4DSegmentsHandle);
@@ -72,7 +75,7 @@ void DTandCSCSegmentsinTracks::produce(edm::Event& iEvent, const edm::EventSetup
 
   for ( auto track : *tracksHandle ) {
     for( auto recHit = track.recHitsBegin(); recHit != track.recHitsEnd(); ++recHit) {
-      const GeomDet* geomDet = trackingGeom->idToDet( (*recHit)->geographicalId() );
+      const GeomDet* geomDet = trackingGeom.idToDet( (*recHit)->geographicalId() );
 
       if( geomDet->subDetector() == GeomDetEnumerators::DT ) {
         //Take the layer associated to this hit

@@ -32,22 +32,23 @@ public:
 private:
   const std::string outFileName_;
 
+  edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeomToken_;
 };
 
 RPCGeometryDumper::RPCGeometryDumper(const edm::ParameterSet& pset):
   outFileName_(pset.getUntrackedParameter<std::string>("outFileName"))
 {
+  rpcGeomToken_ = esConsumes<edm::Transition::BeginRun>();
 }
 
 void RPCGeometryDumper::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
 {
   // Set the roll names
-  edm::ESHandle<RPCGeometry> rpcGeom;
-  eventSetup.get<MuonGeometryRecord>().get(rpcGeom);
+  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
 
   std::ofstream fout(outFileName_);
   fout << "#RollName DetId Area x1 y1 z1 x2 y2 z2 x3 y3 z3 x4 y4 z4\n";
-  for ( const RPCRoll* roll : rpcGeom->rolls() ) {
+  for ( const RPCRoll* roll : rpcGeom.rolls() ) {
     const auto detId = roll->id();
     const string rollName = RPCGeomServ(detId).name();
 
