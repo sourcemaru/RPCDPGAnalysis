@@ -21,7 +21,7 @@ class THnSparseSelector:
 
         for name, (lo, hi) in axisRanges.iteritems():
             if name not in self.axisInfo:
-                print "Cannot find axis '%s'" % name
+                print("Cannot find axis '%s'" % name)
                 continue
 
             index = self.axisInfo[name]['index']
@@ -38,7 +38,7 @@ class THnSparseSelector:
 
         for name, (lo, hi) in axisRanges.iteritems():
             if name not in self.axisInfo:
-                print "Cannot find axis '%s'" % name
+                print("Cannot find axis '%s'" % name)
                 continue
 
             index = self.axisInfo[name]['index']
@@ -62,7 +62,7 @@ class THnSparseSelector:
 
         for name, (lo, hi) in axisRanges.iteritems():
             if name not in self.axisInfo:
-                print "Cannot find axis '%s'" % name
+                print("Cannot find axis '%s'" % name)
                 continue
 
             index = self.axisInfo[name]['index']
@@ -81,7 +81,7 @@ class THnSparseSelector:
 
         for name, (lo, hi) in axisRanges.iteritems():
             if name not in self.axisInfo:
-                print "Cannot find axis '%s'" % name
+                print("Cannot find axis '%s'" % name)
                 continue
 
             index = self.axisInfo[name]['index']
