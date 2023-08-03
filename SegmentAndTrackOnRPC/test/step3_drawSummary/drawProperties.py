@@ -8,8 +8,8 @@ from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 era = "Run2017"
 if len(sys.argv) > 2: era = sys.argv[2]
 
-gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
-setTDRStyle()
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.tdrstyle import set_tdr_style
+set_tdr_style()
 gStyle.SetOptStat(0)
     
 gStyle.SetPadTopMargin(0.09)

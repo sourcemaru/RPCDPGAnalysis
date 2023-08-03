@@ -11,8 +11,8 @@ from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 resultDir = "results/history"
 if not os.path.exists(resultDir): os.makedirs(resultDir)
 
-gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
-setTDRStyle()
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.tdrstyle import set_tdr_style
+set_tdr_style()
 
 gStyle.SetOptStat(0)
 gStyle.SetOptTitle(0)
@@ -60,9 +60,9 @@ nRuns = len(runs)
 gapLS, gapTS = int(nRuns*0.1), int(nRuns*0.02)
 periodsLS = {251168:"Run2015", 273150:"Run2016", 297050:"Run2017", 315488:"Run2018"}
 periodsTS = {
-    254277:"MD1", 257969:"MD2", 258287:"TS2", 
+    254277:"MD1", 257969:"MD2", 258287:"TS2",
     274954:"TS1", 277981:"MD1", 279588:"MD2", 281613:"MD3&TS2", 282708:"MD4",
-    298996:"MD1&TS1", 300087:"MD2", 303824:"MD3&TS2", 
+    298996:"MD1&TS1", 300087:"MD2", 303824:"MD3&TS2",
     318733:"MD1&TS1", 321887:"MD2", 323414:"MD3&TS2",
 }
 gapTexts = []

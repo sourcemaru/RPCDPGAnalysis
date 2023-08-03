@@ -7,8 +7,8 @@ from ROOT import *
 import os, sys
 from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
 
-gROOT.ProcessLine(".L %s/src/SUSYBSMAnalysis/HSCP/test/ICHEP_Analysis/tdrstyle.C" % os.environ["CMSSW_RELEASE_BASE"])
-setTDRStyle()
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.tdrstyle import set_tdr_style
+set_tdr_style()
 gStyle.SetOptStat(0)
 
 gStyle.SetPadTopMargin(0.07)
