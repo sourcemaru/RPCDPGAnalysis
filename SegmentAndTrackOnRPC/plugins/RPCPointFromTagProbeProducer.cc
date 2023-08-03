@@ -122,7 +122,7 @@ void RPCPointFromTagProbeProducer::produce(edm::Event& event, const edm::EventSe
     std::set<std::string> modules;
     for ( int i=0, n=triggerNames.size(); i<n; ++i ) {
       if ( !triggerResultsHandle->accept(i) ) continue;
-      for ( const auto path : triggerPaths_ ) {
+      for ( const auto& path : triggerPaths_ ) {
         if ( hltConfig_.removeVersion(triggerNames[i]) != path ) continue;
 
         const auto& stmodules = hltConfig_.saveTagsModules(i);
