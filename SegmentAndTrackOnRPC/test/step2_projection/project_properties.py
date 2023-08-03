@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os, sys
 import gzip
 if "CMSSW_BASE" in os.environ:

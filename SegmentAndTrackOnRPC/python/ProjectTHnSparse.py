@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from ROOT import gStyle
 gStyle.SetOptStat(0)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 binW, xmin, xmax = 0.5, 70.5, 100.5
 nbin = int((xmax-xmin)/binW)

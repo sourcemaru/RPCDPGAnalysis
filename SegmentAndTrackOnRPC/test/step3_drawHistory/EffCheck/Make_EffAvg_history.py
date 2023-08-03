@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Version to make nominal efficiency history run by run
 # First, set average = num/den

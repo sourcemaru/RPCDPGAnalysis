@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 effMin, effMax = 80, 101
 method = "avgPerRoll"
