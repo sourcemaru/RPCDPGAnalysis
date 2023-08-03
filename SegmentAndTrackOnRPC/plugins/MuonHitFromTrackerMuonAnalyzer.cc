@@ -344,6 +344,10 @@ void MuonHitFromTrackerMuonAnalyzer::analyze(const edm::Event& event, const edm:
 
       const RPCDetId rpcId(match.id);
       const RPCRoll* roll = rpc_geometry->roll(match.id);
+      if (roll == nullptr) {
+        edm::LogError("MuonHitFromTrackerMuonAnalyzer") << "skip this MuonChamberMatch because the corresponding RPCRoll is nullptr: " << rpcId;
+        continue;
+      }
       const auto& bound = roll->surface().bounds();
       const GlobalPoint gPos0 = roll->toGlobal(LocalPoint(0,0,0));
 
