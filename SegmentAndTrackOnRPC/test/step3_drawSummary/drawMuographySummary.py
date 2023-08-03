@@ -60,9 +60,9 @@ gROOT.ProcessLine("""struct effStat { effStat(const TH2D* h/*, const TH1D* heff*
 hDens, hEffs = [], []
 maxMeanZ, maxZ = 0.0, 0.0
 
-hBarrel = zip(hBarrelDen, hBarrelNum)
-hEndcapP = zip(hEndcapPDen, hEndcapPNum)
-hEndcapN = zip(hEndcapNDen, hEndcapNNum)
+hBarrel = list(zip(hBarrelDen, hBarrelNum))
+hEndcapP = list(zip(hEndcapPDen, hEndcapPNum))
+hEndcapN = list(zip(hEndcapNDen, hEndcapNNum))
 
 labels = []
 

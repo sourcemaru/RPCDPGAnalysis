@@ -76,7 +76,7 @@ for fName in sys.argv[1:]:
         else:
             minEffs[name] = eff
 
-minEffs = zip(minEffs.keys(), minEffs.values())
+minEffs = list(zip(list(minEffs.keys()), list(minEffs.values())))
 minEffs.sort(key=lambda x: x[1])
 '''
 for name in hist:
@@ -139,7 +139,7 @@ for name in hist:
         grps[name].SetMarkerColor(kGreen+1)
         grps[name].Draw("LP")
 
-print len(l1), len(l2), len(l3), len(l4)
+print(len(l1), len(l2), len(l3), len(l4))
 
 summation = 0
 
@@ -148,7 +148,7 @@ for name in cat2check:
         for i in range(len(cat2check[name])):
            summation += cat2check[name][i]
         mean = summation / len(cat2check[name])
-        print name, len(cat2check[name]), mean
+        print(name, len(cat2check[name]), mean)
 
         summation = 0
 

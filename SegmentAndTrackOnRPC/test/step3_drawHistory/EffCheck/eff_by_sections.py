@@ -4,7 +4,7 @@ from ROOT import *
 gStyle.SetOptStat(0)
 
 if len(sys.argv) < 2:
-	print "Usage: python -i %s FILENAME.txt" % sys.argv[0]
+	print("Usage: python -i %s FILENAME.txt" % sys.argv[0])
 	sys.exit(1)
 
 fName = sys.argv[1]

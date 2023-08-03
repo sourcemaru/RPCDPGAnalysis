@@ -35,8 +35,8 @@ for line in open(fName2).readlines():
     name, eff, errLo, errHi, something1 = line.strip().split()
     effs2[name] = float(eff)
 
-for name in effs1.keys():
-    if name not in effs2.keys(): continue
+for name in list(effs1.keys()):
+    if name not in list(effs2.keys()): continue
 
     eff_1 = effs1[name]
     eff_2 = effs2[name]

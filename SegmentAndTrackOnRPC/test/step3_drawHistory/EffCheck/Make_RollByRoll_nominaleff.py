@@ -136,7 +136,7 @@ for name in hist:
         #grps[name].SetMarkerColor(kGreen+1)
         #grps[name].Draw("LP")
 
-print len(l1), len(l2), len(l3), len(l4)
+print(len(l1), len(l2), len(l3), len(l4))
 
 f1 = open("17All_nominal_2.txt",'w')
 

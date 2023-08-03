@@ -11,25 +11,25 @@ from collections import OrderedDict
 def project(fName0, commonSel):
     gStyle.SetOptStat(0)
 
-    print "@@ Opening root file..."
+    print("@@ Opening root file...")
     f = TFile(fName0)
-    print "@@ Loading RPC TnP histogram..."
+    print("@@ Loading RPC TnP histogram...")
     hInfo = f.Get("rpcExt/hInfo")
-    print "@@ Initializing THnSparseSelector..."
+    print("@@ Initializing THnSparseSelector...")
     hSel = THnSparseSelector(hInfo)
 
-    print "@@ Extracting runs..."
+    print("@@ Extracting runs...")
     hRuns = hSel.Project1D("run", commonSel)
     #runs = [i+2 for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+2) != 0]
     runs = [hRuns.GetXaxis().GetBinLowEdge(i+1) for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+1) != 0]
-    print "@@ Extracting roll names..."
+    print("@@ Extracting roll names...")
     hRolls = hSel.Project1D("rollName", {}, copyAxisLabel=True)
     axisRolls = hRolls.GetXaxis()
     rollNames = [axisRolls.GetBinLabel(i) for i in range(hRolls.GetNbinsX()+2) if axisRolls.GetBinLabel(i) != ""]
 
     nRun = len(runs)
     for iRun, run in enumerate(runs):
-        print "@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun),
+        print("@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun), end=' ')
         fName = "data/efficiency/run%d.txt" % run
         if not os.path.exists(fName) and os.path.exists(fName+".gz"):
             with open(fName, 'w') as fout:
@@ -64,14 +64,14 @@ def project(fName0, commonSel):
         hNum.Delete()
 
         with open(fName, "w") as fout:
-            print>>fout, "#RollName Denominator Numerator"
+            print("#RollName Denominator Numerator", file=fout)
 
-            for name, [den, num] in effTable.iteritems():
-                print>>fout, name, den, num
+            for name, [den, num] in effTable.items():
+                print(name, den, num, file=fout)
 
-        print ""
+        print("")
 
-    print "@@ Done."
+    print("@@ Done.")
 
 if __name__ == '__main__':
     commonSel = {

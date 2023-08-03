@@ -39,7 +39,7 @@ for line in open(fName1).readlines():
 
 cHistories = [TCanvas("cHistory%d" % i) for i in range(7)]
 
-for name in effs1.keys():
+for name in list(effs1.keys()):
     cat1 = effs1[name][0]
     eff1 = effs1[name][1]
     

@@ -38,7 +38,7 @@ for line in open(fName2).readlines():
     cat, name, nominaleff = line.strip().split()
     effs2[name] = [int(cat), float(nominaleff)]
 
-for name in effs1.keys():
+for name in list(effs1.keys()):
     cat1 = effs1[name][0]
     cat2 = effs2[name][0]
     eff1 = effs1[name][1]

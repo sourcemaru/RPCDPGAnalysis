@@ -58,18 +58,18 @@ for fName in sys.argv[2:]:
 
 effMap = {}
 with open("%s/efficiency_%s.txt" % (resultDir, era), "w") as fout:
-    print>>fout, "#RollName efficiency errLo errHi"
+    print("#RollName efficiency errLo errHi", file=fout)
     for name in sorted(counts.keys()):
         den, num = counts[name]
         if den == 0:
-            print name, -1, 0, 0
+            print(name, -1, 0, 0)
             continue
 
         eff = num/den
         errLo = abs(eff - TEfficiency.ClopperPearson(den, num, 0.683, False))
         errHi = abs(TEfficiency.ClopperPearson(den, num, 0.683, True) - eff) 
 
-        print>>fout, name, eff, errLo, errHi, den
+        print(name, eff, errLo, errHi, den, file=fout)
         effMap[name] = [eff, errLo, errHi, den]
 
 #######################################
@@ -90,8 +90,8 @@ hEffs[0].SetLineColor(TColor.GetColor("#007700"))
 hEffs[1].SetLineColor(TColor.GetColor("#000099"))
 
 effs = [
-    [100*effMap[name][0] for name in effMap.keys() if name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
-    [100*effMap[name][0] for name in effMap.keys() if not name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
+    [100*effMap[name][0] for name in list(effMap.keys()) if name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
+    [100*effMap[name][0] for name in list(effMap.keys()) if not name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
 ]
 
 levels     = array('d', [-1    ] + [10.*i+1e-9 for i in range(8)]
@@ -103,15 +103,15 @@ gStyle.SetPalette(len(rpcPalette), rpcPalette);
 from RPCDPGAnalysis.SegmentAndTrackOnRPC.RPCGeom import *
 rpcShapes = RPCShapes("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/data/rpcGeom.txt" % os.environ["CMSSW_BASE"])
 shapeCanvases, shapePads = rpcShapes.buildCanvas()
-for b in rpcShapes.idToBin.itervalues():
+for b in rpcShapes.idToBin.values():
     rpcShapes.h2ByWheelDisk[b[0]].SetBinContent(b[1], -1)
-for name, data in effMap.iteritems():
+for name, data in effMap.items():
     detId = RPCDetId(name)
     b = rpcShapes.idToBin[detId]
     effVal, errLo, errHi, den = data
     if den <= 100: continue
     rpcShapes.h2ByWheelDisk[b[0]].SetBinContent(b[1], 100*effVal)
-for h in rpcShapes.h2ByWheelDisk.itervalues():
+for h in rpcShapes.h2ByWheelDisk.values():
     h.SetMinimum(0-1e-9)
     h.SetMaximum(110)
     h.SetContour(len(levels)-1, levels)
@@ -198,7 +198,7 @@ for c in canvs:
     c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
     c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
 
-for pads in shapePads.itervalues():
+for pads in shapePads.values():
     for p in pads:
         p.Modified()
         p.Update()

@@ -52,7 +52,7 @@ for line in open(fName2).readlines():
     name, cat = line.strip().split()
     cats2[name] = int(cat)
 
-for name in cats1.keys():
+for name in list(cats1.keys()):
     cat1 = cats1[name]
     cat2 = cats2[name]
     h2d.Fill(cat1, cat2)

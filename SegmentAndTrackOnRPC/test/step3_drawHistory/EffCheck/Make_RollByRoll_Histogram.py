@@ -130,7 +130,7 @@ for name in hist:
         grps[name].SetMarkerColor(kGreen+1)
         grps[name].Draw("LP")
 
-print len(l1), len(l2), len(l3), len(l4)
+print(len(l1), len(l2), len(l3), len(l4))
 
 # Check nominal efficiency of category4 : separate period in large eff change
 summation = 0
@@ -146,7 +146,7 @@ for name in l4:
         if abs(eff1-eff2) > 0.3:
             effgroups.append([])
     effgroups[-1].append(cat4history[name][-1])
-    print name, len(effgroups), [sum(eg)/len(eg) for eg in effgroups]
+    print(name, len(effgroups), [sum(eg)/len(eg) for eg in effgroups])
 
 for c in cHistories:
     c.Modified()

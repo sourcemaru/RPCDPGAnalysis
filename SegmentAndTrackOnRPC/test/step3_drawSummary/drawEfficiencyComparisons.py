@@ -27,7 +27,7 @@ eras = [
 
 resultDir = "results/efficiency_overall"
 if not os.path.exists(resultDir):
-    print "Please make a directory %s and put efficiency_*.txt under this directory." % resultDir
+    print("Please make a directory %s and put efficiency_*.txt under this directory." % resultDir)
     os.exit(1)
 
 objs = {}
@@ -130,7 +130,7 @@ for era, colorB, colorE, pattern in eras:
     tE.SetTextSize(0.035)
     tE.SetTextFont(41)
 
-for c, hs, leg, labels, hists in objs.itervalues():
+for c, hs, leg, labels, hists in objs.values():
     c.cd()
     hs.Draw("nostack")
     hs.GetYaxis().SetNdivisions(505)

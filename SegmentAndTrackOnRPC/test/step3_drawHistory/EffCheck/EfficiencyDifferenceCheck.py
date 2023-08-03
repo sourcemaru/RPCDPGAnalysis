@@ -38,7 +38,7 @@ for rollName in effMap1:
 	eff1, errLeft, errRight = effMap1[rollName]
 	eff2, errDown, errUp = effMap2[rollName]
 
-	if eff1 - eff2 > 15. : print "[Eff Dif > 15] ", rollName, "  ", eff1, eff2
+	if eff1 - eff2 > 15. : print("[Eff Dif > 15] ", rollName, "  ", eff1, eff2)
 	#if eff1 < 70. : print "[PEff < 70] ", rollName, "  ", eff1
 	#if eff2 < 70. : print "[CEff < 70] ", rollName, "  ", eff2
 

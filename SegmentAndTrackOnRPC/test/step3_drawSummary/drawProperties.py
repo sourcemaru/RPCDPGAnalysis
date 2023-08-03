@@ -33,7 +33,7 @@ plots = {
 f = TFile(fName)
 
 objs = []
-for name, hists in plots.iteritems():
+for name, hists in plots.items():
     if len(hists) == 0: continue
 
     h = f.Get(hists[0]).Clone()
@@ -80,4 +80,4 @@ for name, hists in plots.iteritems():
     c.Print("%s.pdf" % c.GetName())
     c.Print("%s.C" % c.GetName())
 
-    print name, h.GetMean(), h.GetRMS(), h.GetEntries()
+    print(name, h.GetMean(), h.GetRMS(), h.GetEntries())

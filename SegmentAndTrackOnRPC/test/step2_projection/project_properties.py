@@ -10,25 +10,25 @@ from collections import OrderedDict
 def project(fName0, varName, commonSel):
     gStyle.SetOptStat(0)
 
-    print "@@ Opening root file..."
+    print("@@ Opening root file...")
     f = TFile(fName0)
-    print "@@ Loading RPC TnP histogram..."
+    print("@@ Loading RPC TnP histogram...")
     hInfo = f.Get("rpcExt/hInfo")
-    print "@@ Initializing THnSparseSelector..."
+    print("@@ Initializing THnSparseSelector...")
     hSel = THnSparseSelector(hInfo)
 
-    print "@@ Extracting runs..."
+    print("@@ Extracting runs...")
     hRuns = hSel.Project1D("run", commonSel)
     #runs = [i+2 for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+2) != 0]
     runs = [hRuns.GetXaxis().GetBinLowEdge(i+1) for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+1) != 0]
-    print "@@ Extracting roll names..."
+    print("@@ Extracting roll names...")
     hRolls = hSel.Project1D("rollName", {}, copyAxisLabel=True)
     axisRolls = hRolls.GetXaxis()
     rollNames = [axisRolls.GetBinLabel(i) for i in range(hRolls.GetNbinsX()+2) if axisRolls.GetBinLabel(i) != ""]
 
     nRun = len(runs)
     for iRun, run in enumerate(runs):
-        print "@@ Analyzing variable %s in run %d (%d/%d)..." % (varName, run, iRun+1, nRun),
+        print("@@ Analyzing variable %s in run %d (%d/%d)..." % (varName, run, iRun+1, nRun), end=' ')
         fName = "data/%s/run%d.txt" % (varName, run)
         if not os.path.exists(fName) and os.path.exists(fName+".gz"):
             with open(fName, 'w') as fout:
@@ -71,14 +71,14 @@ def project(fName0, varName, commonSel):
         h.Delete()
 
         with open(fName, "w") as fout:
-            print>>fout, "#RollName nEntries mean err2"
+            print("#RollName nEntries mean err2", file=fout)
 
-            for name, [nEntries, sumW, sumErr2] in statTable.iteritems():
-                print>>fout, name, nEntries, sumW, sumErr2 
+            for name, [nEntries, sumW, sumErr2] in statTable.items():
+                print(name, nEntries, sumW, sumErr2, file=fout) 
 
-        print ""
+        print("")
 
-    print "@@ Done."
+    print("@@ Done.")
 
 if __name__ == '__main__':
     commonSel = {
