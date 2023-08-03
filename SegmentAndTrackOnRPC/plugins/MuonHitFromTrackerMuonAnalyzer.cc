@@ -2,6 +2,8 @@
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Framework/interface/Run.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -46,6 +48,7 @@ class MuonHitFromTrackerMuonAnalyzer : public edm::one::EDAnalyzer<edm::one::Wat
 public:
   MuonHitFromTrackerMuonAnalyzer(const edm::ParameterSet& pset);
   virtual ~MuonHitFromTrackerMuonAnalyzer() {};
+  static void fillDescriptions(edm::ConfigurationDescriptions&);
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup) override;
   void beginRun(const edm::Run& run, const edm::EventSetup& eventSetup) override;
   void endRun(const edm::Run& run, const edm::EventSetup&) override {};
@@ -105,6 +108,22 @@ MuonHitFromTrackerMuonAnalyzer::MuonHitFromTrackerMuonAnalyzer(const edm::Parame
   else resonanceType_ = ResonanceType::Inclusive;
 
   hInfo_ = nullptr;
+}
+
+void
+MuonHitFromTrackerMuonAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.addUntracked<bool>("doHybrid", false);
+  desc.add<edm::InputTag>("vertex", edm::InputTag("goodVertices"));
+  desc.add<edm::InputTag>("rpcRecHits", edm::InputTag("rpcRecHits"));
+  desc.add<edm::InputTag>("dtSegments", edm::InputTag("dt4DSegments"));
+  desc.add<edm::InputTag>("cscSegments", edm::InputTag("cscSegments"));
+  desc.add<edm::InputTag>("muons", edm::InputTag("probeTrackerMuons"));
+  desc.add<double>("minMuonPt", 10);
+  desc.add<double>("maxMuonAbsEta", 2.1);
+  desc.add<edm::InputTag>("tpMass", edm::InputTag("probeTrackerMuons","mass"));
+  desc.add<std::string>("resonanceType", "Z");
+  descriptions.addWithDefaultLabel(desc);
 }
 
 void MuonHitFromTrackerMuonAnalyzer::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)

@@ -36,14 +36,14 @@ process.probeTrackerMuons.tagIdType = "Soft"
 process.probeTrackerMuons.triggerPaths = ["HLT_Mu7p5_Track3p5_Upsilon"]
 process.probeTrackerMuons.triggerModules = ["hltL3fLMu7p5TrackL3Filtered7p5"]
 process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.muonHitFromTrackerMuonAnalyzer_cfi")
-process.rpcExt.minMuonPt = 4
-process.rpcExt.resonanceType = "Upsilon"
+process.muonHitFromTrackerMuonAnalyzer.minMuonPt = 4
+process.muonHitFromTrackerMuonAnalyzer.resonanceType = "Upsilon"
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcExt)
+process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.muonHitFromTrackerMuonAnalyzer)
 
 process.source.fileNames = [
     '/store/data/Run2018A/MuOnia/AOD/PromptReco-v3/000/316/615/00000/B2A93043-B964-E811-B741-FA163E3240B9.root',

@@ -47,7 +47,7 @@ process.normfilter = cms.EDFilter("HLTHighLevel",
     throw = cms.bool(True)
 )
 
-process.rpcExt = cms.EDAnalyzer("RPCPointAnalyzer",
+process.muonHitFromTrackerMuonAnalyzer = cms.EDAnalyzer("RPCPointAnalyzer",
     minMuonPt = cms.double(4),
     maxMuonAbsEta = cms.double(2.1),
     rpcRecHits = cms.InputTag("hltRpcRecHits"),
@@ -65,7 +65,7 @@ process.p = cms.Path(
     process.normfilter
   * process.standAloneMuonNoRPCSequence
   * process.dTandCSCSegmentsinTracks
-  * process.rpcPointProducer * process.rpcExt
+  * process.rpcPointProducer * process.muonHitFromTrackerMuonAnalyzer
 )
 
 process.source.fileNames = [

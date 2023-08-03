@@ -31,13 +31,13 @@ process.probeTrackerMuons = cms.EDFilter("MuonSelector",
 )
 
 process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.muonHitFromTrackerMuonAnalyzer_cfi")
-process.rpcExt.resonanceType = "Inclusive"
+process.muonHitFromTrackerMuonAnalyzer.resonanceType = "Inclusive"
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcExt)
+process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.muonHitFromTrackerMuonAnalyzer)
 
 process.source.fileNames = [
 #    'root://cms-xrd-global.cern.ch//store/data/Run2018A/SingleMuon/AOD/PromptReco-v2/000/316/505/00000/9C8A29DC-3C5C-E811-841C-FA163E626FD1.root',

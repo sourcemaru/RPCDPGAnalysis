@@ -13,7 +13,7 @@ def project(fName0, varName, commonSel):
     print("@@ Opening root file...")
     f = TFile(fName0)
     print("@@ Loading RPC TnP histogram...")
-    hInfo = f.Get("rpcExt/hInfo")
+    hInfo = f.Get("muonHitFromTrackerMuonAnalyzer/hInfo")
     print("@@ Initializing THnSparseSelector...")
     hSel = THnSparseSelector(hInfo)
 

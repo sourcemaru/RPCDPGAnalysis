@@ -36,14 +36,14 @@ process.probeTrackerMuons.tagIdType = "Soft"
 process.probeTrackerMuons.triggerPaths = ["HLT_Mu7p5_Track3p5_Jpsi"]
 process.probeTrackerMuons.triggerModules = ["hltL3fLMu7p5TrackL3Filtered7p5"]
 process.load("RPCDPGAnalysis.SegmentAndTrackOnRPC.muonHitFromTrackerMuonAnalyzer_cfi")
-process.rpcExt.minMuonPt = 4
-process.rpcExt.resonanceType = "Jpsi"
+process.muonHitFromTrackerMuonAnalyzer.minMuonPt = 4
+process.muonHitFromTrackerMuonAnalyzer.resonanceType = "Jpsi"
 
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("hist.root"),
 )
 
-process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.rpcExt)
+process.p = cms.Path(process.goodVertices+process.probeTrackerMuons+process.muonHitFromTrackerMuonAnalyzer)
 
 process.source.fileNames = [
     '/store/data/Run2018A/Charmonium/AOD/PromptReco-v2/000/316/876/00000/BCBB8FC5-7861-E811-8AEC-FA163E3AC704.root',
