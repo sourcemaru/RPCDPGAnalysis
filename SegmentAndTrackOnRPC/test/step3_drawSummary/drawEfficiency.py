@@ -1,212 +1,317 @@
 #!/usr/bin/env python3
-
-mode = "RPC"
-#mode = "DTCSC"
-
-if mode == "RPC": chTitle = "Rolls"
-else: chTitle = "Chambers"
-
-binW, xmin, xmax = 0.5, 70.5, 100
-#binW, xmin, xmax = 1, -0.5, 100
-
-from ROOT import *
-from array import array
-import os, sys
-from math import sqrt
-from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import *
-
-era = "Run2017"
-if len(sys.argv) > 2: era = sys.argv[1]
-
-resultDir = "results/efficiency_overall"
-if not os.path.exists(resultDir): os.makedirs(resultDir)
-
+import os
+from pathlib import Path
+import argparse
+import numpy as np
+import pandas as pd
+from hist.intervals import clopper_pearson_interval
+import ROOT
+from ROOT import gROOT
+from ROOT import gStyle
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.buildLabels import buildLabel
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.tdrstyle import fix_overlay
 from RPCDPGAnalysis.SegmentAndTrackOnRPC.tdrstyle import set_tdr_style
-set_tdr_style()
-gStyle.SetOptStat(0)
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.RPCGeom import RPCDetId
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.RPCGeom import RPCShapes
 
-gStyle.SetPadTopMargin(0.07)
-gStyle.SetPadLeftMargin(0.12)
-gStyle.SetPadRightMargin(0.048)
-gStyle.SetPadBottomMargin(0.12)
-gStyle.SetTitleSize(0.06, "X");
-gStyle.SetTitleSize(0.06, "Y");
 
-blacklist = []
-#blacklist.extend([x.strip().split()[1] for x in open("blackList_18May.txt").readlines() if x.strip() != ""])
-#blacklist.extend(["RE+3_R2_CH%02d_C" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE-3_R2_CH%02d_C" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE+4_R2_CH%02d_B" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE-4_R2_CH%02d_B" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE+4_R2_CH%02d_C" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE-4_R2_CH%02d_C" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE+2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
-#blacklist.extend(["RE-2_R3_CH%02d_A" % (ch+1) for ch in range(36)])
+def collect_counts(path_list: list[Path]) -> pd.DataFrame:
+    """Collect per-roll counts"""
+    # read 'roll_name' column as index
+    # aggregate run-by-run counts
+    df = sum(pd.read_csv(each, index_col=0) for each in path_list)
+    # then convert index to a column
+    df = df.reset_index()
+    return df
 
-## Collect per-roll counts
-counts = {}
-for fName in sys.argv[2:]:
-    if not os.path.exists(fName):continue
-    for line in open(fName).readlines():
-        line = line.strip()
-        if len(line) == 0 or line.startswith('#'): continue
-        name, den, num = line.split()
-        den, num = float(den), float(num)
 
-        if name not in counts: counts[name] = [den, num]
-        else: counts[name] = [counts[name][0]+den, counts[name][1]+num]
+def compute_efficiency(input_df: pd.DataFrame,
+                       coverage: float = 0.683
+) -> pd.DataFrame:
+    """
+    """
+    den = input_df.denominator.to_numpy()
+    num = input_df.numerator.to_numpy()
+    eff = np.divide(num, den, out=np.zeros_like(den, dtype=np.float64),
+                    where=(den != 0))
+    # lower and upper bounds
+    eff_lo, eff_hi = clopper_pearson_interval(num, den, coverage=coverage)
+    # lower and upper error bars
+    err_lo = eff - eff_lo
+    err_hi = eff_hi - eff
 
-effMap = {}
-with open("%s/efficiency_%s.txt" % (resultDir, era), "w") as fout:
-    print("#RollName efficiency errLo errHi", file=fout)
-    for name in sorted(counts.keys()):
-        den, num = counts[name]
-        if den == 0:
-            print(name, -1, 0, 0)
+    return pd.DataFrame({
+        'roll_name': input_df.roll_name,
+        'efficiency': eff,
+        'err_low': err_lo,
+        'err_high': err_hi,
+        'denominator': den,
+    })
+
+
+def set_style():
+    set_tdr_style() # type: ignore
+    gStyle.SetOptStat(0)
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadLeftMargin(0.12)
+    gStyle.SetPadRightMargin(0.048)
+    gStyle.SetPadBottomMargin(0.12)
+    gStyle.SetTitleSize(0.06, "X");
+    gStyle.SetTitleSize(0.06, "Y");
+
+
+# FIXMXE rename
+def plot_geom(df_eff: pd.DataFrame,
+              output_dir: Path,
+              era: str,
+              min_denominator: int = 100,
+              output_suffix_list: list[str] = ['.png', '.pdf', '.C']
+):
+    ###########################################################################
+    cmssw_base = Path(os.environ["CMSSW_BASE"])
+    rpc_shape_path = cmssw_base / "src/RPCDPGAnalysis/SegmentAndTrackOnRPC/data/rpcGeom.txt"
+    rpc_shapes = RPCShapes(rpc_shape_path)
+    shape_canvas_list, shape_pads = rpc_shapes.buildCanvas()
+
+    # init
+    for key, bin in rpc_shapes.idToBin.values():
+        rpc_shapes.h2ByWheelDisk[key].SetBinContent(bin, -1)
+
+    for _, row in df_eff.iterrows():
+        rpc_id = RPCDetId(row.roll_name)
+        try:
+            key, bin = rpc_shapes.idToBin[rpc_id]
+        except:
+            print(f'RPCDetId not found from {rpc_id}')
+        # FIXME
+        if row.denominator <= min_denominator:
+            # TODO warnings.warn
+            # warnings.warn(f"{rpc_id} does not pass the minimum denominator.")
             continue
+        rpc_shapes.h2ByWheelDisk[key].SetBinContent(bin, 100 * row.efficiency)
 
-        eff = num/den
-        errLo = abs(eff - TEfficiency.ClopperPearson(den, num, 0.683, False))
-        errHi = abs(TEfficiency.ClopperPearson(den, num, 0.683, True) - eff) 
+    # FIXME
+    levels = np.array([-1] + [10. * i + 1e-9 for i in range(8)] + [100 * x + 1e-9 for x in [0.75, 0.80, 0.85, 0.90, 0.95, 1.0, 1.1]], dtype=np.float64)
+    for hist in rpc_shapes.h2ByWheelDisk.values():
+        hist.SetMinimum(0 - 1e-9)
+        hist.SetMaximum(100)
+        hist.SetContour(len(levels) - 1, levels)
 
-        print(name, eff, errLo, errHi, den, file=fout)
-        effMap[name] = [eff, errLo, errHi, den]
+    for pad_list in shape_pads.values():
+        for pad in pad_list:
+            pad.Modified()
+            pad.Update()
 
-#######################################
-## Draw plots
-nbin = int((xmax-xmin)/binW)
-objs = []
-hEffs = [
-    TH1F("hEffBarrel", "Barrel;Efficiency [%];Number of "+chTitle, nbin+1, xmin, xmax+binW),
-    TH1F("hEffEndcap", "Endcap;Efficiency [%];Number of "+chTitle, nbin+1, xmin, xmax+binW),
-]
-canvs = [
-    TCanvas("cBarrel", "cBarrel", 485, 176, 800, 600),
-    TCanvas("cEndcap", "cEndcap", 485, 176, 800, 600),
-]
-hEffs[0].SetFillColor(30)
-hEffs[1].SetFillColor(38)
-hEffs[0].SetLineColor(TColor.GetColor("#007700"))
-hEffs[1].SetLineColor(TColor.GetColor("#000099"))
+    for canvas in shape_canvas_list:
+        canvas.Modified()
+        canvas.Update()
 
-effs = [
-    [100*effMap[name][0] for name in list(effMap.keys()) if name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
-    [100*effMap[name][0] for name in list(effMap.keys()) if not name.startswith("W") and name not in blacklist and effMap[name][-1] > 100],
-]
+        output_path = output_dir / f'{era}_{canvas.GetName()}'
+        for suffix in output_suffix_list:
+            canvas.Print(str(output_path.with_suffix(suffix)))
 
-levels     = array('d', [-1    ] + [10.*i+1e-9 for i in range(8)]
-                       +[100*x+1e-9 for x in [0.75, 0.80, 0.85, 0.90, 0.95, 1.0, 1.1]])
-rpcPalette = array('i', [kBlack] + [kRed]*6
-                       +[kOrange+7, kOrange-3, kOrange, kYellow, kSpring+8, kSpring+7, kSpring, kBlue])
-gStyle.SetPalette(len(rpcPalette), rpcPalette);
 
-from RPCDPGAnalysis.SegmentAndTrackOnRPC.RPCGeom import *
-rpcShapes = RPCShapes("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/data/rpcGeom.txt" % os.environ["CMSSW_BASE"])
-shapeCanvases, shapePads = rpcShapes.buildCanvas()
-for b in rpcShapes.idToBin.values():
-    rpcShapes.h2ByWheelDisk[b[0]].SetBinContent(b[1], -1)
-for name, data in effMap.items():
-    detId = RPCDetId(name)
-    b = rpcShapes.idToBin[detId]
-    effVal, errLo, errHi, den = data
-    if den <= 100: continue
-    rpcShapes.h2ByWheelDisk[b[0]].SetBinContent(b[1], 100*effVal)
-for h in rpcShapes.h2ByWheelDisk.values():
-    h.SetMinimum(0-1e-9)
-    h.SetMaximum(110)
-    h.SetContour(len(levels)-1, levels)
+def plot_efficiency(df_eff: pd.DataFrame,
+                    output_dir: Path,
+                    era: str,
+                    rpc_mode: bool = True,
+                    bin_width: float = 0.5,
+                    xmin: float = 70.5,
+                    xmax: float = 100.0,
+                    blacklist: list[str] = [],
+                    min_denominator: int = 100,
+                    output_suffix_list: list[str] = ['.png', '.pdf', '.C']
+) -> None:
+    """
+    """
+    output_path = output_dir / f'eff_{era}.root'
+    output_file = ROOT.TFile(str(output_path), 'RECREATE')
 
-for i in range(2):
-    hEffs[i].GetYaxis().SetNdivisions(505)
-    hEffs[i].GetYaxis().SetTitleOffset(1.0)
+    ch_title = "Rolls" if rpc_mode else 'Chambers'
 
-    for eff in effs[i]: hEffs[i].Fill(eff)
-    effsNoZero = [eff for eff in effs[i] if eff != 0.0]
-    effsOver70 = [eff for eff in effs[i] if eff > 70]
-    effOver70 = sum(effsOver70)/len(effsOver70)
+    nbin = int((xmax - xmin) / bin_width)
+    h_eff_list = [
+        ROOT.TH1F(f"hEff{key}",
+                  f"{key};Efficiency [%];Number of {ch_title}",
+                  nbin + 1,
+                  xmin,
+                  xmax + bin_width)
+        for key in ['Barrel', 'Endcap']
+    ]
+    for each in h_eff_list:
+        each.SetDirectory(output_file)
 
-    header = TLatex(gStyle.GetPadLeftMargin(), 1-gStyle.GetPadTopMargin()+0.01,
-                    "RPC Overall Efficiency - %s" % hEffs[i].GetTitle())
-    header.SetNDC()
-    header.SetTextAlign(11)
-    header.SetTextFont(42)
+    canvas_list = [
+        ROOT.TCanvas(f"c{key}", f"c{key}", 485, 176, 800, 600)
+        for key in ['Barrel', 'Endcap']
+    ]
+    h_eff_list[0].SetFillColor(30)
+    h_eff_list[1].SetFillColor(38)
+    h_eff_list[0].SetLineColor(ROOT.TColor.GetColor("#007700")) # moth green
+    h_eff_list[1].SetLineColor(ROOT.TColor.GetColor("#000099")) # a kind of dark blue
 
-    stats = ["Entries", "Mean", "RMS", "Underflow"], []
-    stats[1].append("%d" % hEffs[i].GetEntries())
-    stats[1].append("%.2f" % (sum([x for x in effsNoZero])/len(effsNoZero)))
-    stats[1].append("%.2f" % sqrt(sum([x**2 for x in effsNoZero])/len(effsNoZero) - (sum([x for x in effsNoZero])/len(effsNoZero))**2))
-    stats[1].append("%d" % len([x for x in effs[i] if x < xmin]))
+    allowlist_mask = df_eff.roll_name.apply(lambda each: each not in blacklist)
+    min_den_mask = df_eff.denominator > min_denominator
+    good_roll_mask = allowlist_mask & min_den_mask
 
-    statPanel1 = TPaveText(0.53,0.68,0.76,0.85,"brNDC")
-    statPanel2 = TPaveText(0.53,0.68,0.76,0.85,"brNDC")
-    for s in zip(stats[0], stats[1]):
-        statPanel1.AddText(s[0])
-        statPanel2.AddText(s[1])
-    statPanel1.SetBorderSize(0)
-    statPanel1.SetFillColor(0)
-    statPanel1.SetFillStyle(0)
-    statPanel1.SetTextSize(0.04)
-    statPanel1.SetTextAlign(10)
-    statPanel1.SetBorderSize(0)
-    statPanel1.SetTextFont(62)
-    statPanel2.SetBorderSize(0)
-    statPanel2.SetFillColor(0)
-    statPanel2.SetFillStyle(0)
-    statPanel2.SetTextSize(0.04)
-    statPanel2.SetTextAlign(31)
-    statPanel2.SetBorderSize(0)
-    statPanel2.SetTextFont(62)
+    barrel_mask = df_eff.roll_name.apply(lambda each: each.startswith('W')) # FIXME
+    endcap_mask = df_eff.roll_name.apply(lambda each: each.startswith('RE')) # FIXME
 
-    statPanelOver70 = TText(0.18, 0.5, "Mean (>70%%) = %.2f%%" % effOver70)
-    statPanelOver70.SetTextSize(0.05)
-    statPanelOver70.SetTextFont(62)
-    statPanelOver70.SetNDC()
+    # percentage
+    eff_list = [
+        100 * df_eff[good_roll_mask & barrel_mask].efficiency.to_numpy(),
+        100 * df_eff[good_roll_mask & endcap_mask].efficiency.to_numpy(),
+    ]
 
-    canvs[i].cd()
-    hEffs[i].Draw()
-    statPanel1.Draw()
-    statPanel2.Draw()
-    statPanelOver70.Draw()
-    header.Draw()
-    lls = buildLabel(era, "inset")
-    for ll in lls: ll.Draw()
+    ###########################################################################
+    #
+    ###########################################################################
 
-    fixOverlay()
+    # keep objects in memory to avoid gc
+    objs = []
 
-    objs.extend([statPanel1, statPanel2, statPanelOver70, header])
-    objs.extend(lls)
+    for h_eff, eff_arr, canvas in zip(h_eff_list, eff_list, canvas_list):
+        canvas.cd()
 
-for c in canvs:
-    c.cd()
+        h_eff.GetYaxis().SetNdivisions(505)
+        h_eff.GetYaxis().SetTitleOffset(1.0)
 
-    c.SetFillColor(0)
-    c.SetBorderMode(0)
-    c.SetBorderSize(2)
-    c.SetLeftMargin(0.12)
-    c.SetRightMargin(0.04)
-    c.SetTopMargin(0.08)
-    c.SetBottomMargin(0.12)
-    c.SetFrameFillStyle(0)
-    c.SetFrameBorderMode(0)
-    c.SetFrameFillStyle(0)
-    c.SetFrameBorderMode(0)
+        # pass nullptr to 3rd argument, indicating all weights are 1
+        h_eff.FillN(len(eff_arr), eff_arr, ROOT.nullptr)
 
-    c.Modified()
-    c.Update()
+        eff_nonzero_arr = eff_arr[eff_arr != 0]
+        eff_over_70_arr = eff_arr[eff_arr > 70]
+        eff_over_70 = eff_over_70_arr.mean()
 
-    c.Print("%s/%s_%s.png" % (resultDir, era, c.GetName()))
-    c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
-    c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
+        # header
+        header = ROOT.TLatex(gStyle.GetPadLeftMargin(),
+                             1 - gStyle.GetPadTopMargin() + 0.01,
+                             f"RPC Overall Efficiency - {h_eff.GetTitle()}")
+        header.SetNDC()
+        header.SetTextAlign(ROOT.kHAlignLeft + ROOT.kVAlignBottom)
+        header.SetTextFont(42)
 
-for pads in shapePads.values():
-    for p in pads:
-        p.Modified()
-        p.Update()
+        # custom stat panels
+        stat_dict = {
+            'Entries': f'{int(h_eff.GetEntries()):d}',
+            'Mean': f'{eff_nonzero_arr.mean().item():.2f}',
+            'RMS': f'{eff_nonzero_arr.std().item():.2f}',
+            'Underflow': f'{np.count_nonzero(eff_arr < xmin):d}'
+        }
 
-for c in shapeCanvases:
-    c.Modified()
-    c.Update()
-    c.Print("%s/%s_%s.png" % (resultDir, era, c.GetName()))
-    c.Print("%s/%s_%s.pdf" % (resultDir, era, c.GetName()))
-    c.Print("%s/%s_%s.C" % (resultDir, era, c.GetName()))
+        panel_1 = ROOT.TPaveText(0.53, 0.68, 0.76, 0.85, "brNDC")
+        panel_2 = ROOT.TPaveText(0.53, 0.68, 0.76, 0.85, "brNDC")
+        for key, value in stat_dict.items():
+            panel_1.AddText(key)
+            panel_2.AddText(value)
 
+        panel_1.SetBorderSize(0)
+        panel_1.SetFillColor(0)
+        panel_1.SetFillStyle(0)
+        panel_1.SetTextSize(0.04)
+        panel_1.SetTextAlign(ROOT.kHAlignLeft)
+        panel_1.SetBorderSize(0)
+        panel_1.SetTextFont(62)
+
+        panel_2.SetBorderSize(0)
+        panel_2.SetFillColor(0)
+        panel_2.SetFillStyle(0)
+        panel_2.SetTextSize(0.04)
+        panel_2.SetTextAlign(ROOT.kHAlignRight + ROOT.kVAlignBottom)
+        panel_2.SetBorderSize(0)
+        panel_2.SetTextFont(62)
+
+        panel_over_70 = ROOT.TText(0.18, 0.5,
+                                   f"Mean (>70%) = {eff_over_70:.2f}%")
+        panel_over_70.SetTextSize(0.05)
+        panel_over_70.SetTextFont(62)
+        panel_over_70.SetNDC()
+
+        h_eff.Draw()
+        panel_1.Draw()
+        panel_2.Draw()
+        panel_over_70.Draw()
+        header.Draw()
+
+        # labels
+        label_list = buildLabel(era, "inset")
+        for label in label_list:
+            label.Draw()
+
+        fix_overlay() # type: ignore
+
+        objs += [panel_1, panel_2, panel_over_70, header]
+        objs += label_list
+
+    for canvas in canvas_list:
+        canvas.cd()
+
+        canvas.SetFillColor(0)
+
+        canvas.SetBorderMode(0) # type: ignore
+        canvas.SetBorderSize(2)
+
+        canvas.SetLeftMargin(0.12)
+        canvas.SetRightMargin(0.04)
+        canvas.SetTopMargin(0.08)
+        canvas.SetBottomMargin(0.12)
+
+        canvas.SetFrameFillStyle(0)
+        canvas.SetFrameBorderMode(0)
+        canvas.SetFrameFillStyle(0)
+        canvas.SetFrameBorderMode(0)
+
+        canvas.Modified()
+        canvas.Update()
+        # write it to output_file
+        canvas.Write()
+
+        output_path = output_dir / f'{era}_{canvas.GetName()}'
+        for suffix in output_suffix_list:
+            canvas.Print(str(output_path.with_suffix(suffix)))
+
+    output_file.Write()
+    output_file.Close()
+
+def run(input_dir: Path,
+        era: str,
+        output_dir: Path,
+):
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print('finding input files')
+    input_path_list = list(input_dir.glob('*.csv'))
+
+    print(f'collecting per-coll counts from {len(input_path_list)} files')
+    df_count = collect_counts(input_path_list)#, output_path)
+    df_count_path = output_dir / 'count.csv'
+    print(f'writing per-coll counts into {df_count_path}')
+    df_count.to_csv(df_count_path)
+
+    print(f'computing per-roll efficiency')
+    df_eff = compute_efficiency(df_count)
+    df_eff_path = output_dir / 'efficiency.csv'
+    print(f'writing per-roll efficiency into {df_eff_path}')
+    df_eff.to_csv(df_eff_path)
+
+    print(f'plotting efficiency')
+    set_style()
+    plot_efficiency(df_eff, output_dir, era=era)
+    plot_geom(df_eff, output_dir, era=era)
+
+def main():
+    gROOT.SetBatch(True)
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('-i', '--input-dir', type=Path, required=True, help='Help text')
+    parser.add_argument('-o', '--output-dir', default=(Path.cwd() / 'data' / 'efficiency'),
+                        type=Path, help='Help text')
+    parser.add_argument('--era', type=str, required=True, help='Help text')
+    args = parser.parse_args()
+
+    run(**vars(args))
+
+if __name__ == "__main__":
+    main()

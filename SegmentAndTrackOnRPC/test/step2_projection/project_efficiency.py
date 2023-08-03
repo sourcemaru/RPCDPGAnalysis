@@ -1,84 +1,85 @@
 #!/usr/bin/env python3
+from pathlib import Path
+import argparse
+import pandas as pd
+import tqdm
+from ROOT import TFile
+from RPCDPGAnalysis.SegmentAndTrackOnRPC.ProjectTHnSparse import THnSparseSelector
 
-import os, sys
-import gzip
-if "CMSSW_BASE" in os.environ:
-    sys.path.append("%s/src/RPCDPGAnalysis/SegmentAndTrackOnRPC/python" % os.environ["CMSSW_BASE"])
-from ROOT import gStyle, TFile
-from ProjectTHnSparse import THnSparseSelector
-from collections import OrderedDict
 
-def project(fName0, commonSel):
-    gStyle.SetOptStat(0)
+def run(input_path: str,
+        common_selection: dict[str, tuple[float, float]],
+        output_dir: Path,
+        hist_path: str
+):
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("@@ Opening root file...")
-    f = TFile(fName0)
-    print("@@ Loading RPC TnP histogram...")
-    hInfo = f.Get("muonHitFromTrackerMuonAnalyzer/hInfo")
-    print("@@ Initializing THnSparseSelector...")
-    hSel = THnSparseSelector(hInfo)
+    input_file = TFile(input_path)
+    hist = input_file.Get(hist_path)
 
-    print("@@ Extracting runs...")
-    hRuns = hSel.Project1D("run", commonSel)
-    #runs = [i+2 for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+2) != 0]
-    runs = [hRuns.GetXaxis().GetBinLowEdge(i+1) for i in range(hRuns.GetNbinsX()) if hRuns.GetBinContent(i+1) != 0]
-    print("@@ Extracting roll names...")
-    hRolls = hSel.Project1D("rollName", {}, copyAxisLabel=True)
-    axisRolls = hRolls.GetXaxis()
-    rollNames = [axisRolls.GetBinLabel(i) for i in range(hRolls.GetNbinsX()+2) if axisRolls.GetBinLabel(i) != ""]
+    selector = THnSparseSelector(hist)
 
-    nRun = len(runs)
-    for iRun, run in enumerate(runs):
-        print("@@ Analyzing run %d (%d/%d)..." % (run, iRun+1, nRun), end=' ')
-        fName = "data/efficiency/run%d.txt" % run
-        if not os.path.exists(fName) and os.path.exists(fName+".gz"):
-            with open(fName, 'w') as fout:
-                fName.write(gzip.open('.gz', 'rb').read())
-            os.remove(fName+".gz")
+    h_run = selector.Project1D('run', {'isFiducial': (1, 1)})
+    run_list = [int(h_run.GetBinLowEdge(bin))
+                for bin in range(1, 1 + h_run.GetNbinsX())
+                if h_run.GetBinContent(bin) > 0]
 
-        effTable = OrderedDict()
-        if os.path.exists(fName):
-            for line in open(fName).readlines():
-                line = line.strip()
-                if len(line) == 0 or line[0] == '#': continue
+    h_roll_name = selector.Project1D("roll_name", {}, copyAxisLabel=True)
+    roll_name_list = [(bin, h_roll_name.GetXaxis().GetBinLabel(bin))
+                      for bin in range(0, 2 + h_roll_name.GetNbinsX())
+                      if h_roll_name.GetXaxis().GetBinLabel(bin) != ""]
 
-                name, den, num = line.split()
-                den, num = float(den), float(num)
-                effTable[name] = [den, num]
+    # TODO multiprocessing
+    for run in (progress_bar := tqdm.tqdm(run_list)):
+        progress_bar.set_description(f'Processing {run=}')
 
-        subranges = commonSel.copy()
-        subranges.update({'run':[run, run]})
-        hDen = hSel.Project1D("rollName", subranges, suffix="_Den")
-        subranges.update({'isMatched':(1,1)})
-        hNum = hSel.Project1D("rollName", subranges, suffix="_Num")
+        selection = common_selection | {'run': (run, run)}
 
-        for i, name in enumerate(rollNames):
-            den = hDen.GetBinContent(i+1)
-            num = hNum.GetBinContent(i+1)
-            if name not in effTable:
-                effTable[name] = [den, num]
-            else:
-                effTable[name] = [den+effTable[name][0], num+effTable[name][1]]
+        den_selection = selection
+        num_selection = selection | {'isMatched': (1, 1)}
 
-        hDen.Delete()
-        hNum.Delete()
+        h_den = selector.Project1D('roll_name', den_selection, suffix='_den')
+        h_num = selector.Project1D('roll_name', num_selection, suffix='_num')
 
-        with open(fName, "w") as fout:
-            print("#RollName Denominator Numerator", file=fout)
+        count = {name: [0, 0] for _, name in roll_name_list}
+        for bin, name in roll_name_list:
+            den = h_den.GetBinContent(bin)
+            num = h_num.GetBinContent(bin)
 
-            for name, [den, num] in effTable.items():
-                print(name, den, num, file=fout)
+            count[name][0] += int(den)
+            count[name][1] += int(num)
 
-        print("")
+        h_den.Delete()
+        h_num.Delete()
 
-    print("@@ Done.")
+        df = pd.DataFrame(
+            [{'roll_name': name, 'denominator': den, 'numerator': num}
+            for name, (den, num) in count.items()]
+        )
+        df.to_csv(output_dir / f'run-{run}.csv', index=False)
 
-if __name__ == '__main__':
-    commonSel = {
-        'isFiducial':(1,1),
-        #'mass':(84,97),
+
+def main():
+    parser = argparse.ArgumentParser(
+    )
+    parser.add_argument('-i', '--input-path', type=str, required=True,
+                        help='input root file')
+    parser.add_argument('--hist-path', type=str,
+                        default='muonHitFromTrackerMuonAnalyzer/hInfo',
+                        help='path to histogram')
+    parser.add_argument('-o', '--output-dir', type=Path,
+                        default=(Path.cwd() / 'data' / 'count'),
+                        help='output directory')
+    args = parser.parse_args()
+
+    common_selection = {
+        'isFiducial': (1.0, 1.0)
     }
 
-    if not os.path.exists("data/efficiency"): os.makedirs("data/efficiency")
-    for fName in sys.argv[1:]:
-        project(fName, commonSel)
+    run(args.input_path, common_selection, args.output_dir,
+        hist_path=args.hist_path)
+
+
+
+if __name__ == "__main__":
+    main()

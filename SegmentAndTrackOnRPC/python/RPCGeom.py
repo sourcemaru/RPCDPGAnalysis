@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import math
+import numpy as np
+import pandas as pd
 import ROOT
 
 class RPCDetId:
@@ -56,6 +58,16 @@ class RPCDetId:
     def isIRPC(self):
         return self.isEndcap() and self.disk in (3,4) and self.ring == 1
 
+
+def compute_phi(x, y):
+    phi = np.arctan2(y, x)
+    phi[phi < 0] += 2 * np.pi
+    # Regularize the shape in phi
+    if abs(phi[0] - phi[2]) > np.pi:
+        phi[phi > np.pi] -= 2 * np.pi
+    return phi
+
+
 class RPCShapes:
     def __init__(self, fileName="rpcGeom.txt", prefix=""):
         self.shapes = {}
@@ -67,44 +79,33 @@ class RPCShapes:
         self.prefix = prefix
         pi = math.pi
 
-        for l in open(fileName).readlines():
-            if l.startswith('#'): continue
-            l = l.strip().split()
-            if len(l) != 15: continue
+        df = pd.read_csv(fileName, delimiter=' ', index_col=False)
+        for _, row in df.iterrows():
+            name = row['#RollName']
+            x = row[['x1', 'x2', 'x3', 'x4']].to_numpy(dtype=np.float64)
+            y = row[['y1', 'y2', 'y3', 'y4']].to_numpy(dtype=np.float64)
 
-            name, rawId, area = l[0], int(l[1]), float(l[2])
-            xs, ys, zs = [[float(l[3:][3*i+j]) for i in range(4)] for j in range(3)]
-            rpcId = RPCDetId(name)#, rawId)
+            rpc_id = RPCDetId(name)
 
-            ptss = []
-            if rpcId.isEndcap():
-                ptss = [zip(xs, ys)]
-                ptss[0].append([xs[0], ys[0]])
-            elif rpcId.isBarrel():
-                phis = []
-                for y, x in zip(ys, xs):
-                    phi = math.atan2(y,x)
-                    if phi < 0: phi += 2*pi
-                    phis.append(phi)
-                if abs(phis[0]-phis[2]) > pi: ## Regularize the shape in phi
-                    for i, phi in enumerate(phis):
-                        if phi > pi: phis[i] -= 2*pi
+            if rpc_id.isBarrel():
+                graph_x = row[['z1', 'z2', 'z3', 'z4']].to_numpy(dtype=np.float64)
+                graph_y = compute_phi(x, y)
+            else:
+                # endcap
+                graph_x = x
+                graph_y = y
 
-                ptss = [zip(zs, phis)]
-                ptss[0].append([zs[0], phis[0]])
-            else: continue
+            # make a graph closed
+            graph_x = np.append(graph_x, graph_x[0])
+            graph_y = np.append(graph_y, graph_y[0])
 
-            shape = ROOT.TMultiGraph(name, name)
-            for pts in ptss:
-                grp = ROOT.TGraph()
-                grp.SetTitle(name)
-                grp.SetLineColor(ROOT.kGray+2)
-                grp.SetLineWidth(1)
-                grp.SetEditable(False)
-                for i, (x, y) in enumerate(pts): grp.SetPoint(i, x, y)
-                shape.Add(grp)
+            graph = ROOT.TGraph(len(graph_x), graph_x, graph_y)
+            graph.SetTitle(name)
+            graph.SetLineColor(ROOT.kGray + 2)
+            graph.SetLineWidth(1)
+            graph.SetEditable(False)
 
-            self.shapes[rpcId] = shape
+            self.shapes[rpc_id] = graph
 
         for rpcId, shape in self.shapes.items():
             key = ""
@@ -118,7 +119,7 @@ class RPCShapes:
                 else:                self.h2ByWheelDisk[key] = ROOT.TH2Poly("h"+self.prefix+key, key, -800, 800, -800, 800)
             h = self.h2ByWheelDisk[key]
             h.SetMinimum(1e-7)
-            b = h.AddBin(shape)+1
+            b = h.AddBin(shape)
 
             self.binToId[(key, b)] = rpcId
             self.idToBin[rpcId] = (key, b)
