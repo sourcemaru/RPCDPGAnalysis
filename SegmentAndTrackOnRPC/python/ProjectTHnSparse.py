@@ -19,7 +19,7 @@ class THnSparseSelector:
     def Project1D(self, axisName, axisRanges, **kwargs):
         if axisName not in self.axisInfo: return None
 
-        for name, (lo, hi) in axisRanges.iteritems():
+        for name, (lo, hi) in axisRanges.items():
             if name not in self.axisInfo:
                 print("Cannot find axis '%s'" % name)
                 continue
@@ -36,7 +36,7 @@ class THnSparseSelector:
         h = self.hist.Projection(index)
         h.SetName("h_%s%s" % (axisName, suffix))
 
-        for name, (lo, hi) in axisRanges.iteritems():
+        for name, (lo, hi) in axisRanges.items():
             if name not in self.axisInfo:
                 print("Cannot find axis '%s'" % name)
                 continue
@@ -60,7 +60,7 @@ class THnSparseSelector:
         if axisName1 not in self.axisInfo: return None
         if axisName2 not in self.axisInfo: return None
 
-        for name, (lo, hi) in axisRanges.iteritems():
+        for name, (lo, hi) in axisRanges.items():
             if name not in self.axisInfo:
                 print("Cannot find axis '%s'" % name)
                 continue
@@ -79,7 +79,7 @@ class THnSparseSelector:
         h = self.hist.Projection(index2, index1)
         h.SetName("h_%s_%s%s" % (axisName1, axisName2, suffix))
 
-        for name, (lo, hi) in axisRanges.iteritems():
+        for name, (lo, hi) in axisRanges.items():
             if name not in self.axisInfo:
                 print("Cannot find axis '%s'" % name)
                 continue

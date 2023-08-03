@@ -49,7 +49,7 @@ class RPCDetId:
 
     def isBarrel(self):
         return self.region == 0
-            
+
     def isEndcap(self):
         return abs(self.region) == 1
 
@@ -93,7 +93,7 @@ class RPCShapes:
                 ptss = [zip(zs, phis)]
                 ptss[0].append([zs[0], phis[0]])
             else: continue
-            
+
             shape = ROOT.TMultiGraph(name, name)
             for pts in ptss:
                 grp = ROOT.TGraph()
@@ -106,7 +106,7 @@ class RPCShapes:
 
             self.shapes[rpcId] = shape
 
-        for rpcId, shape in self.shapes.iteritems():
+        for rpcId, shape in self.shapes.items():
             key = ""
             #if rpcId.isBarrel(): key = "W%+d" % rpcId.wheel
             if rpcId.isBarrel(): key = ('_'.join(rpcId.name.split('_')[1:2])).strip('+-')
