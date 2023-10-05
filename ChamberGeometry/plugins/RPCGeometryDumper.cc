@@ -2,6 +2,8 @@
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Framework/interface/Run.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -18,74 +20,73 @@
 #include <iostream>
 #include <fstream>
 
-using namespace std;
-
-class RPCGeometryDumper : public edm::one::EDAnalyzer<edm::one::WatchRuns>
-{
+class RPCGeometryDumper : public edm::one::EDAnalyzer<edm::one::WatchRuns> {
 public:
-  RPCGeometryDumper(const edm::ParameterSet& pset);
+  RPCGeometryDumper(const edm::ParameterSet&);
   ~RPCGeometryDumper() = default;
-  void analyze(const edm::Event& event, const edm::EventSetup& eventSetup) override;
-  void beginRun(const edm::Run& run, const edm::EventSetup& eventSetup) override;
-  void endRun(const edm::Run& run, const edm::EventSetup&) override {};
+  static void fillDescriptions(edm::ConfigurationDescriptions&);
+  void analyze(const edm::Event&, const edm::EventSetup&) override {};
+  void beginRun(const edm::Run&, const edm::EventSetup&) override;
+  void endRun(const edm::Run&, const edm::EventSetup&) override {};
 
 private:
-  const std::string outFileName_;
+  const edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpc_geometry_token_;
+  const std::string output_file_name_;
 
-  edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeomToken_;
+  const std::string header_ = "roll_name,det_id,area,x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4";
+  const char delimeter_ = ',';
 };
 
-RPCGeometryDumper::RPCGeometryDumper(const edm::ParameterSet& pset):
-  outFileName_(pset.getUntrackedParameter<std::string>("outFileName"))
-{
-  rpcGeomToken_ = esConsumes<edm::Transition::BeginRun>();
+
+RPCGeometryDumper::RPCGeometryDumper(const edm::ParameterSet& parameter_set)
+  : rpc_geometry_token_(esConsumes<edm::Transition::BeginRun>()),
+    output_file_name_(parameter_set.getUntrackedParameter<std::string>("outputFileName")) {
 }
 
-void RPCGeometryDumper::beginRun(const edm::Run& run, const edm::EventSetup& eventSetup)
-{
-  // Set the roll names
-  const auto& rpcGeom = eventSetup.getData(rpcGeomToken_);
+void RPCGeometryDumper::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.addUntracked<std::string>("outputFileName", "rpc.csv");
+  descriptions.addWithDefaultLabel(desc);
+}
 
-  std::ofstream fout(outFileName_);
-  fout << "#RollName DetId Area x1 y1 z1 x2 y2 z2 x3 y3 z3 x4 y4 z4\n";
-  for ( const RPCRoll* roll : rpcGeom.rolls() ) {
-    const auto detId = roll->id();
-    const string rollName = RPCGeomServ(detId).name();
+void RPCGeometryDumper::beginRun(const edm::Run& run, const edm::EventSetup& event_setup) {
+  const auto& rpc_geometry = event_setup.getData(rpc_geometry_token_);
+
+  std::ofstream fout{output_file_name_};
+  fout << header_ << std::endl;
+
+  for (const RPCRoll* roll : rpc_geometry.rolls()) {
+    const auto det_id = roll->id();
+    const std::string roll_name = RPCGeomServ(det_id).name();
 
     const auto& bound = roll->surface().bounds();
-    const double h = bound.length(), w = bound.width();
-    const double area = w*h;
-    fout << rollName << ' ' << detId.rawId() << ' ' << area << ' ';
-    if ( roll->isBarrel() ) {
-      const auto gp1 = roll->toGlobal(LocalPoint(-w/2,+h/2,0));
-      const auto gp2 = roll->toGlobal(LocalPoint(+w/2,+h/2,0));
-      const auto gp3 = roll->toGlobal(LocalPoint(+w/2,-h/2,0));
-      const auto gp4 = roll->toGlobal(LocalPoint(-w/2,-h/2,0));
-      fout << gp1.x() << ' ' << gp1.y() << ' ' << gp1.z() << ' ';
-      fout << gp2.x() << ' ' << gp2.y() << ' ' << gp2.z() << ' ';
-      fout << gp3.x() << ' ' << gp3.y() << ' ' << gp3.z() << ' ';
-      fout << gp4.x() << ' ' << gp4.y() << ' ' << gp4.z() << ' ';
-    }
-    else {
-      const double w_dn = 2*bound.widthAtHalfLength() - w;
-      const auto gp1 = roll->toGlobal(LocalPoint(-w/2,h/2,0));
-      const auto gp2 = roll->toGlobal(LocalPoint(+w/2,h/2,0));
-      const auto gp3 = roll->toGlobal(LocalPoint(+w_dn/2,-h/2,0));
-      const auto gp4 = roll->toGlobal(LocalPoint(-w_dn/2,-h/2,0));
-      fout << gp1.x() << ' ' << gp1.y() << ' ' << gp1.z() << ' ';
-      fout << gp2.x() << ' ' << gp2.y() << ' ' << gp2.z() << ' ';
-      fout << gp3.x() << ' ' << gp3.y() << ' ' << gp3.z() << ' ';
-      fout << gp4.x() << ' ' << gp4.y() << ' ' << gp4.z() << ' ';
-    }
-    fout << endl;
+    const float h = bound.length();
+    const float w = bound.width();
+    const float area = w * h;
+    const float w34 = roll->isBarrel() ? w : 2 * bound.widthAtHalfLength() - w;
 
+    const auto gp1 = roll->toGlobal(LocalPoint{-w / 2, +h / 2, 0.f});
+    const auto gp2 = roll->toGlobal(LocalPoint{+w / 2, +h / 2, 0.f});
+    const auto gp3 = roll->toGlobal(LocalPoint{+w34 / 2, -h / 2, 0.f});
+    const auto gp4 = roll->toGlobal(LocalPoint{-w34 / 2, -h / 2, 0.f});
+
+    fout << roll_name
+         << delimeter_ << det_id.rawId()
+         << delimeter_ << area
+         << delimeter_ << gp1.x()
+         << delimeter_ << gp1.y()
+         << delimeter_ << gp1.z()
+         << delimeter_ << gp2.x()
+         << delimeter_ << gp2.y()
+         << delimeter_ << gp2.z()
+         << delimeter_ << gp3.x()
+         << delimeter_ << gp3.y()
+         << delimeter_ << gp3.z()
+         << delimeter_ << gp4.x()
+         << delimeter_ << gp4.y()
+         << delimeter_ << gp4.z()
+         << std::endl;
   }
 }
-
-void RPCGeometryDumper::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
-{
-  return;
-}
-
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(RPCGeometryDumper);
