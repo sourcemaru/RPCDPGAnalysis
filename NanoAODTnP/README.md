@@ -12,8 +12,15 @@ git clone https://github.com/slowmoyang/RPCDPGAnalysis.git -b tnp-nanoaod
 scram b
 ```
 
-### CRAB job
+### Test
+```sh
+cmsRun \
+    ${CMSSW_BASE}/src/RPCDPGAnalysis/NanoAODTnP/test/muRPCTnPFlatTableProducer_cfg.py \
+    inputFiles=root://cmsdcadisk.fnal.gov//dcache/uscmsdisk/store/data/Run2023D/Muon1/AOD/PromptReco-v2/000/371/225/00000/5f3efe8c-de70-43e0-a8c7-a532844ca6c3.root
 ```
+
+### CRAB job
+```sh
 rpc-crab-submit.py \
     -p ${CMSSW_BASE}/src/RPCDPGAnalysis/NanoAODTnP/test/muRPCTnPFlatTableProducer_cfg.py \
     -i ${CMSSW_BASE}/src/RPCDPGAnalysis/NanoAODTnP/data/crab/run3.json \
