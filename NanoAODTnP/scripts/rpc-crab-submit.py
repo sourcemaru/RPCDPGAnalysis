@@ -31,7 +31,7 @@ def submit(config: CrabConfig,
     config.Data.inputDataset = input_dataset
     if lumi_mask is not None:
         config.Data.lumiMask = lumi_mask
-    config.Data.outLFNDirBase = f'/store/user/{user}/rpc/{name}/{now}'
+    config.Data.outLFNDirBase = f'/store/user/{user}/RPC_STORE/{name}/{now}'
     config.General.requestName = f'{pset_stem}__{primary}__{processed}__{now}'
     config.Data.outputDatasetTag = f'{pset_stem}__{primary}__{processed}'
 
