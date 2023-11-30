@@ -173,3 +173,106 @@ def plot_eff_detector(input_path: Path,
             output_path=output_path,
             close=True
         )
+
+
+def plot_stat_detector_unit(h_total,
+                           detector_unit: str,
+                           roll_list: list[RPCRoll],
+                           label: str,
+                           year: Union[int, str],
+                           com: float,
+                           output_path: Optional[Path],
+                           close: bool,
+):
+    """
+    plot statistic
+    """
+    name_list = [each.id.name for each in roll_list]
+    
+    values = h_total[name_list].values() # type: ignore
+
+    patches = [each.polygon for each in roll_list]
+    inactive_roll_mask = values < 1
+    vmin = min(values)
+    vmax = max(values)
+
+    fig, ax = plt.subplots()
+    fig = plot_patches(
+        patches=patches,
+        values=values,
+        mask=inactive_roll_mask,
+        vmin=vmin,
+        vmax=vmax,
+        ax=ax
+    )
+    _, cax = fig.get_axes()
+
+    xlabel = roll_list[0].polygon_xlabel
+    ylabel = roll_list[0].polygon_ylabel
+    ymax = roll_list[0].polygon_ymax
+
+    ax.set_xlabel(xlabel) # type: ignore
+    ax.set_ylabel(ylabel) # type: ignore
+
+    cax_ylabel = 'Statistic'
+    cax.set_ylabel(cax_ylabel)
+    cax.set_ylim(vmin, vmax)
+    ax.set_ylim(None, ymax) # type: ignore
+    ax.annotate(detector_unit, (0.05, 0.925), weight='bold',
+                xycoords='axes fraction') # type: ignore
+    mh.cms.label(ax=ax, llabel=label, com=com, year=year)
+
+    if output_path is not None:
+        for suffix in ['.png', '.pdf']:
+            fig.savefig(output_path.with_suffix(suffix))
+
+    if close:
+        plt.close(fig)
+
+    return fig
+    
+
+def plot_stat_detector(input_path: Path,
+                      geom_path: Path,
+                      output_dir: Path,
+                      com: float,
+                      year: Union[int, str],
+                      label: str,
+                      roll_blacklist_path: Optional[Path] = None,
+):
+    input_file = uproot.open(input_path)
+
+    if roll_blacklist_path is None:
+        roll_blacklist = set()
+    else:
+        with open(roll_blacklist_path) as stream:
+            roll_blacklist = set(json.load(stream))
+
+    h_total: Hist = input_file['total'].to_hist() # type: ignore
+
+    geom = pd.read_csv(geom_path)
+    roll_list = [RPCRoll.from_row(row)
+                 for _, row in geom.iterrows()
+                 if row.roll_name not in roll_blacklist]
+
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
+    # wheel (or disk) to rolls
+    unit_to_rolls = defaultdict(list)
+
+    for roll in roll_list:
+        unit_to_rolls[roll.id.detector_unit].append(roll)
+
+    for detector_unit, roll_list in unit_to_rolls.items():
+        output_path = output_dir / detector_unit
+        plot_stat_detector_unit(
+            h_total,
+            detector_unit=detector_unit,
+            roll_list=roll_list,
+            label=label,
+            year=year,
+            com=com,
+            output_path=output_path,
+            close=True
+        )
