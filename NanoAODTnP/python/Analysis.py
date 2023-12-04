@@ -12,6 +12,7 @@ import pandas as pd
 import uproot.writing
 from hist.hist import Hist
 from hist.axis import StrCategory
+from hist.axis import IntCategory
 from RPCDPGAnalysis.NanoAODTnP.RPCGeomServ import get_roll_name
 
 
@@ -149,11 +150,13 @@ def flatten_nanoaod(input_path: Path,
     geom = pd.read_csv(geom_path)
 
     roll_axis = StrCategory(geom['roll_name'].tolist())
-    h_total = Hist(roll_axis) # type: ignore
+    run_axis = IntCategory(list(set(data.run.tolist())))
+
+    h_total = Hist(roll_axis, run_axis) # type: ignore
     h_passed = h_total.copy()
 
-    h_total.fill(name_arr[data.is_fiducial])
-    h_passed.fill(name_arr[data.is_fiducial & data.is_matched].tolist())
+    h_total.fill(name_arr[data.is_fiducial], data.run[data.is_fiducial])
+    h_passed.fill(name_arr[data.is_fiducial & data.is_matched].tolist(), data.run[data.is_fiducial & data.is_matched].to_list())
 
     with uproot.writing.create(output_path) as output_file:
         output_file['tree'] = data
