@@ -5,7 +5,6 @@ from pathlib import Path
 import argparse
 import matplotlib as mpl
 import mplhep as mh
-from RPCDPGAnalysis.NanoAODTnP.Plotting import plot_eff_detector # type: ignore
 from RPCDPGAnalysis.NanoAODTnP.Plotting import plot_stat_detector # type: ignore
 
 
