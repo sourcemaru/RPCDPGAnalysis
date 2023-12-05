@@ -276,3 +276,52 @@ def plot_stat_detector(input_path: Path,
             output_path=output_path,
             close=True
         )
+
+
+def plot_eff_run(input_path: Path,
+                      geom_path: Path,
+                      output_dir: Path,
+                      com: float,
+                      year: Union[int, str],
+                      label: str,
+                      percentage: bool = True,
+                      roll_blacklist_path: Optional[Path] = None,
+):
+    input_file = uproot.open(input_path)
+
+    if roll_blacklist_path is None:
+        roll_blacklist = set()
+    else:
+        with open(roll_blacklist_path) as stream:
+            roll_blacklist = set(json.load(stream))
+
+    h_total: Hist = input_file['total'].to_hist() # type: ignore
+    h_passed: Hist = input_file['passed'].to_hist() # type: ignore
+
+    geom = pd.read_csv(geom_path)
+    roll_list = [RPCRoll.from_row(row)
+                 for _, row in geom.iterrows()
+                 if row.roll_name not in roll_blacklist]
+
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
+    # wheel (or disk) to rolls
+    unit_to_rolls = defaultdict(list)
+    for roll in roll_list:
+        unit_to_rolls[roll.id.detector_unit].append(roll)
+
+    for detector_unit, roll_list in unit_to_rolls.items():
+        output_path = output_dir / detector_unit
+        plot_eff_detector_unit(
+            h_total,
+            h_passed,
+            detector_unit=detector_unit,
+            roll_list=roll_list,
+            percentage=percentage,
+            label=label,
+            year=year,
+            com=com,
+            output_path=output_path,
+            close=True
+        )
