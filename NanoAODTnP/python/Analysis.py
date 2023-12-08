@@ -149,8 +149,11 @@ def flatten_nanoaod(input_path: Path,
 
     geom = pd.read_csv(geom_path)
 
-    roll_axis = StrCategory(geom['roll_name'].tolist())
-    run_axis = IntCategory(list(set(data.run.tolist())))
+    with open(cert_path) as stream:
+        cert = json.load(stream)
+
+    roll_axis = StrCategory(geom['roll_name'].tolist(), name="Roll")
+    run_axis = IntCategory(sorted(map(int, list(cert.keys()))), name="Run")
 
     h_total = Hist(roll_axis, run_axis) # type: ignore
     h_passed = h_total.copy()
